@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
+import Settings from './pages/Settings';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Layout wrappers
 import MainLayout from './layouts/MainLayout';
@@ -25,9 +27,10 @@ import Notifications from './pages/Notifications';
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <SocketProvider>
-          <Routes>
+  <AuthProvider>
+    <ThemeProvider>
+      <SocketProvider>
+        <Routes>
             {/* ── Public / Guest Routes ── */}
             <Route
               path="/login"
@@ -139,7 +142,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
+            <Route
+  path="/settings"
+  element={
+    <ProtectedRoute>
+      <MainLayout>
+        <Settings />
+      </MainLayout>
+    </ProtectedRoute>
+  }
+/>
             {/* ── Catch-all / 404 ── */}
             <Route
               path="*"
@@ -183,10 +195,11 @@ function App() {
                 </AuthLayout>
               }
             />
-          </Routes>
-        </SocketProvider>
-      </AuthProvider>
-    </Router>
+                </Routes>
+      </SocketProvider>
+    </ThemeProvider>
+    </AuthProvider>
+  </Router>
   );
 }
 

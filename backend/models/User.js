@@ -59,6 +59,61 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String, // URL to profile picture from OAuth
     },
+    // Add these new fields to userSchema
+username: {
+  type: String,
+  unique: true,
+  sparse: true,
+  trim: true,
+},
+phone: {
+  type: String,
+  default: '',
+},
+// Settings preferences
+preferences: {
+  appearance: {
+    theme: { type: String, enum: ['light', 'dark', 'ocean', 'system'], default: 'system' },
+    fontSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' }
+  },
+  accessibility: {
+    reducedMotion: { type: Boolean, default: false },
+    highContrast: { type: Boolean, default: false },
+    largerText: { type: Boolean, default: false },
+    keyboardNavigation: { type: Boolean, default: false }
+  },
+  privacy: {
+    profileVisibility: { type: String, enum: ['public', 'connections', 'recruiters', 'private'], default: 'public' },
+    allowConnectionRequests: { type: Boolean, default: true },
+    allowMessages: { type: Boolean, default: true },
+    showEmail: { type: Boolean, default: false },
+    showPhone: { type: Boolean, default: false },
+    searchEngineIndexing: { type: Boolean, default: true },
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  },
+  notifications: {
+    emailNotifications: { type: Boolean, default: true },
+    pushNotifications: { type: Boolean, default: true }
+  }
+},
+// Active sessions
+activeSessions: [{
+  device: String,
+  browser: String,
+  ip: String,
+  location: String,
+  loginTime: { type: Date, default: Date.now },
+  token: String
+}],
+loginHistory: [{
+  browser: String,
+  location: String,
+  ip: String,
+  loginTime: { type: Date, default: Date.now }
+}],
+lastLogin: {
+  type: Date
+},
     authProvider: {
       type: String,
       enum: ['local', 'google', 'github'],

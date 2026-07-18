@@ -14,7 +14,8 @@ import {
   Menu,
   X,
   Search,
-  ChevronDown
+  ChevronDown,
+  Settings
 } from 'lucide-react';
 
 const MainLayout = ({ children }) => {
@@ -201,19 +202,38 @@ const MainLayout = ({ children }) => {
                 }}
               >
                 <Link
-                  to="/profile/me"
-                  onClick={() => setShowProfileDropdown(false)}
-                  style={{
-                    display: 'block',
-                    padding: '8px 12px',
-                    fontSize: '0.9rem',
-                    borderRadius: 'var(--radius-sm)'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
-                  My Profile
-                </Link>
+  to="/profile/me"
+  onClick={() => setShowProfileDropdown(false)}
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 12px',
+    fontSize: '0.9rem',
+    borderRadius: 'var(--radius-sm)'
+  }}
+  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
+  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+>
+  <UserIcon size={16} />
+  My Profile
+</Link>
+                   
+
+                <Link
+  to="/settings"
+  onClick={() => setShowProfileDropdown(false)}
+  style={{
+    display: 'block',
+    padding: '8px 12px',
+    fontSize: '0.9rem',
+    borderRadius: 'var(--radius-sm)'
+  }}
+  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
+  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+>
+  ⚙️ Settings
+</Link>
                 <button
                   onClick={handleLogout}
                   style={{

@@ -111,9 +111,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('rememberedEmail');
     setUser(null);
   };
+const updateUser = (userData) => {
+  setUser(prev => {
+    const updated = { ...prev, ...userData };
+    localStorage.setItem('user', JSON.stringify(updated));
+    return updated;
+  });
+};
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

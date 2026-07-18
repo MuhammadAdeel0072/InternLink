@@ -47,25 +47,8 @@
   --max-width-content: 1250px;
 }
 
-/* Light Theme overrides (Optional trigger via .light-theme) */
-.light-theme {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f5f9;
-  --border-color: rgba(0, 0, 0, 0.06);
-  --border-hover: rgba(0, 0, 0, 0.12);
-  
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  
-  --primary: #4f46e5;
-  --primary-hover: #3730a3;
-  --primary-light: rgba(79, 70, 229, 0.08);
-  
-  --shadow-md: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
-}
+
+
 
 /* Resets */
 *, *::before, *::after {
@@ -310,4 +293,59 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: 1fr;
     padding-bottom: 70px; /* Space for bottom nav bar */
   }
+}
+
+/* ============================================ */
+/* LIGHT THEME (overrides via data-theme)        */
+/* ============================================ */
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --border-color: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --primary: #4f46e5;
+  --primary-hover: #3730a3;
+  --primary-light: rgba(79, 70, 229, 0.08);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
+}
+
+/* ============================================ */
+/* OCEAN THEME                                   */
+/* ============================================ */
+[data-theme="ocean"] {
+  --bg-primary: #0a1628;
+  --bg-secondary: #0f2240;
+  --bg-tertiary: #152d55;
+  --border-color: rgba(56, 189, 248, 0.1);
+  --border-hover: rgba(56, 189, 248, 0.2);
+  --text-primary: #e0f0ff;
+  --text-secondary: #a0c8f0;
+  --text-muted: #6088b0;
+  --primary: #38bdf8;
+  --primary-hover: #0ea5e9;
+  --primary-light: rgba(56, 189, 248, 0.15);
+}
+
+/* ============================================ */
+/* DARK THEME (explicit, same as :root)          */
+/* ============================================ */
+[data-theme="dark"] {
+  --bg-primary: #0a0b10;
+  --bg-secondary: #12131a;
+  --bg-tertiary: #1b1c24;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: rgba(99, 102, 241, 0.15);
 }

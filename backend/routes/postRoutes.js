@@ -1,10 +1,13 @@
 import express from 'express';
+
+
 import {
   createPost,
   getAllPosts,
   likePost,
   commentPost,
-  deletePost
+  deletePost,
+  replyToComment
 } from '../controllers/postController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import upload from '../middlewares/uploadMiddleware.js';
@@ -23,5 +26,9 @@ router.route('/:postId/like')
 
 router.route('/:postId/comment')
   .post(protect, commentPost);
+
+// Reply to comment
+router.route('/:postId/comments/:commentId/reply')
+  .post(protect, replyToComment);
 
 export default router;

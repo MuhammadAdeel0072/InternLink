@@ -8,21 +8,38 @@ const populateAuthorDetails = async (posts) => {
   return await Promise.all(
     posts.map(async (post) => {
       const authorProfile = await Profile.findOne({ user: post.author }).select('avatar headline');
-      const commentsWithProfiles = await Promise.all(
-        post.comments.map(async (comment) => {
-          const commentProfile = await Profile.findOne({ user: comment.user }).select('avatar');
-          return {
-            _id: comment._id,
-            text: comment.text,
-            createdAt: comment.createdAt,
-            user: {
-              _id: comment.user._id,
-              name: comment.user.name,
-              avatar: commentProfile?.avatar || ''
-            }
-          };
-        })
-      );
+     const commentsWithProfiles = await Promise.all(
+  post.comments.map(async (comment) => {
+    const commentProfile = await Profile.findOne({ user: comment.user }).select('avatar');
+    const repliesWithProfiles = await Promise.all(
+      (comment.replies || []).map(async (reply) => {
+        const replyProfile = await Profile.findOne({ user: reply.user }).select('avatar');
+        return {
+          _id: reply._id,
+          text: reply.text,
+          createdAt: reply.createdAt,
+          user: {
+            _id: reply.user._id,
+            name: reply.user.name,
+            avatar: replyProfile?.avatar || ''
+          }
+        };
+      })
+    );
+    return {
+      _id: comment._id,
+      text: comment.text,
+      createdAt: comment.createdAt,
+      replies: repliesWithProfiles,
+      user: {
+        _id: comment.user._id,
+        name: comment.user.name,
+        avatar: commentProfile?.avatar || ''
+      }
+    };
+  })
+);
+        
 
       return {
         _id: post._id,
@@ -206,6 +223,34 @@ export const deletePost = async (req, res) => {
 
     await Post.findByIdAndDelete(req.params.postId);
     res.status(200).json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// @desc    Reply to a comment
+// @route   POST /api/posts/:postId/comments/:commentId/reply
+// @access  Private
+export const replyToComment = async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ message: 'Reply text is required' });
+
+    const post = await Post.findById(req.params.postId);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
+    comment.replies.push({ user: req.user._id, text });
+    await post.save();
+
+    const updatedPost = await Post.findById(post._id)
+      .populate('author', 'name email')
+      .populate('comments.user', 'name')
+      .populate('comments.replies.user', 'name');
+      
+    const formatted = await populateAuthorDetails([updatedPost]);
+    res.status(200).json(formatted[0]);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

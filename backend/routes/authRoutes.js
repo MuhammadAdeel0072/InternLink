@@ -7,6 +7,13 @@ import {
   loginUser,
   oAuthSuccess,
   getMe,
+  updateAccount,
+  changePassword,
+  updatePreferences,
+  getSessions,
+  logoutAllDevices,
+  deleteAccount,
+  disconnectProvider
 } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -48,5 +55,13 @@ router.get('/github/callback',
 
 // Get current user
 router.get('/me', protect, getMe);
+// Settings routes
+router.put('/account', protect, updateAccount);
+router.put('/change-password', protect, changePassword);
+router.put('/preferences', protect, updatePreferences);
+router.put('/disconnect-provider', protect, disconnectProvider);
+router.get('/sessions', protect, getSessions);
+router.post('/logout-all', protect, logoutAllDevices);
+router.delete('/account', protect, deleteAccount);
 
 export default router;

@@ -278,17 +278,22 @@ export const loginUser = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // Return flat structure for frontend compatibility
-    res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      token,
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar,
-      isVerified: user.isVerified
-    });
+  res.status(200).json({
+  success: true,
+  message: 'Login successful',
+  token,
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  avatar: user.avatar,
+  isVerified: user.isVerified,
+  username: user.username,
+  phone: user.phone,
+  googleId: user.googleId,
+  githubId: user.githubId,
+  preferences: user.preferences
+});
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
@@ -340,5 +345,191 @@ export const getMe = async (req, res) => {
       success: false,
       message: 'Server error fetching profile'
     });
+  }
+};
+
+// @desc    Update account settings (name, username, email, phone)
+// @route   PUT /api/auth/account
+// @access  Private
+export const updateAccount = async (req, res) => {
+  try {
+    const { name, username, email, phone } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    if (username) {
+      const existingUsername = await User.findOne({ username, _id: { $ne: user._id } });
+      if (existingUsername) {
+        return res.status(400).json({ success: false, message: 'Username already taken' });
+      }
+      user.username = username;
+    }
+    if (email && email !== user.email) {
+      const existingEmail = await User.findOne({ email, _id: { $ne: user._id } });
+      if (existingEmail) {
+        return res.status(400).json({ success: false, message: 'Email already in use' });
+      }
+      user.email = email;
+      user.isVerified = false;
+    }
+    if (phone !== undefined) user.phone = phone;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Account updated successfully',
+      data: {
+        _id: user._id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        isVerified: user.isVerified
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Change password
+// @route   PUT /api/auth/change-password
+// @access  Private
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id).select('+password');
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.authProvider !== 'local') {
+      return res.status(400).json({ success: false, message: 'OAuth users cannot change password' });
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update preferences (appearance, accessibility, privacy)
+// @route   PUT /api/auth/preferences
+// @access  Private
+export const updatePreferences = async (req, res) => {
+  try {
+    const { type, data } = req.body; // type: 'appearance', 'accessibility', 'privacy'
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (!user.preferences) {
+      user.preferences = {};
+    }
+
+    user.preferences[type] = { ...user.preferences[type], ...data };
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `${type} settings updated`,
+      data: user.preferences
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get login history & active sessions
+// @route   GET /api/auth/sessions
+// @access  Private
+export const getSessions = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select('activeSessions loginHistory');
+
+    res.status(200).json({
+      success: true,
+      data: {
+        activeSessions: user.activeSessions || [],
+        loginHistory: user.loginHistory || []
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Logout from all devices
+// @route   POST /api/auth/logout-all
+// @access  Private
+export const logoutAllDevices = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.activeSessions = [];
+    await user.save();
+
+    res.clearCookie('refreshToken');
+    res.status(200).json({ success: true, message: 'Logged out from all devices' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+// @desc    Delete account
+// @route   DELETE /api/auth/account
+// @access  Private
+export const deleteAccount = async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.user._id);
+    await Profile.findOneAndDelete({ user: req.user._id });
+    res.clearCookie('refreshToken');
+    res.status(200).json({ success: true, message: 'Account deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ✅ ADD THIS RIGHT HERE, AFTER deleteAccount
+// @desc    Disconnect OAuth provider
+// @route   PUT /api/auth/disconnect-provider
+// @access  Private
+export const disconnectProvider = async (req, res) => {
+  try {
+    const { provider } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (provider === 'google') user.googleId = undefined;
+    if (provider === 'github') user.githubId = undefined;
+    
+    await user.save();
+    res.status(200).json({ success: true, message: `${provider} disconnected` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
