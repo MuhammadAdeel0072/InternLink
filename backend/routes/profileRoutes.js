@@ -19,10 +19,18 @@ import {
   updateCertification,
   deleteCertification,
   updateSkills,
-  // ✅ New imports
   addPortfolioLink,
   updatePortfolioLink,
   deletePortfolioLink,
+  // ✅ Phase 2 imports
+  getSkillSuggestions,
+  updateSkillsEnhanced,
+  togglePinSkill,
+  reorderSkills,
+  deleteSkill,
+  addLanguage,
+  updateLanguage,
+  deleteLanguage,
 } from '../controllers/profileController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import upload from '../middlewares/uploadMiddleware.js';
@@ -39,7 +47,7 @@ router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
 router.post('/cover', protect, upload.single('cover'), uploadCover);
 router.post('/resume', protect, upload.single('resume'), uploadResume);
 
-// ✅ Portfolio Links
+// Portfolio Links
 router.post('/portfolio-links', protect, addPortfolioLink);
 router.put('/portfolio-links/:linkId', protect, updatePortfolioLink);
 router.delete('/portfolio-links/:linkId', protect, deletePortfolioLink);
@@ -64,7 +72,16 @@ router.post('/certifications', protect, addCertification);
 router.put('/certifications/:certId', protect, updateCertification);
 router.delete('/certifications/:certId', protect, deleteCertification);
 
-// Skills
-router.put('/skills', protect, updateSkills);
+// ✅ Phase 2: Enhanced Skills (replaces old single route)
+router.get('/skills/suggestions', getSkillSuggestions);  // Public - no protect
+router.put('/skills', protect, updateSkillsEnhanced);
+router.put('/skills/:skillId/pin', protect, togglePinSkill);
+router.put('/skills/reorder', protect, reorderSkills);
+router.delete('/skills/:skillId', protect, deleteSkill);
+
+// ✅ Phase 2: Languages
+router.post('/languages', protect, addLanguage);
+router.put('/languages/:langId', protect, updateLanguage);
+router.delete('/languages/:langId', protect, deleteLanguage);
 
 export default router;

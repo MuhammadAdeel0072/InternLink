@@ -478,3 +478,190 @@ export const deletePortfolioLink = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// =============================================
+// ✅ PHASE 2: Enhanced Skills Management
+// =============================================
+
+// Predefined skill suggestions
+const PREDEFINED_SKILLS = [
+  'JavaScript', 'Python', 'Java', 'C++', 'TypeScript', 'Ruby', 'Go', 'Rust', 'PHP', 'Swift', 'Kotlin',
+  'React', 'Angular', 'Vue.js', 'Next.js', 'Node.js', 'Express', 'Django', 'Flask', 'Spring Boot',
+  'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'GraphQL', 'REST API',
+  'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'CI/CD', 'Git',
+  'HTML', 'CSS', 'SASS', 'Tailwind CSS', 'Bootstrap',
+  'Machine Learning', 'Data Science', 'TensorFlow', 'PyTorch', 'NLP',
+  'Figma', 'Adobe XD', 'UI/UX Design', 'Product Management', 'Agile',
+];
+
+// @desc    Get skill suggestions
+// @route   GET /api/profile/skills/suggestions
+// @access  Public
+export const getSkillSuggestions = async (req, res) => {
+  try {
+    const { search } = req.query;
+    if (!search) return res.status(200).json(PREDEFINED_SKILLS.slice(0, 20));
+    
+    const filtered = PREDEFINED_SKILLS.filter(skill =>
+      skill.toLowerCase().includes(search.toLowerCase())
+    );
+    res.status(200).json(filtered);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update skills with proficiency (replaces old skills array)
+// @route   PUT /api/profile/skills
+// @access  Private
+export const updateSkillsEnhanced = async (req, res) => {
+  try {
+    const { skills } = req.body; // Array of { name, proficiency, pinned, order }
+    
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) return res.status(404).json({ message: 'Profile not found' });
+
+    profile.skills = skills.map((skill, index) => ({
+      name: skill.name || skill,
+      proficiency: skill.proficiency || 'intermediate',
+      pinned: skill.pinned || false,
+      order: skill.order || index
+    }));
+
+    await profile.save();
+    
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    res.status(200).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Toggle pin a skill
+// @route   PUT /api/profile/skills/:skillId/pin
+// @access  Private
+export const togglePinSkill = async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) return res.status(404).json({ message: 'Profile not found' });
+
+    const skill = profile.skills.id(req.params.skillId);
+    if (!skill) return res.status(404).json({ message: 'Skill not found' });
+
+    skill.pinned = !skill.pinned;
+    await profile.save();
+    
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    res.status(200).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Reorder skills
+// @route   PUT /api/profile/skills/reorder
+// @access  Private
+export const reorderSkills = async (req, res) => {
+  try {
+    const { skillIds } = req.body; // Array of skill IDs in new order
+    
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) return res.status(404).json({ message: 'Profile not found' });
+
+    skillIds.forEach((id, index) => {
+      const skill = profile.skills.id(id);
+      if (skill) skill.order = index;
+    });
+
+    await profile.save();
+    
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    res.status(200).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete a single skill
+// @route   DELETE /api/profile/skills/:skillId
+// @access  Private
+export const deleteSkill = async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) return res.status(404).json({ message: 'Profile not found' });
+
+    profile.skills = profile.skills.filter(s => s._id.toString() !== req.params.skillId);
+    await profile.save();
+    
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    res.status(200).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// =============================================
+// ✅ PHASE 2: Languages CRUD
+// =============================================
+
+// @desc    Add language
+// @route   POST /api/profile/languages
+// @access  Private
+export const addLanguage = async (req, res) => {
+  try {
+    const { name, proficiency } = req.body;
+    if (!name) return res.status(400).json({ message: 'Language name is required' });
+
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) return res.status(404).json({ message: 'Profile not found' });
+
+    profile.languages.push({ name, proficiency: proficiency || 'conversational' });
+    await profile.save();
+    
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    res.status(200).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update language
+// @route   PUT /api/profile/languages/:langId
+// @access  Private
+export const updateLanguage = async (req, res) => {
+  try {
+    const { name, proficiency } = req.body;
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) return res.status(404).json({ message: 'Profile not found' });
+
+    const lang = profile.languages.id(req.params.langId);
+    if (!lang) return res.status(404).json({ message: 'Language not found' });
+
+    if (name) lang.name = name;
+    if (proficiency) lang.proficiency = proficiency;
+    await profile.save();
+    
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    res.status(200).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete language
+// @route   DELETE /api/profile/languages/:langId
+// @access  Private
+export const deleteLanguage = async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user._id });
+    if (!profile) return res.status(404).json({ message: 'Profile not found' });
+
+    profile.languages = profile.languages.filter(l => l._id.toString() !== req.params.langId);
+    await profile.save();
+    
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    res.status(200).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

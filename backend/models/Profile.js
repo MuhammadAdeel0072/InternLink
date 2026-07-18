@@ -47,7 +47,29 @@ const certificationSchema = new mongoose.Schema({
   credentialUrl: { type: String }
 });
 
-// ✅ NEW: Portfolio Links Schema
+// ✅ NEW: Skill with proficiency
+const skillSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  proficiency: {
+    type: String,
+    enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+    default: 'intermediate'
+  },
+  pinned: { type: Boolean, default: false },
+  order: { type: Number, default: 0 }
+});
+
+// ✅ NEW: Language schema
+const languageSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  proficiency: {
+    type: String,
+    enum: ['basic', 'conversational', 'professional', 'native'],
+    default: 'conversational'
+  }
+});
+
+// Portfolio Links Schema
 const portfolioLinkSchema = new mongoose.Schema({
   platform: {
     type: String,
@@ -55,7 +77,7 @@ const portfolioLinkSchema = new mongoose.Schema({
     required: true
   },
   url: { type: String, required: true },
-  label: { type: String } // Custom label for 'other' platform
+  label: { type: String }
 });
 
 const profileSchema = new mongoose.Schema(
@@ -70,7 +92,7 @@ const profileSchema = new mongoose.Schema(
     avatar: { type: String, default: '' },
     cover: { type: String, default: '' },
 
-    // ✅ FR-2.1: Basic Information
+    // Basic Information
     headline: { type: String, default: '' },
     currentStatus: {
       type: String,
@@ -82,39 +104,43 @@ const profileSchema = new mongoose.Schema(
     major: { type: String, default: '' },
     graduationYear: { type: Number },
 
-    // ✅ FR-2.4: Professional Summary
+    // Professional Summary
     summary: {
       type: String,
       default: '',
       maxlength: [1000, 'Summary cannot exceed 1000 characters']
     },
 
-    // ✅ FR-2.5: Contact Information
+    // Contact Information
     email: { type: String, default: '' },
     phone: { type: String, default: '' },
     website: { type: String, default: '' },
 
-    // ✅ FR-2.6: Location
+    // Location
     location: {
       country: { type: String, default: '' },
       city: { type: String, default: '' },
       postalCode: { type: String, default: '' }
     },
-    // Keep old location string for backward compatibility
     locationString: { type: String, default: '' },
 
-    // ✅ FR-2.7: Portfolio Links
+    // Portfolio Links
     portfolioLinks: [portfolioLinkSchema],
 
     // Resume
     resume: { type: String, default: '' },
 
-    // Legacy social links (keep for backward compatibility)
+    // Legacy social links
     github: { type: String, default: '' },
     linkedin: { type: String, default: '' },
 
-    // Skills
-    skills: [{ type: String }],
+    // ✅ UPDATED: Skills with proficiency
+    skills: [skillSchema],
+    // Keep old simple skills for backward compatibility
+    legacySkills: [{ type: String }],
+
+    // ✅ NEW: Languages
+    languages: [languageSchema],
 
     // Sections
     education: [educationSchema],
@@ -122,7 +148,7 @@ const profileSchema = new mongoose.Schema(
     projects: [projectSchema],
     certifications: [certificationSchema],
 
-    // ✅ FR-2.9: Visibility
+    // Visibility
     visibility: {
       type: String,
       enum: ['public', 'connections-only', 'recruiters-only', 'private'],
@@ -134,48 +160,28 @@ const profileSchema = new mongoose.Schema(
   }
 );
 
-// ✅ FR-2.10: Virtual for profile completion percentage
+// Virtual for profile completion percentage
 profileSchema.virtual('completionPercentage').get(function() {
   const checks = [
-    // Basic Info (4 checks)
     { weight: 10, passed: !!(this.headline && this.headline.length > 0) },
     { weight: 5, passed: !!(this.currentStatus && this.currentStatus.length > 0) },
     { weight: 5, passed: !!(this.university && this.university.length > 0) },
     { weight: 5, passed: !!(this.major && this.major.length > 0) },
-    
-    // Photo (10 points)
     { weight: 10, passed: !!(this.avatar && this.avatar.length > 0) },
-    
-    // About (10 points)
     { weight: 10, passed: !!(this.summary && this.summary.length > 0) },
-    
-    // Contact (5 points)
     { weight: 5, passed: !!(this.email || this.phone || this.website) },
-    
-    // Location (5 points)
     { weight: 5, passed: !!(this.location?.country || this.locationString) },
-    
-    // Portfolio (5 points)
     { weight: 5, passed: !!(this.portfolioLinks?.length > 0 || this.github || this.linkedin) },
-    
-    // Resume (10 points)
     { weight: 10, passed: !!(this.resume && this.resume.length > 0) },
-    
-    // Skills (10 points)
     { weight: 10, passed: !!(this.skills && this.skills.length > 0) },
-    
-    // Education (10 points)
+    { weight: 5, passed: !!(this.languages && this.languages.length > 0) },
     { weight: 10, passed: !!(this.education && this.education.length > 0) },
-    
-    // Experience (10 points)
-    { weight: 10, passed: !!(this.experience && this.experience.length > 0) },
-    
-    // Projects (5 points)
+    { weight: 5, passed: !!(this.experience && this.experience.length > 0) },
     { weight: 5, passed: !!(this.projects && this.projects.length > 0) },
   ];
   
   const total = checks.reduce((sum, check) => sum + (check.passed ? check.weight : 0), 0);
-  return total;
+  return Math.min(total, 100);
 });
 
 // Ensure virtuals are included in JSON output

@@ -6,6 +6,7 @@ import api from '../services/api';
 import Loader from '../components/Loader';
 import Modal from '../components/Modal';
 import InputField from '../components/InputField';
+import SkillSuggestions from '../components/SkillSuggestions';
 import {
   Camera,
   MapPin,
@@ -29,7 +30,14 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const isOwnProfile = !id || id === 'me' || id === user?._id;
 
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState({
+  skills: [],
+  languages: [],
+  experience: [],
+  education: [],
+  projects: [],
+  certifications: []
+});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -136,7 +144,7 @@ const ProfilePage = () => {
   linkedin: res.data.linkedin || '',
   visibility: res.data.visibility || 'public'
 });
-      setSkillsForm(res.data.skills?.join(', ') || '');
+      // setSkillsForm(res.data.skills?.join(', ') || '');
       setError(null);
     } catch (err) {
       console.error(err);
@@ -262,19 +270,19 @@ const handleBioSubmit = async (e) => {
   };
 
   // Update Skills
-  const handleSkillsSubmit = async (e) => {
-    e.preventDefault();
-    setModalLoading(true);
-    try {
-      const res = await api.put('/profile/skills', { skills: skillsForm });
-      setProfile(res.data);
-      setActiveModal(null);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setModalLoading(false);
-    }
-  };
+  // const handleSkillsSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setModalLoading(true);
+  //   try {
+  //     const res = await api.put('/profile/skills', { skills: skillsForm });
+  //     setProfile(res.data);
+  //     setActiveModal(null);
+  //   } catch (err) {
+  //     alert(err.message);
+  //   } finally {
+  //     setModalLoading(false);
+  //   }
+  // };
 
   // Add or Edit Projects
   const handleProjSubmit = async (e) => {
@@ -479,6 +487,118 @@ const handleBioSubmit = async (e) => {
     setActiveModal('certification');
   };
 
+
+  // Add Skill Helper Function
+const handleAddSkill = async (name, proficiency = 'intermediate') => {
+  try {
+    // Check for duplicates
+    const existingSkill = profile.skills?.find(s => {
+      const skillName = typeof s === 'object' ? s.name : s;
+      return skillName.toLowerCase() === name.toLowerCase();
+    });
+    
+    if (existingSkill) {
+      alert(`${name} already exists in your skills!`);
+      return;
+    }
+
+    const newSkill = {
+      name: name,
+      proficiency: proficiency,
+      pinned: false,
+      order: profile.skills?.length || 0
+    };
+
+    const updatedSkills = [...(profile.skills || []).map(s => 
+      typeof s === 'object' ? s : { name: s, proficiency: 'intermediate', pinned: false, order: 0 }
+    ), newSkill];
+
+    const res = await api.put('/profile/skills', { skills: updatedSkills });
+    setProfile(res.data);
+  } catch (err) {
+    alert(err.response?.data?.message || err.message);
+  }
+};
+
+ useEffect(() => {
+    const fetchSuggestions = async (search) => {
+      const dropdown = document.getElementById('skill-suggestions-dropdown');
+      if (!dropdown) return;
+
+      try {
+        const res = await api.get(`/profile/skills/suggestions?search=${search}`);
+        const existingNames = (profile.skills || []).map(s => 
+          typeof s === 'object' ? s.name?.toLowerCase() : s?.toLowerCase()
+        );
+        const filtered = (res.data || []).filter(s => !existingNames.includes(s.toLowerCase()));
+
+        if (filtered.length > 0) {
+          dropdown.innerHTML = filtered.map(skill => `
+            <div 
+              class="skill-suggestion-item"
+              style="
+                padding: 10px 14px;
+                cursor: pointer;
+                font-size: 0.9rem;
+                color: var(--text-primary);
+                border-bottom: 1px solid var(--border-color);
+                transition: background-color 0.15s;
+              "
+              onmouseenter="this.style.backgroundColor='var(--bg-tertiary)'"
+              onmouseleave="this.style.backgroundColor='transparent'"
+              data-skill="${skill}"
+            >${skill}</div>
+          `).join('');
+          dropdown.style.display = 'block';
+          
+          dropdown.querySelectorAll('.skill-suggestion-item').forEach(item => {
+            item.addEventListener('click', () => {
+              const skillName = item.getAttribute('data-skill');
+              const proficiency = document.getElementById('new-skill-proficiency')?.value || 'intermediate';
+              handleAddSkill(skillName, proficiency);
+              document.getElementById('skill-search-input').value = '';
+              dropdown.style.display = 'none';
+            });
+          });
+        } else {
+          dropdown.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Failed to fetch suggestions:', err);
+        dropdown.style.display = 'none';
+      }
+    };
+
+    const handleSearch = (e) => {
+      const search = e.detail;
+      if (search.length >= 1) {
+        fetchSuggestions(search);
+      } else {
+        const dropdown = document.getElementById('skill-suggestions-dropdown');
+        if (dropdown) dropdown.style.display = 'none';
+      }
+    };
+
+    document.addEventListener('skill-search', handleSearch);
+
+    const handleClickOutside = (e) => {
+      const dropdown = document.getElementById('skill-suggestions-dropdown');
+      const searchInput = document.getElementById('skill-search-input');
+      if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput) {
+        dropdown.style.display = 'none';
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('skill-search', handleSearch);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profile]);
+
+  // ... existing loading check ...
+
   if (loading && !profile) return <Loader fullPage />;
   if (error) return <div style={{ color: 'var(--danger)', textAlign: 'center', padding: '40px' }}>{error}</div>;
 
@@ -508,181 +628,305 @@ const handleBioSubmit = async (e) => {
         style={{ display: 'none' }}
       />
 
-      {/* Profile Header Banner Block */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: '24px', position: 'relative' }}>
-        {/* Cover Photo */}
-        <div
-          style={{
-            height: '200px',
-            backgroundColor: 'var(--bg-tertiary)',
-            backgroundImage: profile.cover ? `url(${profile.cover})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            position: 'relative'
-          }}
-        >
-          {isOwnProfile && (
-            <button
-              onClick={() => coverInputRef.current.click()}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                borderRadius: 'var(--radius-full)',
-                padding: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                color: '#fff'
-              }}
-            >
-              <Camera size={16} />
-            </button>
+     {/* Profile Header Banner Block */}
+<div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: '24px', borderRadius: '12px' }}>
+  {/* Cover Photo */}
+  <div
+    style={{
+      height: '180px',
+      backgroundColor: profile.cover ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      backgroundImage: profile.cover ? `url(${profile.cover})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      position: 'relative'
+    }}
+  >
+    {isOwnProfile && (
+      <button
+        onClick={() => coverInputRef.current.click()}
+        style={{
+          position: 'absolute',
+          top: '12px',
+          right: '12px',
+          backgroundColor: 'rgba(255,255,255,0.2)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          borderRadius: '8px',
+          padding: '6px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          color: '#fff',
+          fontSize: '0.8rem',
+          cursor: 'pointer',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+      >
+        <Camera size={14} /> Change Cover
+      </button>
+    )}
+  </div>
+
+  {/* Profile Info Section */}
+  <div style={{ padding: '0 24px 24px', position: 'relative', marginTop: '-30px' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '20px', flexWrap: 'wrap' }}>
+      {/* Avatar */}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        {profile.avatar ? (
+          <img
+            src={profile.avatar}
+            alt={profile.user?.name}
+            style={{
+              width: '110px',
+              height: '110px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '4px solid var(--bg-primary)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              backgroundColor: 'var(--bg-primary)'
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '110px',
+              height: '110px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--primary)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 700,
+              fontSize: '2.5rem',
+              border: '4px solid var(--bg-primary)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+            }}
+          >
+            {profile.user?.name?.charAt(0).toUpperCase() || '?'}
+          </div>
+        )}
+        {isOwnProfile && (
+          <button
+            onClick={() => avatarInputRef.current.click()}
+            style={{
+              position: 'absolute',
+              bottom: '2px',
+              right: '2px',
+              backgroundColor: 'var(--bg-primary)',
+              border: '2px solid var(--border-color)',
+              borderRadius: '50%',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-primary)'}
+          >
+            <Camera size={14} style={{ color: 'var(--text-secondary)' }} />
+          </button>
+        )}
+      </div>
+
+      {/* Name and Details */}
+      <div style={{ flex: 1, minWidth: '200px', paddingBottom: '4px'}}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
+          {profile.user?.name || 'Your Name'}
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '4px 0 8px 0' }}>
+          {profile.headline || 'Add a professional headline'}
+        </p>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {(profile.location?.city || profile.location?.country) && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              <MapPin size={14} />
+              {[profile.location?.city, profile.location?.country].filter(Boolean).join(', ')}
+            </span>
+          )}
+          {profile.university && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              <GraduationCap size={14} />
+              {profile.university}
+            </span>
           )}
         </div>
-
-        {/* Profile Avatar & Primary Info */}
-        <div style={{ padding: '24px', position: 'relative', marginTop: '-60px', display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-end' }}>
-          <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-            {profile.avatar ? (
-              <img
-                src={profile.avatar}
-                alt={profile.user?.name}
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '4px solid var(--bg-secondary)',
-                  boxShadow: 'var(--shadow-md)'
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--primary-light)',
-                  color: 'var(--primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 800,
-                  fontSize: '2.5rem',
-                  border: '4px solid var(--bg-secondary)',
-                  boxShadow: 'var(--shadow-md)'
-                }}
-              >
-                {profile.user?.name?.charAt(0).toUpperCase()}
-              </div>
-            )}
-            {isOwnProfile && (
-              <button
-                onClick={() => avatarInputRef.current.click()}
-                style={{
-                  position: 'absolute',
-                  bottom: '4px',
-                  right: '4px',
-                  backgroundColor: 'var(--primary)',
-                  color: '#fff',
-                  borderRadius: '50%',
-                  padding: '6px',
-                  display: 'flex',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                <Camera size={14} />
-              </button>
-            )}
-          </div>
-
-          <div style={{ flex: 1, minWidth: '250px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>{profile.user?.name}</h1>
-                <p style={{ color: 'var(--text-secondary)', fontWeight: 500, fontSize: '1rem', marginTop: '2px' }}>
-                  {profile.headline || 'No professional headline set yet'}
-                </p>
-                <div style={{ display: 'flex', gap: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px', flexWrap: 'wrap' }}>
-                {(profile.location?.city || profile.location?.country || profile.locationString) && (
-  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-    <MapPin size={14} /> 
-    {typeof profile.location === 'string' 
-      ? profile.location 
-      : [profile.location?.city, profile.location?.country].filter(Boolean).join(', ') || profile.locationString}
-  </span>
-)}
-                  {profile.visibility && (
-                    <span className="badge badge-info" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
-                      {profile.visibility} profile
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {isOwnProfile ? (
-                <button
-                  onClick={() => setActiveModal('bio')}
-                  className="btn btn-secondary"
-                  style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Edit2 size={14} /> Edit Bio
-                </button>
-              ) : null}
-            </div>
-
-            {/* Social and Resume Links */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
-              {profile.website && (
-                <a href={profile.website} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--primary)' }}>
-                  <Globe size={14} /> Website <ExternalLink size={12} />
-                </a>
-              )}
-              {profile.github && (
-                <a href={profile.github} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  <Github size={14} /> GitHub <ExternalLink size={12} />
-                </a>
-              )}
-              {profile.linkedin && (
-                <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--primary)' }}>
-                  <Linkedin size={14} /> LinkedIn <ExternalLink size={12} />
-                </a>
-              )}
-              
-              {profile.resume ? (
-                <a
-                  href={profile.resume}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                  style={{ padding: '6px 12px', fontSize: '0.8rem', marginLeft: 'auto' }}
-                >
-                  <FileText size={14} /> View Resume
-                </a>
-              ) : isOwnProfile ? (
-                <button
-                  onClick={() => resumeInputRef.current.click()}
-                  className="btn btn-secondary"
-                  style={{ padding: '6px 12px', fontSize: '0.8rem', marginLeft: 'auto' }}
-                >
-                  <Plus size={14} /> Upload Resume (PDF)
-                </button>
-              ) : null}
-
-              {isOwnProfile && profile.resume && (
-                <button
-                  onClick={() => resumeInputRef.current.click()}
-                  className="btn btn-secondary"
-                  style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                >
-                  Update
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
+
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', paddingBottom: '4px' }}>
+        {isOwnProfile && (
+          <button
+            onClick={() => setActiveModal('bio')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--bg-primary)',
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-primary)'}
+          >
+            <Edit2 size={14} /> Edit Profile
+          </button>
+        )}
+      </div>
+    </div>
+
+    {/* Links Section */}
+    <div style={{ 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: '12px', 
+      marginTop: '20px',
+      paddingTop: '16px', 
+      borderTop: '1px solid var(--border-color)',
+      alignItems: 'center'
+    }}>
+      {/* Social Links */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: 1 }}>
+        {profile.website && (
+          <a
+            href={profile.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
+              fontSize: '0.8rem',
+              textDecoration: 'none',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-light)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+          >
+            <Globe size={14} /> Website
+          </a>
+        )}
+        {profile.github && (
+          <a
+            href={profile.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
+              fontSize: '0.8rem',
+              textDecoration: 'none',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-light)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+          >
+            <Github size={14} /> GitHub
+          </a>
+        )}
+        {profile.linkedin && (
+          <a
+            href={profile.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
+              fontSize: '0.8rem',
+              textDecoration: 'none',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-light)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+          >
+            <Linkedin size={14} /> LinkedIn
+          </a>
+        )}
+      </div>
+
+      {/* Resume Button */}
+      <div style={{ marginLeft: 'auto' }}>
+        {profile.resume ? (
+          <a
+            href={profile.resume}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              backgroundColor: 'var(--primary)',
+              color: '#fff',
+              fontSize: '0.85rem',
+              fontWeight: 500,
+              textDecoration: 'none',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          >
+            <FileText size={14} /> View Resume
+          </a>
+        ) : isOwnProfile ? (
+          <button
+            onClick={() => resumeInputRef.current.click()}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px dashed var(--border-color)',
+              backgroundColor: 'transparent',
+              color: 'var(--text-secondary)',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--primary)';
+              e.currentTarget.style.color = 'var(--primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-color)';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
+          >
+            <Plus size={14} /> Upload Resume
+          </button>
+        ) : null}
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Summary / About Section */}
       <div className="card" style={{ marginBottom: '24px' }}>
@@ -692,45 +936,125 @@ const handleBioSubmit = async (e) => {
         </p>
       </div>
 
-      {/* Skills Section */}
-      <div className="card" style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-display)' }}>Skills</h3>
+    {/* ✅ Enhanced Skills Section */}
+<div className="card" style={{ marginBottom: '24px' }}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+    <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-display)' }}>Skills</h3>
+    {isOwnProfile && (
+      <button
+        onClick={() => setActiveModal('skills')}
+        className="btn btn-secondary"
+        style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+      >
+        Manage
+      </button>
+    )}
+  </div>
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+    {profile.skills && profile.skills.length > 0 ? (
+      [...profile.skills]
+        .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+        .map((skill, index) => {
+          const isObject = typeof skill === 'object';
+          const name = isObject ? skill.name : skill;
+          const proficiency = isObject ? skill.proficiency : 'intermediate';
+          const pinned = isObject ? skill.pinned : false;
+          const stars = { beginner: 1, intermediate: 2, advanced: 3, expert: 4 }[proficiency] || 2;
+          
+          return (
+            <span
+              key={skill._id || index}
+              style={{
+                backgroundColor: pinned ? 'var(--primary-light)' : 'var(--bg-tertiary)',
+                color: pinned ? 'var(--primary)' : 'var(--text-primary)',
+                border: `1px solid ${pinned ? 'var(--primary)' : 'var(--border-color)'}`,
+                padding: '8px 14px',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.85rem',
+                fontWeight: pinned ? 600 : 400,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              {pinned && <span style={{ fontSize: '0.7rem' }}>📌</span>}
+              <span>{name}</span>
+              <span style={{ fontSize: '0.7rem', letterSpacing: '1px', opacity: 0.7 }}>
+                {'⭐'.repeat(stars)}{'☆'.repeat(4 - stars)}
+              </span>
+            </span>
+          );
+        })
+    ) : (
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No skills added yet.</p>
+    )}
+  </div>
+</div>
+
+{/* ✅ NEW: Languages Section */}
+<div className="card" style={{ marginBottom: '24px' }}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+    <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-display)' }}>Languages</h3>
+    {isOwnProfile && (
+      <button
+        onClick={() => setActiveModal('language')}
+        className="btn btn-secondary"
+        style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+      >
+        <Plus size={14} /> Add
+      </button>
+    )}
+  </div>
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+    {profile.languages && profile.languages.length > 0 ? (
+      profile.languages.map((lang) => (
+        <span
+          key={lang._id}
+          style={{
+            backgroundColor: 'var(--bg-tertiary)',
+            border: '1px solid var(--border-color)',
+            padding: '8px 14px',
+            borderRadius: 'var(--radius-full)',
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <span>{lang.name}</span>
+          <span style={{
+            fontSize: '0.65rem',
+            padding: '2px 8px',
+            borderRadius: 'var(--radius-full)',
+            backgroundColor: 'var(--primary-light)',
+            color: 'var(--primary)',
+            fontWeight: 600,
+          }}>
+            {lang.proficiency}
+          </span>
           {isOwnProfile && (
             <button
-              onClick={() => {
-                setSkillsForm(profile.skills?.join(', ') || '');
-                setActiveModal('skills');
+              onClick={async () => {
+                if (!window.confirm(`Remove ${lang.name}?`)) return;
+                try {
+                  const res = await api.delete(`/profile/languages/${lang._id}`);
+                  setProfile(res.data);
+                } catch (err) {
+                  alert(err.message);
+                }
               }}
-              className="btn btn-secondary"
-              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+              style={{ color: 'var(--danger)', padding: '0', display: 'flex', marginLeft: '4px' }}
             >
-              Manage
+              <Trash2 size={12} />
             </button>
           )}
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {profile.skills && profile.skills.length > 0 ? (
-            profile.skills.map((skill, index) => (
-              <span
-                key={index}
-                className="badge"
-                style={{
-                  backgroundColor: 'var(--bg-tertiary)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border-color)',
-                  padding: '6px 12px',
-                  fontSize: '0.85rem'
-                }}
-              >
-                {skill}
-              </span>
-            ))
-          ) : (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No skills added yet.</p>
-          )}
-        </div>
-      </div>
+        </span>
+      ))
+    ) : (
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No languages added yet.</p>
+    )}
+  </div>
+</div>
 
       {/* Experience Timeline Section */}
       <div className="card" style={{ marginBottom: '24px' }}>
@@ -1006,162 +1330,364 @@ const handleBioSubmit = async (e) => {
 
       {/* --- MODALS BLOCK --- */}
 
-      {/* Bio / Details Modal */}
-      <Modal
-        isOpen={activeModal === 'bio'}
-        onClose={() => setActiveModal(null)}
-        title="Edit Profile Information"
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleBioSubmit} disabled={modalLoading}>
-              {modalLoading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </>
-        }
+     {/* ✅ Enhanced Skills Modal */}
+<Modal
+  isOpen={activeModal === 'skills'}
+  onClose={() => setActiveModal(null)}
+  title="Manage Skills"
+  footer={
+    <>
+      <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Done</button>
+    </>
+  }
+>
+  <div style={{ minHeight: '400px' }}>
+    {/* Add Skill Section */}
+    <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--border-color)' }}>
+      <label className="form-label" style={{ marginBottom: '8px', display: 'block' }}>Add a Skill</label>
+      
+      {/* Search Input */}
+      <div style={{ position: 'relative', marginBottom: '12px' }}>
+        <input
+          id="skill-search-input"
+          type="text"
+          className="form-input"
+          placeholder="Search or type a skill name..."
+          style={{ width: '100%' }}
+          onChange={(e) => {
+            const searchValue = e.target.value;
+            // Trigger suggestion search
+            const event = new CustomEvent('skill-search', { detail: searchValue });
+            document.dispatchEvent(event);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const name = e.target.value.trim();
+              if (!name) return;
+              
+              const proficiencySelect = document.getElementById('new-skill-proficiency');
+              const proficiency = proficiencySelect?.value || 'intermediate';
+              
+              handleAddSkill(name, proficiency);
+              e.target.value = '';
+            }
+          }}
+        />
+        
+        {/* Suggestions Dropdown */}
+        <div 
+          id="skill-suggestions-dropdown"
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            backgroundColor: 'var(--bg-primary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '0 0 8px 8px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            zIndex: 1000,
+            display: 'none',
+            boxShadow: 'var(--shadow-lg)'
+          }}
+        />
+      </div>
+
+      {/* Proficiency Selector */}
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+        <label className="form-label" style={{ margin: 0, whiteSpace: 'nowrap' }}>Proficiency:</label>
+        <select 
+          id="new-skill-proficiency" 
+          className="form-input"
+          style={{ width: 'auto', flex: 1 }}
+          defaultValue="intermediate"
+        >
+          <option value="beginner">⭐ Beginner</option>
+          <option value="intermediate">⭐⭐ Intermediate</option>
+          <option value="advanced">⭐⭐⭐ Advanced</option>
+          <option value="expert">⭐⭐⭐⭐ Expert</option>
+        </select>
+      </div>
+
+      {/* Add Button */}
+      <button
+        className="btn btn-primary"
+        style={{ width: '100%', padding: '10px' }}
+        onClick={() => {
+          const input = document.getElementById('skill-search-input');
+          const name = input?.value.trim();
+          if (!name) {
+            alert('Please enter a skill name');
+            return;
+          }
+          const proficiency = document.getElementById('new-skill-proficiency')?.value || 'intermediate';
+          handleAddSkill(name, proficiency);
+          input.value = '';
+          input.focus();
+        }}
       >
-        <form onSubmit={handleBioSubmit}>
-          <InputField
-            label="Professional Headline"
-            name="headline"
-            placeholder="Computer Science Student | Frontend Developer Intern"
-            value={bioForm.headline}
-            onChange={(e) => setBioForm({ ...bioForm, headline: e.target.value })}
-            required
-          />
-          <InputField
-  label="Current Status"
-  name="currentStatus"
-  type="select"
-  value={bioForm.currentStatus}
-  onChange={(e) => setBioForm({ ...bioForm, currentStatus: e.target.value })}
-  options={[
-    { value: '', label: 'Select status...' },
-    { value: 'student', label: 'Student' },
-    { value: 'graduate', label: 'Graduate' },
-    { value: 'looking-internship', label: 'Looking for Internship' },
-    { value: 'looking-job', label: 'Looking for Job' },
-    { value: 'employed', label: 'Employed' }
-  ]}
-/>
+        <Plus size={16} /> Add Skill
+      </button>
+    </div>
 
-<InputField
-  label="University / College"
-  name="university"
-  placeholder="Stanford University"
-  value={bioForm.university}
-  onChange={(e) => setBioForm({ ...bioForm, university: e.target.value })}
-/>
+    {/* Current Skills List */}
+    <div>
+      <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>
+        Your Skills ({profile.skills?.length || 0})
+      </label>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+        {profile.skills && profile.skills.length > 0 ? (
+          [...profile.skills]
+            .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (a.order || 0) - (b.order || 0))
+            .map((skill) => {
+              const isObject = typeof skill === 'object';
+              const skillId = isObject ? skill._id : skill;
+              const name = isObject ? skill.name : skill;
+              const proficiency = isObject ? (skill.proficiency || 'intermediate') : 'intermediate';
+              const pinned = isObject ? (skill.pinned || false) : false;
+              
+              return (
+                <div 
+                  key={skillId} 
+                  style={{
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    padding: '12px', 
+                    backgroundColor: pinned ? 'var(--primary-light)' : 'var(--bg-tertiary)',
+                    borderRadius: '8px', 
+                    border: `1px solid ${pinned ? 'var(--primary)' : 'var(--border-color)'}`,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    {pinned && <span style={{ fontSize: '1rem' }}>📌</span>}
+                    <span style={{ fontWeight: 600, fontSize: '0.95rem', minWidth: '80px' }}>{name}</span>
+                    
+                    <select
+                      value={proficiency}
+                      onChange={async (e) => {
+                        const updated = (profile.skills || []).map(s => {
+                          const sId = typeof s === 'object' ? s._id : s;
+                          const sName = typeof s === 'object' ? s.name : s;
+                          if ((typeof skill === 'object' && sId === skill._id) || sName === name) {
+                            return typeof s === 'object' 
+                              ? { ...s, proficiency: e.target.value }
+                              : { name: s, proficiency: e.target.value };
+                          }
+                          return s;
+                        });
+                        try {
+                          const res = await api.put('/profile/skills', { skills: updated });
+                          setProfile(res.data);
+                        } catch (err) {
+                          alert(err.message);
+                        }
+                      }}
+                      style={{
+                        padding: '4px 8px', 
+                        fontSize: '0.8rem', 
+                        borderRadius: '6px',
+                        backgroundColor: 'var(--bg-secondary)', 
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                      <option value="expert">Expert</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await api.put(`/profile/skills/${skillId}/pin`);
+                          setProfile(res.data);
+                        } catch (err) { 
+                          alert(err.message); 
+                        }
+                      }}
+                      style={{ 
+                        color: pinned ? 'var(--primary)' : 'var(--text-muted)', 
+                        padding: '6px',
+                        fontSize: '1.1rem',
+                        cursor: 'pointer',
+                        border: 'none',
+                        background: 'none'
+                      }}
+                      title={pinned ? 'Unpin skill' : 'Pin to top'}
+                    >
+                      📌
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm(`Remove "${name}" from skills?`)) return;
+                        try {
+                          const res = await api.delete(`/profile/skills/${skillId}`);
+                          setProfile(res.data);
+                        } catch (err) { 
+                          alert(err.message); 
+                        }
+                      }}
+                      style={{ 
+                        color: 'var(--danger)', 
+                        padding: '6px',
+                        cursor: 'pointer',
+                        border: 'none',
+                        background: 'none'
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+        ) : (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '40px 20px', 
+            color: 'var(--text-muted)',
+            backgroundColor: 'var(--bg-tertiary)',
+            borderRadius: '8px'
+          }}>
+            <p style={{ fontSize: '0.95rem', marginBottom: '8px' }}>No skills added yet</p>
+            <p style={{ fontSize: '0.85rem' }}>Use the search above to add your first skill</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</Modal>
 
-<InputField
-  label="Degree"
-  name="degree"
-  placeholder="Bachelor of Science"
-  value={bioForm.degree}
-  onChange={(e) => setBioForm({ ...bioForm, degree: e.target.value })}
-/>
+{/* Bio / Edit Profile Modal */}
+<Modal
+  isOpen={activeModal === 'bio'}
+  onClose={() => setActiveModal(null)}
+  title="Edit Profile"
+  footer={
+    <>
+      <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
+      <button className="btn btn-primary" onClick={handleBioSubmit} disabled={modalLoading}>
+        {modalLoading ? 'Saving...' : 'Save'}
+      </button>
+    </>
+  }
+>
+  <form onSubmit={handleBioSubmit} style={{ overflowY: 'auto', paddingRight: '8px' }}>
+    <InputField
+      label="Professional Headline"
+      name="headline"
+      placeholder="Software Engineer | CS Student"
+      value={bioForm.headline}
+      onChange={(e) => setBioForm({...bioForm, headline: e.target.value})}
+    />
+    <InputField
+      label="Current Status"
+      name="currentStatus"
+      type="select"
+      value={bioForm.currentStatus}
+      onChange={(e) => setBioForm({...bioForm, currentStatus: e.target.value})}
+      options={[
+        {value: '', label: 'Select status...'},
+        {value: 'student', label: 'Student'},
+        {value: 'graduate', label: 'Graduate'},
+        {value: 'looking-internship', label: 'Looking for Internship'},
+        {value: 'looking-job', label: 'Looking for Job'},
+        {value: 'employed', label: 'Employed'}
+      ]}
+    />
+    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px'}}>
+      <InputField label="University" name="university" value={bioForm.university} onChange={(e) => setBioForm({...bioForm, university: e.target.value})} />
+      <InputField label="Degree" name="degree" value={bioForm.degree} onChange={(e) => setBioForm({...bioForm, degree: e.target.value})} />
+    </div>
+    <InputField label="Major" name="major" value={bioForm.major} onChange={(e) => setBioForm({...bioForm, major: e.target.value})} />
+    <InputField label="Graduation Year" name="graduationYear" type="number" value={bioForm.graduationYear} onChange={(e) => setBioForm({...bioForm, graduationYear: e.target.value})} />
+    <InputField
+      label="Professional Summary"
+      name="summary"
+      type="textarea"
+      placeholder="Brief overview of your career goals and strengths..."
+      value={bioForm.summary}
+      onChange={(e) => setBioForm({...bioForm, summary: e.target.value})}
+    />
+    <InputField label="Email" name="email" type="email" value={bioForm.email} onChange={(e) => setBioForm({...bioForm, email: e.target.value})} />
+    <InputField label="Phone" name="phone" value={bioForm.phone} onChange={(e) => setBioForm({...bioForm, phone: e.target.value})} />
+    <InputField label="Website" name="website" placeholder="https://yourportfolio.com" value={bioForm.website} onChange={(e) => setBioForm({...bioForm, website: e.target.value})} />
+    
+    <h4 style={{marginTop: '20px', marginBottom: '12px', fontSize: '0.95rem', color: 'var(--text-secondary)'}}>Location</h4>
+    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px'}}>
+      <InputField label="Country" name="country" value={bioForm.country} onChange={(e) => setBioForm({...bioForm, country: e.target.value})} />
+      <InputField label="City" name="city" value={bioForm.city} onChange={(e) => setBioForm({...bioForm, city: e.target.value})} />
+    </div>
+    <InputField label="Postal Code" name="postalCode" value={bioForm.postalCode} onChange={(e) => setBioForm({...bioForm, postalCode: e.target.value})} />
+    
+    <h4 style={{marginTop: '20px', marginBottom: '12px', fontSize: '0.95rem', color: 'var(--text-secondary)'}}>Social Links</h4>
+    <InputField label="GitHub URL" name="github" value={bioForm.github} onChange={(e) => setBioForm({...bioForm, github: e.target.value})} />
+    <InputField label="LinkedIn URL" name="linkedin" value={bioForm.linkedin} onChange={(e) => setBioForm({...bioForm, linkedin: e.target.value})} />
+    
+    <InputField
+      label="Profile Visibility"
+      name="visibility"
+      type="select"
+      value={bioForm.visibility}
+      onChange={(e) => setBioForm({...bioForm, visibility: e.target.value})}
+      options={[
+        {value: 'public', label: 'Public'},
+        {value: 'connections-only', label: 'Connections Only'},
+        {value: 'recruiters-only', label: 'Recruiters Only'},
+        {value: 'private', label: 'Private'}
+      ]}
+    />
+  </form>
+</Modal>
 
-<InputField
-  label="Major / Field of Study"
-  name="major"
-  placeholder="Computer Science"
-  value={bioForm.major}
-  onChange={(e) => setBioForm({ ...bioForm, major: e.target.value })}
-/>
-
-<InputField
-  label="Graduation Year"
-  name="graduationYear"
-  type="number"
-  placeholder="2026"
-  value={bioForm.graduationYear}
-  onChange={(e) => setBioForm({ ...bioForm, graduationYear: e.target.value })}
-/>
-
-<InputField
-  label="Country"
-  name="country"
-  placeholder="United States"
-  value={bioForm.country}
-  onChange={(e) => setBioForm({ ...bioForm, country: e.target.value })}
-/>
-
-<InputField
-  label="City"
-  name="city"
-  placeholder="San Francisco"
-  value={bioForm.city}
-  onChange={(e) => setBioForm({ ...bioForm, city: e.target.value })}
-/>
-
-<InputField
-  label="Postal Code"
-  name="postalCode"
-  placeholder="94105"
-  value={bioForm.postalCode}
-  onChange={(e) => setBioForm({ ...bioForm, postalCode: e.target.value })}
-/>
-
-<InputField
-  label="Phone"
-  name="phone"
-  placeholder="+1 (555) 123-4567"
-  value={bioForm.phone}
-  onChange={(e) => setBioForm({ ...bioForm, phone: e.target.value })}
-/>
-
-<InputField
-  label="Email (Public)"
-  name="email"
-  type="email"
-  placeholder="you@example.com"
-  value={bioForm.email}
-  onChange={(e) => setBioForm({ ...bioForm, email: e.target.value })}
-/>
-          <InputField
-            label="About / Professional Summary"
-            name="summary"
-            type="textarea"
-            placeholder="Write a brief intro..."
-            value={bioForm.summary}
-            onChange={(e) => setBioForm({ ...bioForm, summary: e.target.value })}
-            rows={5}
-          />
-          <InputField
-            label="Portfolio Website Link"
-            name="website"
-            placeholder="https://myportfolio.com"
-            value={bioForm.website}
-            onChange={(e) => setBioForm({ ...bioForm, website: e.target.value })}
-          />
-          <InputField
-            label="GitHub Profile URL"
-            name="github"
-            placeholder="https://github.com/username"
-            value={bioForm.github}
-            onChange={(e) => setBioForm({ ...bioForm, github: e.target.value })}
-          />
-          <InputField
-            label="LinkedIn Profile URL"
-            name="linkedin"
-            placeholder="https://linkedin.com/in/username"
-            value={bioForm.linkedin}
-            onChange={(e) => setBioForm({ ...bioForm, linkedin: e.target.value })}
-          />
-          <InputField
-            label="Profile Visibility"
-            name="visibility"
-            type="select"
-            value={bioForm.visibility}
-            onChange={(e) => setBioForm({ ...bioForm, visibility: e.target.value })}
-            options={[
-              { value: 'public', label: 'Public (Anyone)' },
-              { value: 'connections-only', label: 'Connections Only' },
-              { value: 'private', label: 'Private (Only Me)' }
-            ]}
-          />
-        </form>
-      </Modal>
+{/* ✅ Languages Modal */}
+<Modal
+  isOpen={activeModal === 'language'}
+  onClose={() => setActiveModal(null)}
+  title="Add Language"
+  footer={
+    <>
+      <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
+      <button className="btn btn-primary" onClick={async () => {
+        const name = document.getElementById('lang-name').value;
+        const proficiency = document.getElementById('lang-proficiency').value;
+        if (!name) return alert('Language name is required');
+        try {
+          const res = await api.post('/profile/languages', { name, proficiency });
+          setProfile(res.data);
+          setActiveModal(null);
+        } catch (err) { alert(err.message); }
+      }}>
+        Add
+      </button>
+    </>
+  }
+>
+  <div>
+    <div className="form-group">
+      <label className="form-label">Language</label>
+      <input id="lang-name" className="form-input" placeholder="English, Urdu, Arabic..." />
+    </div>
+    <div className="form-group">
+      <label className="form-label">Proficiency</label>
+      <select id="lang-proficiency" className="form-input">
+        <option value="basic">Basic</option>
+        <option value="conversational" selected>Conversational</option>
+        <option value="professional">Professional</option>
+        <option value="native">Native</option>
+      </select>
+    </div>
+  </div>
+</Modal>
+     
 
       {/* Education Modal */}
       <Modal
@@ -1347,35 +1873,7 @@ const handleBioSubmit = async (e) => {
         </form>
       </Modal>
 
-      {/* Skills Modal */}
-      <Modal
-        isOpen={activeModal === 'skills'}
-        onClose={() => setActiveModal(null)}
-        title="Manage Skill Tags"
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSkillsSubmit} disabled={modalLoading}>
-              {modalLoading ? 'Saving...' : 'Save'}
-            </button>
-          </>
-        }
-      >
-        <form onSubmit={handleSkillsSubmit}>
-          <InputField
-            label="Enter Skills (separated by commas)"
-            name="skills"
-            type="textarea"
-            placeholder="React, Node.js, Python, CSS Grid, Product Management"
-            value={skillsForm}
-            onChange={(e) => setSkillsForm(e.target.value)}
-            rows={4}
-          />
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-            Tip: Pressing save will convert commas into individual searchable tags on your profile.
-          </p>
-        </form>
-      </Modal>
+
 
       {/* Project Modal */}
       <Modal
