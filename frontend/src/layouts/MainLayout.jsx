@@ -88,8 +88,10 @@ const MainLayout = ({ children }) => {
       {/* Top Navigation Header */}
       <header
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: 0,
+          right: 0,
           zIndex: 99,
           height: '64px',
           backgroundColor: 'rgba(18, 19, 26, 0.85)',
@@ -269,8 +271,11 @@ const MainLayout = ({ children }) => {
             borderRight: '1px solid var(--border-color)',
             backgroundColor: 'var(--bg-secondary)',
             padding: '24px 16px',
-            position: 'sticky',
+            position: 'fixed',
             top: '64px',
+            left: 0,
+            bottom: 0,
+            owerflowY: 'auto',
             height: 'calc(100vh - 64px)',
             display: 'flex',
             flexDirection: 'column',
@@ -329,7 +334,7 @@ const MainLayout = ({ children }) => {
         </aside>
 
         {/* Content Panel */}
-        <main style={{ flex: 1, overflowY: 'auto', paddingBottom: '32px' }}>
+        <main style={{ flex: 1, overflowY: 'auto', paddingBottom: '32px', marginLeft: '240px', paddingTop: '64px' }}>
           <div className="content-wrapper">{children}</div>
         </main>
       </div>

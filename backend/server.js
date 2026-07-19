@@ -16,6 +16,9 @@ console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET);
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
+import jobAlertRoutes from './routes/jobAlertRoutes.js';
+
+
 // Route Imports
 import authRoutes from './routes/authRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
@@ -104,6 +107,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/job-alerts', jobAlertRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 

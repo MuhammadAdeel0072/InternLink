@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ProfileCompletionBar from '../components/ProfileCompletionBar';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -604,7 +603,7 @@ const handleAddSkill = async (name, proficiency = 'intermediate') => {
 
   return (
     <div style={{ maxWidth: '850px', margin: '0 auto', animation: 'fadeIn 0.4s ease' }}>
-        {isOwnProfile && <ProfileCompletionBar profile={profile} />}
+        
       {/* Hidden File Inputs */}
       <input
         type="file"

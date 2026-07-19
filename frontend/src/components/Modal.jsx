@@ -55,15 +55,18 @@ const Modal = ({ isOpen, onClose, title, children, footer, maxWidth = '550px' })
     >
       <div
         ref={modalRef}
-        className="card glass animate-fade-in"
+        className="card animate-fade-in"
         style={{
           width: '100%',
-          maxWidth: maxWidth,
-          padding: '24px',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+  maxWidth: maxWidth,
+  padding: '24px',
+  maxHeight: '90vh',
+  display: 'flex',
+  flexDirection: 'column',
+  backgroundColor: 'var(--bg-secondary)',
+  border: '1px solid var(--border-color)',
+  borderRadius: 'var(--radius-md)',
+  boxShadow: 'var(--shadow-lg)'
         }}
       >
         {/* Header */}

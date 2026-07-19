@@ -7,50 +7,39 @@ const jobSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
-    company: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    title: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    description: {
-      type: String,
-      required: true
-    },
+    company: { type: String, required: true, trim: true },
+    title: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
     requirements: [{ type: String }],
-    location: {
-      type: String,
-      required: true
-    },
+    responsibilities: [{ type: String }],
+    benefits: [{ type: String }],
+    skills: [{ type: String }],
+    location: { type: String, required: true },
     jobType: {
       type: String,
       enum: ['Full-time', 'Part-time', 'Internship', 'Contract'],
       default: 'Internship'
     },
-    salaryRange: {
+    workMode: {
       type: String,
-      default: ''
+      enum: ['remote', 'onsite', 'hybrid'],
+      default: 'onsite'
     },
-    logo: {
+    salaryRange: { type: String, default: '' },
+    experienceLevel: {
       type: String,
-      default: ''
+      enum: ['entry', 'mid', 'senior', 'lead'],
+      default: 'entry'
     },
-    remote: {
-      type: Boolean,
-      default: false
-    },
-    isActive: {
-      type: Boolean,
-      default: true
-    }
+    industry: { type: String, default: '' },
+    companySize: { type: String, default: '' },
+    logo: { type: String, default: '' },
+    deadline: { type: Date },
+    applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    isActive: { type: Boolean, default: true },
+    savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 );
 
 const Job = mongoose.model('Job', jobSchema);
