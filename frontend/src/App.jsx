@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import Settings from './pages/Settings';
 import { ThemeProvider } from './context/ThemeContext';
+import OAuthCallback from "./pages/OAuthCallback";
 
 // Layout wrappers
 import MainLayout from './layouts/MainLayout';
@@ -60,7 +61,11 @@ function App() {
                 </AuthLayout>
               }
             />
-
+            <Route
+  path="/oauth/callback"
+  element={<OAuthCallback />}
+ />
+ 
             {/* ── Protected / Authenticated Routes ── */}
             <Route
               path="/"

@@ -39,7 +39,7 @@ export const getCurrentProfile = async (req, res) => {
 // @access  Public
 export const getProfileByUserId = async (req, res) => {
   try {
-    const profile = await Profile.findOne({ user: req.params.userId })
+    const profile = await Profile.findById(req.params.userId)
       .populate('user', 'name email role');
     if (!profile) {
       return res.status(404).json({ message: 'Profile not found' });

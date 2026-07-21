@@ -120,7 +120,18 @@ const updateUser = (userData) => {
 };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, logout, updateUser }}>
+    <AuthContext.Provider
+  value={{
+    user,
+    setUser,
+    loading,
+    login,
+    register,
+    verifyEmail,
+    logout,
+    updateUser
+  }}
+>
       {children}
     </AuthContext.Provider>
   );

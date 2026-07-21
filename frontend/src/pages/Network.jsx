@@ -16,6 +16,7 @@ const Network = () => {
     try {
       setLoading(true);
       const connRes = await api.get('/connections');
+      console.log('Connections:', connRes.data);
       const pendRes = await api.get('/connections/pending');
       const suggRes = await api.get('/connections/suggestions');
 
@@ -190,13 +191,12 @@ const Network = () => {
                   </p>
                   
                   <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: 'auto' }}>
-                    <button
-                      onClick={() => (window.location.href = `/profile/${conn._id}`)}
-                      className="btn btn-secondary"
-                      style={{ flex: 1, padding: '8px', fontSize: '0.8rem' }}
-                    >
-                      Profile
-                    </button>
+                    <button onClick={() => (window.location.href = `/profile/${conn._id}`)}
+  className="btn btn-secondary"
+  style={{ flex: 1, padding: '8px', fontSize: '0.8rem' }}
+>
+  Profile
+</button>
                     <button
                       onClick={() => handleRemoveConnection(conn.connectionId, conn._id)}
                       className="btn btn-danger"

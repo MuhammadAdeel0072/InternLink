@@ -21,14 +21,20 @@ import {
   Briefcase,
   GraduationCap,
   ExternalLink,
-  Code
+  Code,
+  MessageSquare,
+  UserPlus,
+  Check,
+  Share2
 } from 'lucide-react';
 
-const ProfilePage = () => {
-  const { id } = useParams(); // Can be a specific student ID or 'me'
-  const { user } = useAuth();
-  const isOwnProfile = !id || id === 'me' || id === user?._id;
+import { useNavigate } from 'react-router-dom';
 
+const ProfilePage = () => {
+  const { userId } = useParams(); // Can be a specific student ID or 'me'
+  const { user } = useAuth();
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+ 
   const [profile, setProfile] = useState({
   skills: [],
   languages: [],
@@ -39,6 +45,11 @@ const ProfilePage = () => {
 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOwnProfile, setIsOwnProfile] = useState(false); // ← ADD THIS LINE
+
+  const navigate = useNavigate();
+const [connectionStatus, setConnectionStatus] = useState(null);
+const [connectionId, setConnectionId] = useState(null);
 
   // File Ref triggers
   const avatarInputRef = useRef();
@@ -119,8 +130,11 @@ const ProfilePage = () => {
 
   const fetchProfile = async () => {
     try {
-      setLoading(true);
-      const url = isOwnProfile ? '/profile/me' : `/profile/user/${id}`;
+       setLoading(true);
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+       const ownProfile = !userId || userId === 'me' || userId === storedUser?._id;  // ← CHANGE
+    const url = ownProfile ? '/profile/me' : `/profile/user/${userId}`;  // ← CHANGE
+    console.log('🔍 FETCHING:', { userId, ownProfile, url });  // ← CHANGE
       const res = await api.get(url);
       setProfile(res.data);
 
@@ -146,16 +160,66 @@ const ProfilePage = () => {
       // setSkillsForm(res.data.skills?.join(', ') || '');
       setError(null);
     } catch (err) {
-      console.error(err);
+     console.error('Full error:', err);
+  console.error('Error response:', err.response?.data);
+  console.error('Error status:', err.response?.status);
       setError('Could not load profile. Please make sure it is public.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, [id]);
+   useEffect(() => {
+  if (!isOwnProfile && profile?.user?._id) {
+    checkConnectionStatus();
+  }
+}, [profile?.user?._id, isOwnProfile]);
+
+const checkConnectionStatus = async () => {
+  try {
+    const res = await api.get('/connections');
+    const connections = res.data;
+    const existing = connections.find(c => c._id === profile.user._id);
+    if (existing) {
+      setConnectionStatus('accepted');
+      return;
+    }
+    setConnectionStatus('none');
+  } catch (err) {
+    setConnectionStatus('none');
+  }
+};
+
+const handleConnect = async () => {
+  try {
+    await api.post(`/connections/request/${profile.user._id}`);
+    setConnectionStatus('pending');
+    alert('Connection request sent!');
+  } catch (err) {
+    alert(err.response?.data?.message || 'Failed');
+  }
+};
+
+const handleMessage = async () => {
+  try {
+    const res = await api.post(`/messages/conversation/${profile.user._id}`);
+    navigate(`/messages`);
+  } catch (err) {
+    alert('Failed to start conversation');
+  }
+};
+
+const handleShareProfile = () => {
+  navigator.clipboard.writeText(`${window.location.origin}/profile/${profile.user?._id}`);
+  alert('Profile link copied!');
+};
+ 
+useEffect(() => {
+  const ownProfile = !userId || userId === 'me' || userId === storedUser?._id;  // ← CHANGE
+  setIsOwnProfile(ownProfile);
+  console.log('DEBUG id:', userId);  // ← CHANGE
+  fetchProfile();
+}, [userId]);  // ← CHANGE
 
   // Image Upload Triggers
   const handleFileChange = async (e, type) => {
@@ -759,31 +823,36 @@ const handleAddSkill = async (name, proficiency = 'intermediate') => {
       </div>
 
       {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', paddingBottom: '4px' }}>
-        {isOwnProfile && (
-          <button
-            onClick={() => setActiveModal('bio')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-primary)',
-              color: 'var(--text-primary)',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-primary)'}
-          >
-            <Edit2 size={14} /> Edit Profile
-          </button>
-        )}
-      </div>
+      {/* Action Buttons */}
+<div style={{ display: 'flex', gap: '8px', alignItems: 'center', paddingBottom: '4px', flexWrap: 'wrap' }}>
+  {isOwnProfile ? (
+    <button onClick={() => setActiveModal('bio')} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <Edit2 size={14} /> Edit Profile
+    </button>
+  ) : (
+    <>
+      {connectionStatus === 'accepted' ? (
+        <button style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: 'var(--success-light)', color: 'var(--success)', border: '1px solid var(--success)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Check size={14} /> Connected
+        </button>
+      ) : connectionStatus === 'pending' ? (
+        <button style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: 'var(--warning-light)', color: 'var(--warning)', border: '1px solid var(--warning)', fontSize: '0.85rem' }}>
+          Request Sent
+        </button>
+      ) : (
+        <button onClick={handleConnect} style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <UserPlus size={14} /> Connect
+        </button>
+      )}
+      <button onClick={handleMessage} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--primary)', color: 'var(--primary)', backgroundColor: 'transparent', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <MessageSquare size={14} /> Message
+      </button>
+      <button onClick={handleShareProfile} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-tertiary)', fontSize: '0.85rem', cursor: 'pointer' }}>
+        <Share2 size={14} />
+      </button>
+    </>
+  )}
+</div>
     </div>
 
     {/* Links Section */}
@@ -1579,8 +1648,8 @@ const handleAddSkill = async (name, proficiency = 'intermediate') => {
     </>
   }
 >
-  <form onSubmit={handleBioSubmit} style={{ overflowY: 'auto', paddingRight: '8px' }}>
-    <InputField
+<form onSubmit={handleBioSubmit}>    
+  <InputField
       label="Professional Headline"
       name="headline"
       placeholder="Software Engineer | CS Student"

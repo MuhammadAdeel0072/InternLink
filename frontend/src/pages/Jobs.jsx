@@ -36,7 +36,30 @@ const [useProfileResume, setUseProfileResume] = useState(true);
 const [coverLetter, setCoverLetter] = useState('');
 const [newResumeFile, setNewResumeFile] = useState(null);
 const [applying, setApplying] = useState(false);
+const [activeTab, setActiveTab] = useState('all'); // all, internships, remote, saved, recommended
 
+const fetchJobsByTab = async (tab) => {
+  setActiveTab(tab);
+  if (tab === 'all') fetchJobs({});
+  else if (tab === 'internships') fetchJobs({ jobType: 'Internship' });
+  else if (tab === 'remote') fetchJobs({ remote: true });
+  else if (tab === 'saved') {
+    try {
+      setLoading(true);
+      const res = await api.get('/jobs/saved');
+      setJobs(res.data);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  }
+  else if (tab === 'recommended') {
+    try {
+      setLoading(true);
+      const res = await api.get('/jobs/recommended');
+      setJobs(res.data);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  }
+};
 
 
   const fetchJobs = async (searchParams = {}) => {
@@ -195,6 +218,30 @@ const handleApplySubmit = async (e) => {
             Search
           </button>
         </form>
+      </div>
+
+
+      {/* Tab Bar */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        {[
+          { key: 'all', label: '🔍 All Jobs' },
+          { key: 'internships', label: '🎓 Internships' },
+          { key: 'remote', label: '🏠 Remote' },
+          { key: 'recommended', label: '⭐ Recommended' },
+          { key: 'saved', label: '❤️ Saved' },
+        ].map(tab => (
+          <button key={tab.key} onClick={() => fetchJobsByTab(tab.key)}
+            style={{
+              padding: '8px 18px', borderRadius: '20px',
+              border: activeTab === tab.key ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+              backgroundColor: activeTab === tab.key ? 'var(--primary-light)' : 'transparent',
+              color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-secondary)',
+              fontWeight: activeTab === tab.key ? 600 : 400,
+              fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s'
+            }}>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* JOB CARDS GRID */}
@@ -469,6 +516,23 @@ const handleApplySubmit = async (e) => {
                 <Heart size={16} fill={savedJobs.includes(selectedJob._id) ? '#ef4444' : 'none'} />
                 {savedJobs.includes(selectedJob._id) ? 'Saved' : 'Save Job'}
               </button>
+
+              <button onClick={() => {
+                  const url = `${window.location.origin}/jobs`;
+                  navigator.clipboard.writeText(url);
+                  alert('Job link copied!');
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '10px 16px', borderRadius: '10px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-tertiary)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem'
+                }}>
+                📤 Share
+              </button>
+              
               <button
   disabled={hasApplied(selectedJob._id)}
   onClick={() => {
@@ -487,6 +551,7 @@ const handleApplySubmit = async (e) => {
   <Send size={16} />
   {hasApplied(selectedJob._id) ? 'Applied' : 'Apply Now'}
 </button>
+
             </div>
           </div>
         </Modal>
