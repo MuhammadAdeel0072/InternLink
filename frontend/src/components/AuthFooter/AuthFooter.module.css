@@ -1,0 +1,59 @@
+/* AuthFooter.module.css */
+
+/* ============================================ */
+/* AUTH FOOTER                                  */
+/* ============================================ */
+.authFooter {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ============================================ */
+/* FOOTER LINK                                  */
+/* ============================================ */
+.authFooterLink {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.authFooterLink:hover {
+  color: var(--primary-hover);
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .authFooter {
+    margin-top: 24px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .authFooter {
+    margin-top: 20px;
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  .authFooterLink {
+    display: inline-block;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .authFooter {
+    margin-top: 16px;
+    font-size: 0.7rem;
+  }
+}

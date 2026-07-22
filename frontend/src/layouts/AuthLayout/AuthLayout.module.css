@@ -1,0 +1,35 @@
+/* AuthLayout.module.css */
+
+/* ============================================ */
+/* AUTH LAYOUT                                  */
+/* ============================================ */
+.authLayout {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .authLayout {
+    min-height: 100vh;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .authLayout {
+    min-height: 100vh;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .authLayout {
+    min-height: 100vh;
+  }
+}

@@ -1,0 +1,184 @@
+/* VerifyEmail.module.css */
+
+/* ============================================ */
+/* VERIFYING STATE                              */
+/* ============================================ */
+.verifyingContainer {
+  text-align: center;
+  padding: 20px;
+}
+
+.verifyingText {
+  margin-top: 16px;
+  color: var(--text-secondary);
+}
+
+/* ============================================ */
+/* SUCCESS STATE                                */
+/* ============================================ */
+.successContainer {
+  text-align: center;
+}
+
+.successIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--success-light);
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 1.75rem;
+  font-weight: bold;
+}
+
+.successTitle {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.successText {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+/* ============================================ */
+/* ERROR STATE                                  */
+/* ============================================ */
+.errorContainer {
+  text-align: center;
+}
+
+.errorIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--danger-light);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 1.75rem;
+  font-weight: bold;
+}
+
+.errorTitle {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+  color: var(--danger);
+}
+
+.errorText {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+/* ============================================ */
+/* ACTION BUTTON                                */
+/* ============================================ */
+.actionBtn {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .successIcon,
+  .errorIcon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  .successTitle,
+  .errorTitle {
+    font-size: 1.1rem;
+  }
+
+  .successText,
+  .errorText {
+    font-size: 0.85rem;
+  }
+
+  .verifyingText {
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .successIcon,
+  .errorIcon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+    margin-bottom: 14px;
+  }
+
+  .successTitle,
+  .errorTitle {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .successText,
+  .errorText {
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+  }
+
+  .verifyingContainer {
+    padding: 16px;
+  }
+
+  .verifyingText {
+    font-size: 0.85rem;
+    margin-top: 12px;
+  }
+
+  .actionBtn {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .successIcon,
+  .errorIcon {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+
+  .successTitle,
+  .errorTitle {
+    font-size: 0.9rem;
+  }
+
+  .successText,
+  .errorText {
+    font-size: 0.75rem;
+  }
+
+  .verifyingText {
+    font-size: 0.8rem;
+  }
+
+  .actionBtn {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+}

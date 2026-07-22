@@ -1,0 +1,431 @@
+/* Notifications.module.css */
+
+/* ============================================ */
+/* MAIN CONTAINER                               */
+/* ============================================ */
+.notificationsContainer {
+  max-width: 650px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease;
+  padding: 0 16px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
+/* HEADER                                       */
+/* ============================================ */
+.notificationsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerIcon {
+  color: var(--primary);
+}
+
+.headerTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+}
+
+.markAllBtn {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ============================================ */
+/* NOTIFICATIONS LIST                           */
+/* ============================================ */
+.notificationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ============================================ */
+/* NOTIFICATION ITEM                            */
+/* ============================================ */
+.notificationItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  gap: 12px;
+}
+
+.notificationItem:hover {
+  transform: translateX(4px);
+}
+
+.notificationRead {
+  border-left: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+.notificationUnread {
+  border-left: 4px solid var(--primary);
+  background-color: rgba(99, 102, 241, 0.05);
+}
+
+/* ============================================ */
+/* NOTIFICATION CONTENT                         */
+/* ============================================ */
+.notificationContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Icon Container */
+.iconContainer {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Icon Colors */
+.iconWarning {
+  color: var(--warning);
+}
+.iconSuccess {
+  color: var(--success);
+}
+.iconInfo {
+  color: var(--info);
+}
+.iconDanger {
+  color: var(--danger);
+}
+.iconPrimary {
+  color: var(--primary);
+}
+.iconMuted {
+  color: var(--text-muted);
+}
+
+/* Avatar */
+.avatarContainer {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Notification Text */
+.notificationTextContainer {
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationText {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.notificationTime {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ============================================ */
+/* NOTIFICATION ACTIONS                         */
+/* ============================================ */
+.notificationActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.deleteBtn {
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteBtn:hover {
+  color: var(--danger);
+}
+
+/* ============================================ */
+/* EMPTY STATE                                  */
+/* ============================================ */
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.emptyState p {
+  margin: 0;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .notificationsContainer {
+    padding: 0 12px;
+  }
+
+  .headerTitle {
+    font-size: 1.5rem;
+  }
+
+  .notificationItem {
+    padding: 14px;
+  }
+
+  .notificationContent {
+    gap: 12px;
+  }
+
+  .iconContainer {
+    width: 32px;
+    height: 32px;
+  }
+
+  .avatarContainer {
+    width: 36px;
+    height: 36px;
+  }
+
+  .notificationText {
+    font-size: 0.85rem;
+  }
+
+  .markAllBtn {
+    font-size: 0.75rem;
+    padding: 6px 14px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .notificationsContainer {
+    padding: 0 8px;
+  }
+
+  .notificationsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .headerTitle {
+    font-size: 1.25rem;
+  }
+
+  .headerIcon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .markAllBtn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+  }
+
+  .notificationItem {
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+
+  .notificationContent {
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .iconContainer {
+    width: 28px;
+    height: 28px;
+  }
+
+  .iconContainer svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .avatarContainer {
+    width: 32px;
+    height: 32px;
+  }
+
+  .avatarFallback {
+    font-size: 0.8rem;
+  }
+
+  .notificationText {
+    font-size: 0.8rem;
+  }
+
+  .notificationTime {
+    font-size: 0.65rem;
+  }
+
+  .notificationActions {
+    gap: 8px;
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .unreadDot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .deleteBtn {
+    padding: 4px;
+  }
+
+  .deleteBtn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .emptyState {
+    padding: 30px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .notificationsContainer {
+    padding: 0 4px;
+  }
+
+  .notificationItem {
+    padding: 10px;
+  }
+
+  .notificationContent {
+    gap: 8px;
+  }
+
+  .iconContainer {
+    width: 24px;
+    height: 24px;
+  }
+
+  .iconContainer svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .avatarContainer {
+    width: 28px;
+    height: 28px;
+  }
+
+  .avatarFallback {
+    font-size: 0.7rem;
+  }
+
+  .notificationText {
+    font-size: 0.75rem;
+  }
+
+  .notificationTime {
+    font-size: 0.6rem;
+  }
+
+  .notificationActions {
+    gap: 6px;
+    padding-top: 6px;
+  }
+
+  .deleteBtn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .markAllBtn {
+    font-size: 0.65rem;
+    padding: 4px 10px;
+  }
+}

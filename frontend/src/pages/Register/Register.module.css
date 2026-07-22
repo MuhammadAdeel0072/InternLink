@@ -1,0 +1,330 @@
+/* Register.module.css */
+
+/* ============================================ */
+/* STATUS MESSAGE                               */
+/* ============================================ */
+.statusMessage {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+.statusSuccess {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.2);
+}
+
+.statusError {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+/* ============================================ */
+/* PASSWORD TOGGLE                             */
+/* ============================================ */
+.passwordWrapper {
+  position: relative;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 42px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.passwordToggle:hover {
+  color: var(--text-primary);
+}
+
+/* ============================================ */
+/* TERMS AND PRIVACY                            */
+/* ============================================ */
+.termsContainer {
+  margin: 20px 0;
+}
+
+.termsLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.termsCheckbox {
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.termsLink {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.termsLink:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.termsError {
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin-top: 6px;
+  margin-left: 28px;
+}
+
+/* ============================================ */
+/* SUBMIT BUTTON                                */
+/* ============================================ */
+.submitBtn {
+  width: 100%;
+  margin-top: 12px;
+  height: 48px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.loadingContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================ */
+/* OAUTH SECTION                                */
+/* ============================================ */
+.oauthSection {
+  margin-top: 24px;
+}
+
+.oauthDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.oauthDividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+.oauthDividerText {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ============================================ */
+/* LOGIN LINK                                   */
+/* ============================================ */
+.loginLink {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.loginLinkText {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.loginLinkText:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .submitBtn {
+    height: 44px;
+    font-size: 0.95rem;
+  }
+
+  .statusMessage {
+    font-size: 0.8rem;
+    padding: 10px;
+  }
+
+  .termsLabel {
+    font-size: 0.8rem;
+  }
+
+  .termsCheckbox {
+    width: 16px;
+    height: 16px;
+  }
+
+  .oauthDividerText {
+    font-size: 0.7rem;
+  }
+
+  .loginLink {
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .statusMessage {
+    font-size: 0.75rem;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+  }
+
+  .passwordToggle {
+    top: 38px;
+    right: 10px;
+    font-size: 0.8rem;
+  }
+
+  .termsContainer {
+    margin: 16px 0;
+  }
+
+  .termsLabel {
+    font-size: 0.75rem;
+    gap: 8px;
+  }
+
+  .termsCheckbox {
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+  }
+
+  .termsError {
+    font-size: 0.7rem;
+    margin-left: 24px;
+  }
+
+  .submitBtn {
+    height: 40px;
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+  }
+
+  .oauthSection {
+    margin-top: 20px;
+  }
+
+  .oauthDivider {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .oauthDividerText {
+    font-size: 0.65rem;
+  }
+
+  .loginLink {
+    font-size: 0.75rem;
+    margin-top: 20px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .statusMessage {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+  }
+
+  .passwordToggle {
+    top: 34px;
+    right: 8px;
+    font-size: 0.7rem;
+  }
+
+  .termsLabel {
+    font-size: 0.7rem;
+    gap: 6px;
+  }
+
+  .termsCheckbox {
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+  }
+
+  .termsError {
+    font-size: 0.65rem;
+    margin-left: 20px;
+  }
+
+  .submitBtn {
+    height: 36px;
+    font-size: 0.8rem;
+    margin-top: 6px;
+  }
+
+  .spinner {
+    width: 12px;
+    height: 12px;
+  }
+
+  .oauthDividerText {
+    font-size: 0.55rem;
+  }
+
+  .loginLink {
+    font-size: 0.7rem;
+    margin-top: 16px;
+  }
+}

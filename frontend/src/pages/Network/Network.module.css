@@ -1,0 +1,534 @@
+/* Network.module.css */
+
+/* ============================================ */
+/* MAIN CONTAINER                               */
+/* ============================================ */
+.networkContainer {
+  max-width: 850px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease;
+  padding: 0 16px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
+/* HEADER                                       */
+/* ============================================ */
+.networkHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.headerIcon {
+  color: var(--primary);
+}
+
+.headerTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+}
+
+/* ============================================ */
+/* TAB BAR                                      */
+/* ============================================ */
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 24px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.tabBtn {
+  padding: 12px 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tabBtn:hover {
+  color: var(--text-primary);
+}
+
+.tabBtnActive {
+  border-bottom: 2px solid var(--primary);
+  color: var(--primary);
+}
+
+.requestBadge {
+  font-size: 0.75rem;
+  background-color: var(--danger);
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.suggestIcon {
+  color: var(--warning);
+}
+
+/* ============================================ */
+/* GRID CONTAINER                               */
+/* ============================================ */
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* ============================================ */
+/* CONNECTION CARD                              */
+/* ============================================ */
+.connectionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ============================================ */
+/* SUGGESTION CARD                              */
+/* ============================================ */
+.suggestionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ============================================ */
+/* AVATARS                                      */
+/* ============================================ */
+.avatarLarge {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+  overflow: hidden;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallbackLarge {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.avatarMedium {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatarFallbackMedium {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+/* ============================================ */
+/* USER INFO                                    */
+/* ============================================ */
+.userName {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.userHeadline {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 4px 0 16px;
+  min-height: 38px;
+  overflow: hidden;
+}
+
+/* ============================================ */
+/* CARD ACTIONS                                 */
+/* ============================================ */
+.cardActions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.profileBtn {
+  flex: 1;
+  padding: 8px;
+  font-size: 0.8rem;
+}
+
+.removeBtn {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.connectBtn {
+  flex: 1;
+  padding: 8px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.viewBtn {
+  padding: 8px;
+  font-size: 0.8rem;
+}
+
+/* ============================================ */
+/* REQUESTS LIST                                */
+/* ============================================ */
+.requestsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.requestCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.requestUserInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.requestName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.requestHeadline {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.requestActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.acceptBtn {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ignoreBtn {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+}
+
+/* ============================================ */
+/* EMPTY STATE                                  */
+/* ============================================ */
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.emptyState p {
+  margin: 0;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .networkContainer {
+    padding: 0 12px;
+  }
+
+  .headerTitle {
+    font-size: 1.5rem;
+  }
+
+  .tabBar {
+    gap: 16px;
+  }
+
+  .tabBtn {
+    font-size: 0.85rem;
+    padding: 10px 6px;
+  }
+
+  .gridContainer {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .requestCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .requestUserInfo {
+    min-width: unset;
+  }
+
+  .requestActions {
+    justify-content: flex-end;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .networkContainer {
+    padding: 0 8px;
+  }
+
+  .networkHeader {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .headerTitle {
+    font-size: 1.25rem;
+  }
+
+  .headerIcon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .tabBar {
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabBtn {
+    font-size: 0.75rem;
+    padding: 8px 4px;
+    white-space: nowrap;
+  }
+
+  .requestBadge {
+    width: 16px;
+    height: 16px;
+    font-size: 0.65rem;
+  }
+
+  .gridContainer {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .connectionCard,
+  .suggestionCard {
+    padding: 14px;
+  }
+
+  .avatarLarge {
+    width: 56px;
+    height: 56px;
+  }
+
+  .avatarFallbackLarge {
+    font-size: 1.2rem;
+  }
+
+  .userName {
+    font-size: 0.85rem;
+  }
+
+  .userHeadline {
+    font-size: 0.7rem;
+    min-height: 30px;
+    margin: 2px 0 12px;
+  }
+
+  .cardActions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .profileBtn,
+  .connectBtn,
+  .viewBtn,
+  .removeBtn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.7rem;
+    padding: 6px;
+  }
+
+  .requestCard {
+    padding: 12px;
+  }
+
+  .requestUserInfo {
+    gap: 10px;
+  }
+
+  .avatarMedium {
+    width: 40px;
+    height: 40px;
+  }
+
+  .avatarFallbackMedium {
+    font-size: 1rem;
+  }
+
+  .requestName {
+    font-size: 0.85rem;
+  }
+
+  .requestHeadline {
+    font-size: 0.7rem;
+  }
+
+  .requestActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .acceptBtn,
+  .ignoreBtn {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+
+  .emptyState {
+    padding: 30px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .networkContainer {
+    padding: 0 4px;
+  }
+
+  .gridContainer {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .connectionCard,
+  .suggestionCard {
+    padding: 10px;
+  }
+
+  .avatarLarge {
+    width: 48px;
+    height: 48px;
+  }
+
+  .avatarFallbackLarge {
+    font-size: 1rem;
+  }
+
+  .userName {
+    font-size: 0.75rem;
+  }
+
+  .userHeadline {
+    font-size: 0.6rem;
+    min-height: 24px;
+  }
+
+  .tabBtn {
+    font-size: 0.65rem;
+    padding: 6px 4px;
+  }
+
+  .requestCard {
+    padding: 10px;
+  }
+
+  .requestUserInfo {
+    gap: 8px;
+  }
+
+  .avatarMedium {
+    width: 36px;
+    height: 36px;
+  }
+
+  .avatarFallbackMedium {
+    font-size: 0.85rem;
+  }
+
+  .requestName {
+    font-size: 0.75rem;
+  }
+
+  .requestHeadline {
+    font-size: 0.65rem;
+  }
+}

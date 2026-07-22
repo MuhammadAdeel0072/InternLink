@@ -1,0 +1,134 @@
+/* OAuthCallback.module.css */
+
+/* ============================================ */
+/* MAIN CONTAINER                               */
+/* ============================================ */
+.callbackContainer {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+  padding: 20px;
+}
+
+.callbackContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+  padding: 40px;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* ============================================ */
+/* SPINNER                                      */
+/* ============================================ */
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--bg-tertiary);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================ */
+/* TEXT STYLES                                  */
+/* ============================================ */
+.callbackText {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.callbackSubtext {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .callbackContent {
+    padding: 30px 24px;
+    gap: 16px;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border-width: 3px;
+  }
+
+  .callbackText {
+    font-size: 1.3rem;
+  }
+
+  .callbackSubtext {
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .callbackContainer {
+    padding: 16px;
+  }
+
+  .callbackContent {
+    padding: 24px 16px;
+    gap: 14px;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+
+  .callbackText {
+    font-size: 1.1rem;
+  }
+
+  .callbackSubtext {
+    font-size: 0.8rem;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .callbackContent {
+    padding: 20px 12px;
+    gap: 12px;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border-width: 2px;
+  }
+
+  .callbackText {
+    font-size: 1rem;
+  }
+
+  .callbackSubtext {
+    font-size: 0.75rem;
+  }
+}

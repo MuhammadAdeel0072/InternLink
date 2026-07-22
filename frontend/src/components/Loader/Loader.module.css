@@ -1,0 +1,226 @@
+/* Loader.module.css */
+
+/* ============================================ */
+/* SPINNER ANIMATION                            */
+/* ============================================ */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================ */
+/* LOADER - FULL PAGE                          */
+/* ============================================ */
+.loaderFullPage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* ============================================ */
+/* LOADER - INLINE                             */
+/* ============================================ */
+.loaderInline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* ============================================ */
+/* SPINNER                                      */
+/* ============================================ */
+.spinner {
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ============================================ */
+/* SKELETON CARD                                */
+/* ============================================ */
+.skeletonCard {
+  margin-bottom: 16px;
+  padding: 20px;
+}
+
+/* ============================================ */
+/* SKELETON HEADER                              */
+/* ============================================ */
+.skeletonHeader {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.skeletonAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeletonHeaderText {
+  flex: 1;
+}
+
+.skeletonTitle {
+  width: 120px;
+  height: 16px;
+  margin-bottom: 8px;
+}
+
+.skeletonSubtitle {
+  width: 80px;
+  height: 12px;
+}
+
+/* ============================================ */
+/* SKELETON LINES                               */
+/* ============================================ */
+.skeletonLine {
+  width: 100%;
+  height: 14px;
+  margin-bottom: 8px;
+}
+
+.skeletonLineShort {
+  width: 60%;
+  height: 14px;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .loaderInline {
+    padding: 20px;
+  }
+
+  .skeletonCard {
+    padding: 16px;
+  }
+
+  .skeletonAvatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .skeletonTitle {
+    width: 100px;
+    height: 14px;
+  }
+
+  .skeletonSubtitle {
+    width: 70px;
+    height: 11px;
+  }
+
+  .skeletonLine {
+    height: 12px;
+  }
+
+  .skeletonLineShort {
+    height: 12px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .loaderInline {
+    padding: 16px;
+  }
+
+  .skeletonCard {
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .skeletonHeader {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .skeletonAvatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .skeletonTitle {
+    width: 80px;
+    height: 12px;
+    margin-bottom: 6px;
+  }
+
+  .skeletonSubtitle {
+    width: 60px;
+    height: 10px;
+  }
+
+  .skeletonLine {
+    height: 10px;
+    margin-bottom: 6px;
+  }
+
+  .skeletonLineShort {
+    height: 10px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .loaderInline {
+    padding: 12px;
+  }
+
+  .skeletonCard {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .skeletonHeader {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .skeletonAvatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .skeletonTitle {
+    width: 60px;
+    height: 10px;
+    margin-bottom: 4px;
+  }
+
+  .skeletonSubtitle {
+    width: 50px;
+    height: 8px;
+  }
+
+  .skeletonLine {
+    height: 8px;
+    margin-bottom: 4px;
+  }
+
+  .skeletonLineShort {
+    height: 8px;
+  }
+}

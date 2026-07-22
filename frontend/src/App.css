@@ -182,3 +182,17 @@
     border-right-color: var(--border);
   }
 }
+
+
+/* ============================================ */
+/* GLOBAL RESPONSIVE RULES                       */
+/* ============================================ */
+@media (max-width: 768px) {
+  main { margin-left: 0 !important; padding-bottom: 75px !important; }
+  .card { padding: 14px !important; }
+  h1 { font-size: 1.2rem !important; }
+}
+@media (max-width: 480px) {
+  .card { padding: 10px !important; border-radius: 8px !important; }
+  .btn { padding: 8px 14px !important; font-size: 0.8rem !important; }
+}

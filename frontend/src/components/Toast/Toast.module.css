@@ -1,0 +1,239 @@
+/* Toast.module.css */
+
+/* ============================================ */
+/* TOAST CONTAINER                              */
+/* ============================================ */
+.toastContainer {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10000;
+}
+
+/* ============================================ */
+/* TOAST ANIMATIONS                             */
+/* ============================================ */
+.toastEntering {
+  animation: slideIn 0.3s ease forwards;
+}
+
+.toastExiting {
+  animation: slideOut 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* ============================================ */
+/* TOAST CONTENT                                */
+/* ============================================ */
+.toastContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 14px 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  min-width: 300px;
+  max-width: 450px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================ */
+/* TOAST TYPES                                  */
+/* ============================================ */
+.success {
+  background-color: rgba(34, 197, 94, 0.95);
+}
+
+.error {
+  background-color: rgba(239, 68, 68, 0.95);
+}
+
+.warning {
+  background-color: rgba(245, 158, 11, 0.95);
+}
+
+.info {
+  background-color: rgba(59, 130, 246, 0.95);
+}
+
+/* ============================================ */
+/* TOAST MESSAGE                                */
+/* ============================================ */
+.toastMessage {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  flex: 1;
+  line-height: 1.4;
+  color: white;
+}
+
+/* ============================================ */
+/* TOAST CLOSE BUTTON                           */
+/* ============================================ */
+.toastCloseBtn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+}
+
+.toastCloseBtn:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.toastCloseBtn:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .toastContainer {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+  }
+
+  .toastContent {
+    min-width: unset;
+    max-width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+  }
+
+  .toastMessage {
+    font-size: 0.8rem;
+  }
+
+  .toastContent svg:first-child {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toastCloseBtn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .toastContainer {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+  }
+
+  .toastContent {
+    padding: 10px 14px;
+    border-radius: 8px;
+    gap: 10px;
+  }
+
+  .toastMessage {
+    font-size: 0.75rem;
+  }
+
+  .toastContent svg:first-child {
+    width: 16px;
+    height: 16px;
+  }
+
+  .toastCloseBtn {
+    padding: 2px;
+  }
+
+  .toastCloseBtn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOut {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .toastContainer {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+  }
+
+  .toastContent {
+    padding: 8px 12px;
+    border-radius: 6px;
+    gap: 8px;
+  }
+
+  .toastMessage {
+    font-size: 0.7rem;
+  }
+
+  .toastContent svg:first-child {
+    width: 14px;
+    height: 14px;
+  }
+
+  .toastCloseBtn svg {
+    width: 10px;
+    height: 10px;
+  }
+}

@@ -1,0 +1,75 @@
+/* AuthDivider.module.css */
+
+/* ============================================ */
+/* AUTH DIVIDER                                 */
+/* ============================================ */
+.authDivider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+/* ============================================ */
+/* DIVIDER LINES                                */
+/* ============================================ */
+.authDividerLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-color), transparent);
+}
+
+/* ============================================ */
+/* DIVIDER TEXT                                 */
+/* ============================================ */
+.authDividerText {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .authDivider {
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .authDividerText {
+    font-size: 0.7rem;
+    letter-spacing: 0.4px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .authDivider {
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .authDividerText {
+    font-size: 0.65rem;
+    letter-spacing: 0.3px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .authDivider {
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .authDividerText {
+    font-size: 0.6rem;
+    letter-spacing: 0.2px;
+  }
+}

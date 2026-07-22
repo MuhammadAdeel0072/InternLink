@@ -1,0 +1,99 @@
+/* InputField.module.css */
+
+/* ============================================ */
+/* REQUIRED STAR                                */
+/* ============================================ */
+.requiredStar {
+  color: var(--danger);
+}
+
+/* ============================================ */
+/* TEXTAREA INPUT                               */
+/* ============================================ */
+.textareaInput {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* ============================================ */
+/* SELECT INPUT                                 */
+/* ============================================ */
+.selectInput {
+  background-position: right 16px center;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.selectInput option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* ============================================ */
+/* ERROR TEXT                                   */
+/* ============================================ */
+.errorText {
+  color: var(--danger);
+  font-size: 0.75rem;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .textareaInput {
+    min-height: 50px;
+  }
+
+  .errorText {
+    font-size: 0.7rem;
+  }
+
+  .selectInput {
+    padding-right: 32px;
+    background-position: right 10px center;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .textareaInput {
+    min-height: 40px;
+    font-size: 0.85rem;
+  }
+
+  .errorText {
+    font-size: 0.65rem;
+  }
+
+  .selectInput {
+    padding-right: 28px;
+    background-position: right 8px center;
+    font-size: 0.85rem;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .textareaInput {
+    min-height: 36px;
+    font-size: 0.8rem;
+  }
+
+  .errorText {
+    font-size: 0.6rem;
+  }
+
+  .selectInput {
+    font-size: 0.8rem;
+    padding-right: 24px;
+  }
+}

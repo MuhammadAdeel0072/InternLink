@@ -1,0 +1,137 @@
+/* SkillSuggestions.module.css */
+
+/* ============================================ */
+/* SKILL SUGGESTIONS WRAPPER                    */
+/* ============================================ */
+.skillSuggestionsWrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+/* ============================================ */
+/* SKILL INPUT                                  */
+/* ============================================ */
+.skillInput {
+  width: 100%;
+}
+
+/* ============================================ */
+/* SUGGESTIONS DROPDOWN                         */
+/* ============================================ */
+.suggestionsDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+  margin-top: 4px;
+}
+
+/* Custom scrollbar for dropdown */
+.suggestionsDropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.suggestionsDropdown::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 0 0 8px 8px;
+}
+
+.suggestionsDropdown::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.suggestionsDropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ============================================ */
+/* SUGGESTION ITEM                              */
+/* ============================================ */
+.suggestionItem {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.suggestionItem:last-child {
+  border-bottom: none;
+}
+
+.suggestionItem:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .skillSuggestionsWrapper {
+    margin-bottom: 10px;
+  }
+
+  .suggestionItem {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .suggestionsDropdown {
+    max-height: 180px;
+    border-radius: 6px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .skillSuggestionsWrapper {
+    margin-bottom: 8px;
+  }
+
+  .skillInput {
+    font-size: 0.85rem;
+    padding: 10px 12px;
+  }
+
+  .suggestionItem {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .suggestionsDropdown {
+    max-height: 150px;
+    border-radius: 6px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .skillSuggestionsWrapper {
+    margin-bottom: 6px;
+  }
+
+  .skillInput {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
+
+  .suggestionItem {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+
+  .suggestionsDropdown {
+    max-height: 120px;
+  }
+}

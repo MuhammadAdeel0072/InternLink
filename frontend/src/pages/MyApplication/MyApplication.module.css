@@ -1,0 +1,391 @@
+/* MyApplications.module.css */
+
+/* ============================================ */
+/* MAIN CONTAINER                               */
+/* ============================================ */
+.applicationsContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease;
+  padding: 0 16px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
+/* PAGE HEADER                                  */
+/* ============================================ */
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.pageSubtitle {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+
+/* ============================================ */
+/* EMPTY STATE                                  */
+/* ============================================ */
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.emptyIcon {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyText {
+  margin: 0;
+}
+
+/* ============================================ */
+/* APPLICATIONS LIST                            */
+/* ============================================ */
+.applicationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ============================================ */
+/* APPLICATION CARD                             */
+/* ============================================ */
+.applicationCard {
+  padding: 20px;
+}
+
+.applicationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.applicationInfo {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.companyLogo {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.jobTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+}
+
+.companyName {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 0 0 6px 0;
+}
+
+.jobMeta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ============================================ */
+/* STATUS BADGE                                 */
+/* ============================================ */
+.statusBadge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* ============================================ */
+/* TIMELINE                                     */
+/* ============================================ */
+.timelineContainer {
+  padding: 12px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.timelineDots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.timelineDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.timelineDotActive {
+  border: none;
+}
+
+.timelineLine {
+  flex: 1;
+  height: 2px;
+  background-color: var(--border-color);
+  transition: all 0.3s;
+}
+
+.timelineLineActive {
+  background-color: var(--primary);
+}
+
+.timelineLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  padding: 0 4px;
+  margin-top: 4px;
+}
+
+/* ============================================ */
+/* WITHDRAW BUTTON                              */
+/* ============================================ */
+.withdrawBtn {
+  margin-top: 12px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  background-color: transparent;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.withdrawBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .applicationsContainer {
+    padding: 0 12px;
+  }
+
+  .pageTitle {
+    font-size: 1.3rem;
+  }
+
+  .applicationCard {
+    padding: 16px;
+  }
+
+  .applicationHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .applicationInfo {
+    width: 100%;
+  }
+
+  .companyLogo {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .jobTitle {
+    font-size: 0.95rem;
+  }
+
+  .statusBadge {
+    align-self: flex-start;
+  }
+
+  .timelineLabels {
+    font-size: 0.55rem;
+  }
+
+  .timelineDot {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .applicationsContainer {
+    padding: 0 8px;
+  }
+
+  .pageTitle {
+    font-size: 1.1rem;
+  }
+
+  .pageSubtitle {
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+  }
+
+  .applicationCard {
+    padding: 14px;
+  }
+
+  .applicationInfo {
+    gap: 10px;
+  }
+
+  .companyLogo {
+    width: 36px;
+    height: 36px;
+    font-size: 0.8rem;
+  }
+
+  .jobTitle {
+    font-size: 0.85rem;
+  }
+
+  .companyName {
+    font-size: 0.75rem;
+  }
+
+  .jobMeta {
+    font-size: 0.65rem;
+    gap: 8px;
+  }
+
+  .statusBadge {
+    font-size: 0.6rem;
+    padding: 3px 10px;
+  }
+
+  .timelineContainer {
+    padding: 8px 0;
+  }
+
+  .timelineLabels {
+    font-size: 0.45rem;
+    gap: 2px;
+  }
+
+  .timelineLabels span {
+    text-align: center;
+    flex: 1;
+  }
+
+  .timelineDot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .withdrawBtn {
+    font-size: 0.65rem;
+    padding: 4px 12px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .emptyState {
+    padding: 40px 16px;
+  }
+
+  .emptyIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .emptyText {
+    font-size: 0.85rem;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .applicationsContainer {
+    padding: 0 4px;
+  }
+
+  .applicationCard {
+    padding: 10px;
+  }
+
+  .applicationInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .companyLogo {
+    width: 32px;
+    height: 32px;
+    font-size: 0.7rem;
+  }
+
+  .jobTitle {
+    font-size: 0.8rem;
+  }
+
+  .jobMeta {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .statusBadge {
+    font-size: 0.55rem;
+    padding: 2px 8px;
+  }
+
+  .timelineLabels {
+    font-size: 0.4rem;
+  }
+
+  .timelineDot {
+    width: 10px;
+    height: 10px;
+  }
+}

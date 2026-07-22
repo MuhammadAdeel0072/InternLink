@@ -1,0 +1,119 @@
+/* PrimaryButton.module.css */
+
+/* ============================================ */
+/* PRIMARY BUTTON                               */
+/* ============================================ */
+.primaryButton {
+  height: 48px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  opacity: 1;
+  width: auto;
+}
+
+.primaryButton:active {
+  transform: scale(0.98);
+}
+
+/* ============================================ */
+/* FULL WIDTH                                   */
+/* ============================================ */
+.fullWidth {
+  width: 100%;
+}
+
+/* ============================================ */
+/* DISABLED STATE                               */
+/* ============================================ */
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.disabled:active {
+  transform: none;
+}
+
+/* ============================================ */
+/* SPINNER                                      */
+/* ============================================ */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top: 2.5px solid white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .primaryButton {
+    height: 44px;
+    font-size: 0.95rem;
+    gap: 6px;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .primaryButton {
+    height: 40px;
+    font-size: 0.85rem;
+    gap: 6px;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+  }
+
+  .primaryButton:active {
+    transform: scale(0.97);
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .primaryButton {
+    height: 36px;
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+
+  .spinner {
+    width: 12px;
+    height: 12px;
+    border-width: 1.5px;
+  }
+}

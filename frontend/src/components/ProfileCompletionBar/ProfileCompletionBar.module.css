@@ -1,0 +1,218 @@
+/* ProfileCompletionBar.module.css */
+
+/* ============================================ */
+/* COMPLETION CARD                              */
+/* ============================================ */
+.completionCard {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+}
+
+/* ============================================ */
+/* COMPLETION HEADER                            */
+/* ============================================ */
+.completionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.completionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.completionPercentage {
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: color 0.3s ease;
+}
+
+/* ============================================ */
+/* PROGRESS BAR                                 */
+/* ============================================ */
+.progressBar {
+  height: 8px;
+  background-color: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ============================================ */
+/* CHECKLIST                                    */
+/* ============================================ */
+.checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+/* ============================================ */
+/* CHECKLIST ITEM                               */
+/* ============================================ */
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.checklistItemComplete {
+  color: #22c55e;
+  opacity: 1;
+}
+
+.checklistItemIncomplete {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.checklistIcon {
+  flex-shrink: 0;
+}
+
+.checklistEmoji {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.checklistLabel {
+  font-size: 0.8rem;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .completionCard {
+    padding: 16px 20px;
+  }
+
+  .checklist {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 6px;
+  }
+
+  .completionTitle {
+    font-size: 0.9rem;
+  }
+
+  .completionPercentage {
+    font-size: 1rem;
+  }
+
+  .checklistItem {
+    font-size: 0.75rem;
+    gap: 6px;
+  }
+
+  .checklistLabel {
+    font-size: 0.75rem;
+  }
+
+  .checklistEmoji {
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .completionCard {
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .completionHeader {
+    margin-bottom: 10px;
+  }
+
+  .completionTitle {
+    font-size: 0.85rem;
+  }
+
+  .completionPercentage {
+    font-size: 0.9rem;
+  }
+
+  .progressBar {
+    height: 6px;
+    margin-bottom: 12px;
+  }
+
+  .checklist {
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .checklistItem {
+    font-size: 0.7rem;
+    gap: 4px;
+  }
+
+  .checklistLabel {
+    font-size: 0.7rem;
+  }
+
+  .checklistEmoji {
+    font-size: 0.7rem;
+  }
+
+  .checklistIcon {
+    font-size: 0.65rem;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .completionCard {
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+
+  .completionTitle {
+    font-size: 0.75rem;
+  }
+
+  .completionPercentage {
+    font-size: 0.8rem;
+  }
+
+  .progressBar {
+    height: 4px;
+    margin-bottom: 10px;
+  }
+
+  .checklist {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .checklistItem {
+    font-size: 0.65rem;
+    gap: 3px;
+  }
+
+  .checklistLabel {
+    font-size: 0.65rem;
+  }
+
+  .checklistEmoji {
+    font-size: 0.6rem;
+  }
+
+  .checklistIcon {
+    font-size: 0.55rem;
+  }
+}

@@ -1,0 +1,137 @@
+/* Login.module.css */
+
+/* ============================================ */
+/* REMEMBER ME & FORGOT PASSWORD ROW            */
+/* ============================================ */
+.rememberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.forgotPasswordLink {
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.forgotPasswordLink:hover {
+  color: var(--primary-hover);
+}
+
+/* ============================================ */
+/* UNVERIFIED EMAIL NOTICE                      */
+/* ============================================ */
+.unverifiedNotice {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.unverifiedText {
+  margin: 0;
+  color: #92400e;
+}
+
+.resendLink {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.resendLink:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* ============================================ */
+/* LOGIN BUTTON WRAPPER                         */
+/* ============================================ */
+.loginButtonWrapper {
+  margin-top: 24px;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .rememberRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .forgotPasswordLink {
+    font-size: 0.8rem;
+  }
+
+  .unverifiedNotice {
+    padding: 10px;
+    font-size: 0.75rem;
+  }
+
+  .loginButtonWrapper {
+    margin-top: 20px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .rememberRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .forgotPasswordLink {
+    font-size: 0.75rem;
+  }
+
+  .unverifiedNotice {
+    padding: 8px 12px;
+    font-size: 0.7rem;
+    border-radius: 6px;
+  }
+
+  .unverifiedText {
+    line-height: 1.5;
+  }
+
+  .loginButtonWrapper {
+    margin-top: 16px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .rememberRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .forgotPasswordLink {
+    font-size: 0.7rem;
+    width: 100%;
+    text-align: left;
+  }
+
+  .unverifiedNotice {
+    padding: 6px 10px;
+    font-size: 0.65rem;
+  }
+}

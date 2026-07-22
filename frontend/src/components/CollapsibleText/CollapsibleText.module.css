@@ -1,0 +1,125 @@
+/* CollapsibleText.module.css */
+
+/* ============================================ */
+/* COLLAPSIBLE CONTAINER                        */
+/* ============================================ */
+.collapsibleContainer {
+  width: 100%;
+}
+
+/* ============================================ */
+/* COLLAPSIBLE CONTENT                          */
+/* ============================================ */
+.collapsibleContent {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  position: relative;
+}
+
+.collapsibleContentCollapsed {
+  max-height: 80px; /* Default, will be overridden by inline style */
+}
+
+/* ============================================ */
+/* COLLAPSIBLE TEXT                             */
+/* ============================================ */
+.collapsibleText {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+}
+
+/* ============================================ */
+/* GRADIENT OVERLAY                             */
+/* ============================================ */
+.collapsibleGradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(transparent, var(--bg-secondary));
+  pointer-events: none;
+}
+
+/* ============================================ */
+/* TOGGLE BUTTON                                */
+/* ============================================ */
+.collapsibleToggle {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0 0 0;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.collapsibleToggle:hover {
+  color: var(--primary-hover);
+  transform: scale(1.02);
+}
+
+.collapsibleToggle:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .collapsibleText {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .collapsibleToggle {
+    font-size: 0.85rem;
+    padding: 6px 0 0 0;
+  }
+
+  .collapsibleGradient {
+    height: 35px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .collapsibleText {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .collapsibleToggle {
+    font-size: 0.8rem;
+    padding: 4px 0 0 0;
+  }
+
+  .collapsibleGradient {
+    height: 30px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .collapsibleText {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .collapsibleToggle {
+    font-size: 0.75rem;
+    padding: 4px 0 0 0;
+  }
+
+  .collapsibleGradient {
+    height: 25px;
+  }
+}

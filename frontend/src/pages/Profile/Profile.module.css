@@ -1,0 +1,1436 @@
+/* ProfilePage.module.css */
+
+/* ============================================ */
+/* MAIN CONTAINER                               */
+/* ============================================ */
+.profileContainer {
+  max-width: 850px;
+  margin: 0 auto;
+  animation: fadeIn 0.4s ease;
+  padding: 0 16px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.errorContainer {
+  color: var(--danger);
+  text-align: center;
+  padding: 40px;
+}
+
+/* ============================================ */
+/* HIDDEN INPUTS                                */
+/* ============================================ */
+.hiddenInput {
+  display: none;
+}
+
+/* ============================================ */
+/* PROFILE HEADER                               */
+/* ============================================ */
+.profileHeader {
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.coverPhoto {
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.coverBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.coverBtn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================ */
+/* PROFILE INFO                                 */
+/* ============================================ */
+.profileInfo {
+  padding: 0 24px 24px;
+  position: relative;
+  margin-top: -30px;
+  flex-shrink: 0;
+  min-height: 140px;
+}
+
+.profileInfoRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.avatarWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatarImage {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--bg-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--bg-primary);
+}
+
+.avatarFallback {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 2.5rem;
+  border: 4px solid var(--bg-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.avatarEditBtn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background-color: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.avatarEditBtn:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.avatarEditIcon {
+  color: var(--text-secondary);
+}
+
+.userDetails {
+  flex: 1;
+  min-width: 200px;
+  padding-bottom: 4px;
+}
+
+.userName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.userHeadline {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 4px 0 8px 0;
+}
+
+.userMeta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.editProfileBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.editProfileBtn:hover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.connectedBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: var(--success-light);
+  color: var(--success);
+  border: 1px solid var(--success);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pendingBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: var(--warning-light);
+  color: var(--warning);
+  border: 1px solid var(--warning);
+  font-size: 0.85rem;
+}
+
+.connectBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.connectBtn:hover {
+  background-color: var(--primary-hover);
+}
+
+.messageBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  background-color: transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.messageBtn:hover {
+  background-color: var(--primary-light);
+}
+
+.shareBtn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shareBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+/* ============================================ */
+/* LINKS SECTION                                */
+/* ============================================ */
+.linksSection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+  align-items: center;
+}
+
+.linksList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.linkItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.linkItem:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.resumeWrapper {
+  margin-left: auto;
+}
+
+.resumeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: var(--primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.resumeBtn:hover {
+  opacity: 0.9;
+}
+
+.uploadResumeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+  background-color: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uploadResumeBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ============================================ */
+/* SECTION CARDS                                */
+/* ============================================ */
+.sectionCard {
+  margin-bottom: 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.sectionIcon {
+  color: var(--primary);
+}
+
+.sectionActionBtn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ============================================ */
+/* SKILLS                                       */
+/* ============================================ */
+.skillsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skillTag {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skillTagPinned {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
+.pinIcon {
+  font-size: 0.7rem;
+}
+
+.skillStars {
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+/* ============================================ */
+/* LANGUAGES                                    */
+/* ============================================ */
+.languagesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.languageTag {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.languageProficiency {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.languageDeleteBtn {
+  color: var(--danger);
+  padding: 0;
+  display: flex;
+  margin-left: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* ============================================ */
+/* EXPERIENCE                                   */
+/* ============================================ */
+.experienceList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.experienceItem {
+  display: flex;
+  gap: 16px;
+  position: relative;
+}
+
+.experienceIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.experienceContent {
+  flex: 1;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.experienceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.experienceTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.experienceCompany {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.experienceDate {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.experienceBadge {
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  margin-left: 8px;
+}
+
+.experienceDescription {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 10px;
+  white-space: pre-wrap;
+}
+
+/* ============================================ */
+/* EDUCATION                                    */
+/* ============================================ */
+.educationList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.educationItem {
+  display: flex;
+  gap: 16px;
+}
+
+.educationIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.educationContent {
+  flex: 1;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.educationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.educationSchool {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.educationDegree {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.educationDate {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.educationGrade {
+  color: var(--text-secondary);
+  margin-left: 12px;
+}
+
+.educationAchievements {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.educationAchievements span {
+  color: var(--text-primary);
+}
+
+.educationDescription {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 8px;
+  white-space: pre-wrap;
+}
+
+/* ============================================ */
+/* PROJECTS                                     */
+/* ============================================ */
+.projectsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.projectCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+}
+
+.projectImage {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+
+.projectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.projectTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.projectDescription {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  flex: 1;
+  margin-bottom: 12px;
+}
+
+.projectTechnologies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.techTag {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.projectLinks {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+}
+
+.projectLink {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.projectLink:hover {
+  color: var(--primary);
+}
+
+.projectLinkDemo {
+  color: var(--primary);
+  margin-left: auto;
+}
+
+.projectLinkDemo:hover {
+  color: var(--primary-hover);
+}
+
+.projectActions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ============================================ */
+/* CERTIFICATIONS                               */
+/* ============================================ */
+.certificationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.certificationItem {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.certificationIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.certificationContent {
+  flex: 1;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.certificationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.certificationName {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.certificationOrg {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.certificationDate {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.certificationId {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+.certificationActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.certificationLink {
+  color: var(--primary);
+  display: flex;
+  transition: color 0.2s;
+}
+
+.certificationLink:hover {
+  color: var(--primary-hover);
+}
+
+/* ============================================ */
+/* ITEM ACTIONS                                 */
+/* ============================================ */
+.itemActions {
+  display: flex;
+  gap: 8px;
+}
+
+.editBtn {
+  color: var(--text-muted);
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.editBtn:hover {
+  color: var(--primary);
+}
+
+.deleteBtn {
+  color: var(--danger);
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.deleteBtn:hover {
+  color: #dc2626;
+}
+
+/* ============================================ */
+/* EMPTY STATE                                  */
+/* ============================================ */
+.emptyText {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ============================================ */
+/* MODAL STYLES                                 */
+/* ============================================ */
+.skillsModal {
+  min-height: 400px;
+}
+
+.skillsAddSection {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.skillSearchWrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.skillSuggestionsDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  box-shadow: var(--shadow-lg);
+}
+
+.skillProficiencyRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.skillProficiencyRow .form-label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.skillProficiencyRow select {
+  width: auto;
+  flex: 1;
+}
+
+.skillsListModal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.skillItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.skillItemPinned {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.skillItemInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.skillItemName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-width: 80px;
+}
+
+.skillProficiencySelect {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.skillItemActions {
+  display: flex;
+  gap: 6px;
+  margin-left: 12px;
+}
+
+.pinBtn {
+  color: var(--text-muted);
+  padding: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: color 0.2s;
+}
+
+.pinBtn:hover {
+  color: var(--primary);
+}
+
+.removeSkillBtn {
+  color: var(--danger);
+  padding: 6px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: color 0.2s;
+}
+
+.removeSkillBtn:hover {
+  color: #dc2626;
+}
+
+.noSkills {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.noSkills p:first-child {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.noSkills p:last-child {
+  font-size: 0.85rem;
+}
+
+.modalSubtitle {
+  margin-top: 20px;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.twoColumnGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkboxRow input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.checkboxRow .form-label {
+  margin: 0;
+}
+
+.fileInput {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  width: 100%;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .profileContainer {
+    padding: 0 12px;
+  }
+
+  .profileInfo {
+    padding: 0 16px 16px;
+  }
+
+  .profileInfoRow {
+    gap: 14px;
+  }
+
+  .avatarImage,
+  .avatarFallback {
+    width: 90px;
+    height: 90px;
+    font-size: 2rem;
+  }
+
+  .avatarEditBtn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .userName {
+    font-size: 1.3rem;
+  }
+
+  .actionButtons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .linksSection {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .resumeWrapper {
+    margin-left: 0;
+  }
+
+  .projectsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+
+  .twoColumnGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .profileContainer {
+    padding: 0 8px;
+  }
+
+  .profileHeader {
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+
+  .coverPhoto {
+    height: 120px;
+  }
+
+  .coverBtn {
+    font-size: 0.65rem;
+    padding: 4px 10px;
+  }
+
+  .profileInfo {
+    padding: 0 12px 12px;
+    margin-top: -24px;
+  }
+
+  .profileInfoRow {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatarImage,
+  .avatarFallback {
+    width: 80px;
+    height: 80px;
+    font-size: 1.8rem;
+  }
+
+  .avatarEditBtn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .userDetails {
+    text-align: center;
+    min-width: unset;
+    width: 100%;
+  }
+
+  .userName {
+    font-size: 1.1rem;
+  }
+
+  .userHeadline {
+    font-size: 0.8rem;
+  }
+
+  .userMeta {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .metaItem {
+    font-size: 0.75rem;
+  }
+
+  .actionButtons {
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .editProfileBtn,
+  .connectBtn,
+  .messageBtn,
+  .connectedBtn,
+  .pendingBtn {
+    font-size: 0.7rem;
+    padding: 6px 12px;
+  }
+
+  .shareBtn {
+    padding: 6px 10px;
+  }
+
+  .linksSection {
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .linkItem {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+
+  .resumeBtn,
+  .uploadResumeBtn {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sectionCard {
+    margin-bottom: 16px;
+    padding: 14px;
+  }
+
+  .sectionTitle {
+    font-size: 1rem;
+  }
+
+  .sectionActionBtn {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+
+  .skillsContainer {
+    gap: 6px;
+  }
+
+  .skillTag {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+
+  .skillStars {
+    font-size: 0.6rem;
+  }
+
+  .experienceItem,
+  .educationItem {
+    gap: 10px;
+  }
+
+  .experienceIcon,
+  .educationIcon,
+  .certificationIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .experienceIcon svg,
+  .educationIcon svg,
+  .certificationIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .experienceTitle,
+  .educationSchool,
+  .certificationName {
+    font-size: 0.9rem;
+  }
+
+  .experienceCompany,
+  .educationDegree,
+  .certificationOrg {
+    font-size: 0.8rem;
+  }
+
+  .experienceDate,
+  .educationDate,
+  .certificationDate {
+    font-size: 0.7rem;
+  }
+
+  .experienceDescription,
+  .educationDescription,
+  .educationAchievements {
+    font-size: 0.8rem;
+  }
+
+  .projectsGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .projectCard {
+    padding: 12px;
+  }
+
+  .projectImage {
+    height: 120px;
+  }
+
+  .projectTitle {
+    font-size: 0.9rem;
+  }
+
+  .projectDescription {
+    font-size: 0.8rem;
+  }
+
+  .certificationItem {
+    gap: 10px;
+  }
+
+  .certificationId {
+    font-size: 0.65rem;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    padding: 2px;
+  }
+
+  .editBtn svg,
+  .deleteBtn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .skillsModal {
+    min-height: 300px;
+  }
+
+  .skillItem {
+    padding: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .skillItemInfo {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .skillItemName {
+    font-size: 0.85rem;
+    min-width: 60px;
+  }
+
+  .skillProficiencySelect {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+
+  .skillItemActions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .noSkills p {
+    font-size: 0.8rem;
+  }
+
+  .modalSubtitle {
+    font-size: 0.85rem;
+  }
+
+  .checkboxRow {
+    gap: 6px;
+  }
+
+  .checkboxRow input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+
+  .fileInput {
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .profileContainer {
+    padding: 0 4px;
+  }
+
+  .profileInfo {
+    padding: 0 8px 8px;
+  }
+
+  .avatarImage,
+  .avatarFallback {
+    width: 70px;
+    height: 70px;
+    font-size: 1.5rem;
+  }
+
+  .avatarEditBtn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .userName {
+    font-size: 1rem;
+  }
+
+  .actionButtons {
+    gap: 4px;
+  }
+
+  .editProfileBtn,
+  .connectBtn,
+  .messageBtn,
+  .connectedBtn,
+  .pendingBtn {
+    font-size: 0.65rem;
+    padding: 4px 8px;
+  }
+
+  .shareBtn {
+    padding: 4px 8px;
+  }
+
+  .sectionCard {
+    padding: 10px;
+  }
+
+  .skillsContainer {
+    gap: 4px;
+  }
+
+  .skillTag {
+    font-size: 0.65rem;
+    padding: 4px 8px;
+  }
+
+  .projectsGrid {
+    gap: 10px;
+  }
+
+  .projectCard {
+    padding: 10px;
+  }
+
+  .projectImage {
+    height: 100px;
+  }
+}

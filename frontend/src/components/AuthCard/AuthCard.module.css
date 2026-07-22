@@ -1,0 +1,123 @@
+/* AuthCard.module.css */
+
+/* ============================================ */
+/* AUTH CARD CONTAINER                          */
+/* ============================================ */
+.authCardContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+}
+
+/* ============================================ */
+/* AUTH CARD                                    */
+/* ============================================ */
+.authCard {
+  width: 100%;
+  max-width: 450px;
+  padding: 40px 32px;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
+/* TITLE                                        */
+/* ============================================ */
+.authCardTitle {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+  letter-spacing: -0.5px;
+}
+
+/* ============================================ */
+/* SUBTITLE                                     */
+/* ============================================ */
+.authCardSubtitle {
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: 0.9rem;
+  margin-bottom: 32px;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .authCard {
+    padding: 32px 24px;
+    max-width: 400px;
+  }
+
+  .authCardTitle {
+    font-size: 1.75rem;
+  }
+
+  .authCardSubtitle {
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .authCardContainer {
+    padding: 16px;
+    min-height: 100vh;
+    align-items: center;
+  }
+
+  .authCard {
+    padding: 24px 16px;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .authCardTitle {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+  }
+
+  .authCardSubtitle {
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .authCardContainer {
+    padding: 12px;
+  }
+
+  .authCard {
+    padding: 20px 12px;
+  }
+
+  .authCardTitle {
+    font-size: 1.25rem;
+  }
+
+  .authCardSubtitle {
+    font-size: 0.75rem;
+    margin-bottom: 16px;
+  }
+}
