@@ -50,8 +50,12 @@ const Feed = () => {
   const [expandedComments, setExpandedComments] = useState({});
   const [showAllReplies, setShowAllReplies] = useState({});
   const [activeReply, setActiveReply] = useState({});
-
+  const [visibleCommentCount, setVisibleCommentCount] = useState({});
   const limit = 5;
+
+  const [nestedReplyInputs, setNestedReplyInputs] = useState({});
+const [activeNestedReply, setActiveNestedReply] = useState({});
+const [showAllNestedReplies, setShowAllNestedReplies] = useState({});
 
   const fetchPosts = async (reset = false) => {
     try {
@@ -166,6 +170,24 @@ const Feed = () => {
       alert('Failed to add reply');
     }
   };
+const handleNestedReply = async (postId, commentId, parentReplyId) => {
+  const text = nestedReplyInputs[`${postId}-${commentId}-${parentReplyId}`];
+  if (!text || !text.trim()) return;
+  try {
+    // Use the existing /reply endpoint
+    const res = await api.post(`/posts/${postId}/comments/${commentId}/reply`, { 
+      text,
+      // Add a flag to identify nested replies
+      isNestedReply: true,
+      parentReplyId: parentReplyId 
+    });
+    setPosts((prev) => prev.map((p) => (p._id === postId ? res.data : p)));
+    setNestedReplyInputs((prev) => ({ ...prev, [`${postId}-${commentId}-${parentReplyId}`]: '' }));
+    setActiveNestedReply((prev) => ({ ...prev, [`${commentId}-${parentReplyId}`]: false }));
+  } catch (err) {
+    alert('Failed to add reply');
+  }
+};
 
   const handleDeletePost = async (postId) => {
     if (!window.confirm('Delete this post?')) return;
@@ -178,12 +200,38 @@ const Feed = () => {
   };
 
   const toggleComments = (postId) => {
-    setExpandedComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
-  };
+  setExpandedComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  // Reset visible count when expanding
+  if (!expandedComments[postId]) {
+    setVisibleCommentCount((prev) => ({ ...prev, [postId]: 2 }));
+  }
+};
+
+const showMoreComments = (postId) => {
+  setVisibleCommentCount((prev) => ({ 
+    ...prev, 
+    [postId]: (prev[postId] || 2) + 2 
+  }));
+};
 
   const toggleShowReplies = (commentId) => {
     setShowAllReplies((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
   };
+
+  const toggleShowNestedReplies = (replyId) => {
+  setShowAllNestedReplies((prev) => ({ ...prev, [replyId]: !prev[replyId] }));
+};
+
+  const getTotalCommentCount = (post) => {
+  let count = post.comments?.length || 0;
+  post.comments?.forEach(comment => {
+    count += comment.replies?.length || 0;
+    comment.replies?.forEach(reply => {
+      count += reply.nestedReplies?.length || 0;
+    });
+  });
+  return count;
+};
 
   return (
     <div style={{ maxWidth: '650px', margin: '0 auto', animation: 'fadeIn 0.3s ease' }}>
@@ -328,15 +376,15 @@ const Feed = () => {
               )}
 
               {/* Action Counters */}
-              <div style={{
-                display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)',
-                fontSize: '0.8rem', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)', marginBottom: '10px'
-              }}>
-                <span>{post.likes?.length || 0} Likes</span>
-                <span onClick={() => toggleComments(post._id)} style={{ cursor: 'pointer' }}>
-                  {post.comments?.length || 0} Comments
-                </span>
-              </div>
+            <div style={{
+  display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)',
+  fontSize: '0.8rem', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)', marginBottom: '10px'
+}}>
+  <span>{post.likes?.length || 0} Likes</span>
+  <span onClick={() => toggleComments(post._id)} style={{ cursor: 'pointer' }}>
+    {getTotalCommentCount(post)} Comments {/* ← UPDATED */}
+  </span>
+</div>
 
               {/* Action Buttons */}
               <div style={{ display: 'flex', gap: '20px', marginBottom: '14px' }}>
@@ -346,8 +394,8 @@ const Feed = () => {
                   fontWeight: post.likes?.includes(user._id) ? 600 : 500
                 }}><ThumbsUp size={16} /> Like</button>
                 <button onClick={() => toggleComments(post._id)} style={{
-                  display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)'
-                }}><MessageCircle size={16} /> Comment</button>
+  display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)'
+}}><MessageCircle size={16} /> Comment ({getTotalCommentCount(post)})</button>
               </div>
 
               {/* Comments Section */}
@@ -371,85 +419,261 @@ const Feed = () => {
                       <Send size={14} />
                     </button>
                   </div>
+  {/* Comments List */}
+{post.comments?.length > 0 ? (
+  <>
+    {/* Show only visible comments (2 initially) */}
+    {post.comments.slice(0, visibleCommentCount[post._id] || 2).map((comment) => {
+      const replies = comment.replies || [];
+      const showAll = showAllReplies[comment._id];
+      const visibleReplies = showAll ? replies : replies.slice(0, 2);
+      const hasMoreReplies = replies.length > 2;
 
-                  {/* Comments List */}
-                  {post.comments?.length > 0 ? (
-                    post.comments.map((comment) => {
-                      const replies = comment.replies || [];
-                      const showAll = showAllReplies[comment._id];
-                      const visibleReplies = showAll ? replies : replies.slice(0, 2);
-                      const hasMoreReplies = replies.length > 2;
+      return (
+        <div key={comment._id} style={{ marginBottom: '16px' }}>
+          {/* Main Comment */}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+            {/* Comment Avatar */}
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--bg-tertiary)', overflow: 'hidden', flexShrink: 0 }}>
+              {comment.user?.avatar ? (
+                <img src={comment.user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600 }}>
+                  {comment.user?.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ backgroundColor: 'var(--bg-tertiary)', padding: '10px 14px', borderRadius: '12px' }}>
+                <h5 style={{ fontSize: '0.8rem', fontWeight: 600 }}>{comment.user?.name}</h5>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '2px' }}>{comment.text}</p>
+              </div>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '4px', paddingLeft: '4px' }}>
+                <button 
+                  onClick={() => setActiveReply(prev => ({ ...prev, [comment._id]: !prev[comment._id] }))}
+                  style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}
+                >
+                  Reply {comment.replies?.length > 0 && `(${comment.replies.length})`}
+                </button>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                  {new Date(comment.createdAt).toLocaleDateString()}
+                </span>
+              </div>
 
-                      return (
-                        <div key={comment._id} style={{ marginBottom: '12px' }}>
-                          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--bg-tertiary)', overflow: 'hidden', flexShrink: 0 }}>
-                              {comment.user?.avatar ? (
-                                <img src={comment.user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : (
-                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600 }}>
-                                  {comment.user?.name?.charAt(0).toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ backgroundColor: 'var(--bg-tertiary)', padding: '10px 14px', borderRadius: '12px' }}>
-                                <h5 style={{ fontSize: '0.8rem', fontWeight: 600 }}>{comment.user?.name}</h5>
-                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '2px' }}>{comment.text}</p>
+              {/* Reply Input for Comment */}
+              {activeReply[comment._id] && (
+                <div style={{ display: 'flex', gap: '6px', marginTop: '8px', marginLeft: '12px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Write a reply..."
+                    value={replyInputs[`${post._id}-${comment._id}`] || ''}
+                    onChange={(e) => setReplyInputs(prev => ({ ...prev, [`${post._id}-${comment._id}`]: e.target.value }))}
+                    style={{
+                      flex: 1, padding: '6px 12px', backgroundColor: 'var(--bg-tertiary)',
+                      borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)',
+                      color: 'var(--text-primary)', fontSize: '0.8rem'
+                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handlePostReply(post._id, comment._id); }} 
+                  />
+                  <button 
+                    onClick={() => handlePostReply(post._id, comment._id)}
+                    style={{ padding: '6px', borderRadius: '50%', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', display: 'flex' }}
+                  >
+                    <Send size={12} />
+                  </button>
+                </div>
+              )}
+
+              {/* ===== REPLIES (Level 1) ===== */}
+              {visibleReplies.map((reply) => {
+                const nestedReplies = reply.nestedReplies || [];
+                const showAllNested = showAllNestedReplies[reply._id];
+                const visibleNestedReplies = showAllNested ? nestedReplies : nestedReplies.slice(0, 2);
+                const hasMoreNested = nestedReplies.length > 2;
+
+                return (
+                  <div key={reply._id} style={{ marginTop: '8px', marginLeft: '12px' }}>
+                    {/* Reply Container */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <CornerDownRight size={14} style={{ color: 'var(--text-muted)', marginTop: '6px', flexShrink: 0 }} />
+                      
+                      {/* Reply Content */}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', gap: '8px', backgroundColor: 'var(--bg-tertiary)', padding: '8px 12px', borderRadius: '10px' }}>
+                          {/* Reply Avatar */}
+                          <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'var(--bg-secondary)', overflow: 'hidden', flexShrink: 0, marginTop: '2px' }}>
+                            {reply.user?.avatar ? (
+                              <img src={reply.user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 600 }}>
+                                {reply.user?.name?.charAt(0).toUpperCase() || '?'}
                               </div>
-                              <div style={{ display: 'flex', gap: '16px', marginTop: '4px', paddingLeft: '4px' }}>
-                                <button onClick={() => setActiveReply(prev => ({ ...prev, [comment._id]: !prev[comment._id] }))}
-                                  style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>Reply</button>
-                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                                  {new Date(comment.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
-
-                              {/* Replies */}
-                              {visibleReplies.map((reply) => (
-                                <div key={reply._id} style={{ display: 'flex', gap: '8px', marginTop: '8px', marginLeft: '12px' }}>
-                                  <CornerDownRight size={14} style={{ color: 'var(--text-muted)', marginTop: '6px' }} />
-                                  <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '8px 12px', borderRadius: '10px' }}>
-                                    <h5 style={{ fontSize: '0.75rem', fontWeight: 600 }}>{reply.user?.name}</h5>
-                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{reply.text}</p>
-                                  </div>
-                                </div>
-                              ))}
-
-                              {/* See more / See less */}
-                              {hasMoreReplies && (
-                                <button onClick={() => toggleShowReplies(comment._id)}
-                                  style={{ fontSize: '0.7rem', color: 'var(--primary)', marginLeft: '28px', marginTop: '4px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  {showAll ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> See {replies.length - 2} more replies</>}
-                                </button>
-                              )}
-
-                              {/* Reply Input */}
-                              {activeReply[comment._id] && (
-                                <div style={{ display: 'flex', gap: '6px', marginTop: '8px', marginLeft: '12px' }}>
-                                  <input type="text" placeholder="Write a reply..."
-                                    value={replyInputs[`${post._id}-${comment._id}`] || ''}
-                                    onChange={(e) => setReplyInputs(prev => ({ ...prev, [`${post._id}-${comment._id}`]: e.target.value }))}
-                                    style={{
-                                      flex: 1, padding: '6px 12px', backgroundColor: 'var(--bg-tertiary)',
-                                      borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)',
-                                      color: 'var(--text-primary)', fontSize: '0.8rem'
-                                    }}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handlePostReply(post._id, comment._id); }} />
-                                  <button onClick={() => handlePostReply(post._id, comment._id)}
-                                    style={{ padding: '6px', borderRadius: '50%', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', display: 'flex' }}>
-                                    <Send size={12} />
-                                  </button>
-                                </div>
-                              )}
+                            )}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <h5 style={{ fontSize: '0.75rem', fontWeight: 600 }}>{reply.user?.name}</h5>
+                              <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>
+                                {new Date(reply.createdAt).toLocaleDateString()}
+                              </span>
                             </div>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '2px' }}>{reply.text}</p>
                           </div>
                         </div>
-                      );
-                    })
+
+                        {/* Reply Actions */}
+                        <div style={{ display: 'flex', gap: '16px', marginTop: '4px', paddingLeft: '8px' }}>
+                          <button 
+                            onClick={() => setActiveNestedReply(prev => ({ ...prev, [`${comment._id}-${reply._id}`]: !prev[`${comment._id}-${reply._id}`] }))}
+                            style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 500 }}
+                          >
+                            Reply {nestedReplies.length > 0 && `(${nestedReplies.length})`}
+                          </button>
+                        </div>
+
+                        {/* ===== NESTED REPLIES (Level 2) ===== */}
+                        {visibleNestedReplies.map((nestedReply) => (
+                          <div key={nestedReply._id} style={{ marginTop: '8px', marginLeft: '16px' }}>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <CornerDownRight size={12} style={{ color: 'var(--text-muted)', marginTop: '6px', flexShrink: 0 }} />
+                              <div style={{ flex: 1, backgroundColor: 'var(--bg-tertiary)', padding: '8px 12px', borderRadius: '10px' }}>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  {/* Nested Reply Avatar */}
+                                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--bg-secondary)', overflow: 'hidden', flexShrink: 0, marginTop: '2px' }}>
+                                    {nestedReply.user?.avatar ? (
+                                      <img src={nestedReply.user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontSize: '0.6rem', fontWeight: 600 }}>
+                                        {nestedReply.user?.name?.charAt(0).toUpperCase() || '?'}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <h5 style={{ fontSize: '0.7rem', fontWeight: 600 }}>{nestedReply.user?.name}</h5>
+                                      <span style={{ fontSize: '0.55rem', color: 'var(--text-muted)' }}>
+                                        {new Date(nestedReply.createdAt).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '2px' }}>{nestedReply.text}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* See More Nested Replies */}
+                        {hasMoreNested && (
+                          <button 
+                            onClick={() => toggleShowNestedReplies(reply._id)}
+                            style={{ fontSize: '0.65rem', color: 'var(--primary)', marginLeft: '20px', marginTop: '4px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            {showAllNested ? (
+                              <><ChevronUp size={12} /> Show less</>
+                            ) : (
+                              <><ChevronDown size={12} /> See {nestedReplies.length - 2} more replies</>
+                            )}
+                          </button>
+                        )}
+
+                        {/* Nested Reply Input */}
+                        {activeNestedReply[`${comment._id}-${reply._id}`] && (
+                          <div style={{ display: 'flex', gap: '6px', marginTop: '8px', marginLeft: '20px' }}>
+                            <input 
+                              type="text" 
+                              placeholder="Write a reply..."
+                              value={nestedReplyInputs[`${post._id}-${comment._id}-${reply._id}`] || ''}
+                              onChange={(e) => setNestedReplyInputs(prev => ({ ...prev, [`${post._id}-${comment._id}-${reply._id}`]: e.target.value }))}
+                              style={{
+                                flex: 1, padding: '6px 12px', backgroundColor: 'var(--bg-tertiary)',
+                                borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)',
+                                color: 'var(--text-primary)', fontSize: '0.75rem'
+                              }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleNestedReply(post._id, comment._id, reply._id); }} 
+                            />
+                            <button 
+                              onClick={() => handleNestedReply(post._id, comment._id, reply._id)}
+                              style={{ padding: '6px', borderRadius: '50%', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', display: 'flex' }}
+                            >
+                              <Send size={12} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* See More Replies for Comment */}
+              {hasMoreReplies && (
+                <button 
+                  onClick={() => toggleShowReplies(comment._id)}
+                  style={{ fontSize: '0.7rem', color: 'var(--primary)', marginLeft: '28px', marginTop: '4px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  {showAll ? (
+                    <><ChevronUp size={12} /> Show less</>
                   ) : (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center' }}>No comments yet.</p>
+                    <><ChevronDown size={12} /> See {replies.length - 2} more replies</>
                   )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+    
+    {/* See More / See Less for Comments */}
+    {post.comments.length > 2 && (
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
+        {(visibleCommentCount[post._id] || 2) < post.comments.length ? (
+          <button 
+            onClick={() => showMoreComments(post._id)}
+            style={{
+              color: 'var(--primary)',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <ChevronDown size={14} /> 
+            See {post.comments.length - (visibleCommentCount[post._id] || 2)} more comments
+          </button>
+        ) : (
+          <button 
+            onClick={() => setVisibleCommentCount(prev => ({ ...prev, [post._id]: 2 }))}
+            style={{
+              color: 'var(--text-muted)',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <ChevronUp size={14} /> Show less
+          </button>
+        )}
+      </div>
+    )}
+  </>
+) : (
+  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center' }}>No comments yet.</p>
+)}
+                              
+                              
                 </div>
               )}
             </div>

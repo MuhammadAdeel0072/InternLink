@@ -200,14 +200,29 @@ const Messages = () => {
     <div className="messages-layout-grid" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', minHeight: 'calc(100vh - 100px)', height: 'calc(100vh - 100px)', animation: 'fadeIn 0.3s ease' }}>
 
       {/* LEFT COLUMN: CONVERSATIONS */}
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', padding: '16px', overflowY: 'auto', height: '100%', maxHeight: 'calc(100vh - 100px)' }}>
-        <h3 style={{ fontSize: '1.15rem', fontFamily: 'var(--font-display)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+<div className="card" style={{ 
+  display: 'flex', 
+  flexDirection: 'column', 
+  padding: '16px', 
+  overflowY: 'auto', 
+  height: '100%', 
+  maxHeight: 'calc(100vh - 100px)',
+  scrollbarWidth: 'none', /* Firefox */
+  msOverflowStyle: 'none' /* IE and Edge */
+}}>        <h3 style={{ fontSize: '1.15rem', fontFamily: 'var(--font-display)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <MessageSquare size={18} style={{ color: 'var(--primary)' }} /> Chats
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1 }}>
-          {conversations.length > 0 ? (
-            conversations.map((conv) => {
+<div style={{ 
+  display: 'flex', 
+  flexDirection: 'column', 
+  gap: '8px', 
+  overflowY: 'auto', 
+  flex: 1,
+  scrollbarWidth: 'none', /* Firefox */
+  msOverflowStyle: 'none' /* IE and Edge */
+}}>        {conversations.length > 0 ? (
+  [...conversations].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).map((conv) => {
               const isActive = activeConversation?._id === conv._id;
               const hasUnread = unreadMap[conv._id];
               const unreadCount = unreadCounts[conv._id] || 0;
@@ -243,14 +258,15 @@ const Messages = () => {
                       {conv.otherUser.name}
                       {hasUnread && <span style={{ marginLeft: '6px', fontSize: '0.6rem', color: 'var(--primary)' }}>●</span>}
                     </h4>
-                    <p style={{
-                      fontSize: '0.75rem',
-                      fontWeight: hasUnread ? 600 : 400,
-                      color: hasUnread ? 'var(--text-primary)' : 'var(--text-secondary)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px'
-                    }}>
-                      {conv.lastMessage}
-                    </p>
+
+                   <p style={{
+  fontSize: '0.75rem',
+  fontWeight: (conv.lastMessage?.sender?._id !== user?._id && hasUnread) ? 700 : 400, 
+  color: hasUnread ? 'var(--text-primary)' : 'var(--text-secondary)',
+  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px'
+}}>
+  {conv.lastMessage}
+</p>
                   </div>
                   {unreadCount > 0 && (
                     <span style={{
