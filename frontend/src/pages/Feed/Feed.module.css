@@ -7,7 +7,7 @@
   max-width: 650px;
   margin: 0 auto;
   animation: fadeIn 0.3s ease;
-  padding: 0 16px;
+ padding: 20px 16px 0 16px; 
 }
 
 @keyframes fadeIn {
@@ -58,7 +58,7 @@
   border: none;
   color: var(--text-primary);
   resize: none;
-  height: 60px;
+  height: 40px;
   font-size: 0.95rem;
   outline: none;
   padding-top: 8px;
