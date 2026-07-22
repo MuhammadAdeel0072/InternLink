@@ -39,14 +39,24 @@ export const getCurrentProfile = async (req, res) => {
 // @access  Public
 export const getProfileByUserId = async (req, res) => {
   try {
-    const profile = await Profile.findById(req.params.userId)
-      .populate('user', 'name email role');
+    const { userId } = req.params;
+    
+    // Find profile where the 'user' field matches the userId
+    const profile = await Profile.findOne({ user: userId })
+      .populate('user', 'name email role avatar');
+    
     if (!profile) {
-      return res.status(404).json({ message: 'Profile not found' });
+      return res.status(404).json({ 
+        message: 'Profile not found for this user' 
+      });
     }
+    
     res.status(200).json(profile);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching profile by user ID:', error);
+    res.status(500).json({ 
+      message: error.message || 'Server error while fetching profile' 
+    });
   }
 };
 

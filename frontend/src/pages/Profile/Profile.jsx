@@ -132,7 +132,9 @@ const ProfilePage = () => {
     try {
       setLoading(true);
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const ownProfile = !userId || userId === 'me' || userId === storedUser?._id;
+        const ownProfile = !userId || 
+                       userId === 'me' || 
+                       String(userId) === String(storedUser?._id);
       const url = ownProfile ? '/profile/me' : `/profile/user/${userId}`;
       console.log('🔍 FETCHING:', { userId, ownProfile, url });
       const res = await api.get(url);
@@ -213,11 +215,19 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-    const ownProfile = !userId || userId === 'me' || userId === storedUser?._id;
-    setIsOwnProfile(ownProfile);
-    console.log('DEBUG id:', userId);
-    fetchProfile();
-  }, [userId]);
+  const ownProfile = !userId || 
+                     userId === 'me' || 
+                     String(userId) === String(storedUser?._id);
+  setIsOwnProfile(ownProfile);
+  console.log('🔍 DEBUG:', { 
+    userId, 
+    storedUserId: storedUser?._id, 
+    ownProfile,
+    userIdType: typeof userId,
+    storedUserIdType: typeof storedUser?._id
+  });
+  fetchProfile();
+}, [userId]);
 
   const handleFileChange = async (e, type) => {
     const file = e.target.files[0];
