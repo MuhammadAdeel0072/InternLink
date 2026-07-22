@@ -79,10 +79,10 @@
 /* ============================================ */
 /* MAIN CONTENT                                 */
 /* ============================================ */
-.mainContent {
-  flex: 1;
-  padding: 32px;
-  overflow-y: auto;
+.settingsContainer {
+  display: flex;
+  gap: 20px;  /* ← Add gap between sidebar and content */
+  padding: 20px;  /* ← Add padding around the whole container */
 }
 
 /* ============================================ */
