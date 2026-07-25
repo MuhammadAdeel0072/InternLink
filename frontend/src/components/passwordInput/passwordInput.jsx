@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styles from './PasswordInput.module.css';
+import styles from './passwordInput.module.css';
 
 const PasswordInput = ({
   label = 'Password',
