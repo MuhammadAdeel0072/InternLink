@@ -36,16 +36,7 @@
   flex: 1;
 }
 
-.logo {
-  font-size: 1.5rem;
-  font-weight: 800;
-  font-family: var(--font-display);
-  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.8px;
-  text-decoration: none;
-}
+
 
 /* Search */
 .searchContainer {
@@ -808,4 +799,21 @@
   }
 
   .searchDropdown { max-height: 240px; }
+}
+
+.logoImage {
+  height: 36px;
+  width: auto;
+}
+
+@media (max-width: 768px) {
+  .logoImage {
+    height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logoImage {
+    height: 24px;
+  }
 }

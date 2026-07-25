@@ -5,6 +5,7 @@ import AuthCard from '../../components/AuthCard/AuthCard';
 import InputField from '../../components/InputField/InputField';
 import PasswordStrengthMeter from '../../components/PasswordStrengthMeter/PasswordStrengthMeter';
 import OAuthButtons from '../../components/OAuthButtons/OAuthButtons';
+import PasswordInput from '../../components/passwordInput/passwordInput';
 import styles from './Register.module.css';
 
 const Register = () => {
@@ -22,8 +23,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -164,51 +164,40 @@ const Register = () => {
           required
         />
 
-        <div className={styles.passwordWrapper}>
-          <InputField
-            label="Password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Minimum 8 characters"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            required
-            autoComplete="new-password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className={styles.passwordToggle}
-          >
-            {showPassword ? '🙈' : '👁️'}
-          </button>
-        </div>
+       
+
+        <PasswordInput
+  label="Password"
+  name="password"
+  placeholder="Minimum 8 characters"
+  value={formData.password}
+  onChange={handleChange}
+  error={errors.password}
+  required
+  autoComplete="new-password"
+/>
+
+{formData.password && (
+  <PasswordStrengthMeter password={formData.password} />
+)}
+
+<PasswordInput
+  label="Confirm Password"
+  name="confirmPassword"
+  placeholder="Re-enter password"
+  value={formData.confirmPassword}
+  onChange={handleChange}
+  error={errors.confirmPassword}
+  required
+  autoComplete="new-password"
+/>
+
 
         {formData.password && (
           <PasswordStrengthMeter password={formData.password} />
         )}
 
-        <div className={styles.passwordWrapper}>
-          <InputField
-            label="Confirm Password"
-            name="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            placeholder="Re-enter password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            error={errors.confirmPassword}
-            required
-            autoComplete="new-password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className={styles.passwordToggle}
-          >
-            {showConfirmPassword ? '🙈' : '👁️'}
-          </button>
-        </div>
+      
 
         {/* Terms and Privacy Policy Checkbox */}
         <div className={styles.termsContainer}>

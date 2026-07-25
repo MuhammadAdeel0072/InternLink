@@ -141,8 +141,8 @@ const clearSearch = () => {
         <div className={styles.headerLeft}>
           {/* Logo */}
           <Link to="/" className={styles.logo}>
-            InternLink
-          </Link>
+  <img src="/Logo.png" alt="InternLink" className={styles.logoImage} />
+</Link>
 
           {/* Mobile Search Toggle */}
 <button 
