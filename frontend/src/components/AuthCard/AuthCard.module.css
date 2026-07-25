@@ -10,8 +10,8 @@
   min-height: 100vh;
   padding: 20px;
   background: 
-    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
 }
 
 /* ============================================ */
@@ -20,18 +20,22 @@
 .authCard {
   width: 100%;
   max-width: 450px;
-  padding: 40px 32px;
+  padding: 40px 36px;
   animation: fadeIn 0.5s ease forwards;
+  background: var(--bg-secondary);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(20px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -44,6 +48,8 @@
   margin-bottom: 8px;
   font-family: var(--font-display);
   letter-spacing: -0.5px;
+  color: var(--text-primary);
+  font-weight: 800;
 }
 
 /* ============================================ */
@@ -52,8 +58,9 @@
 .authCardSubtitle {
   color: var(--text-secondary);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   margin-bottom: 32px;
+  font-weight: 400;
 }
 
 /* ============================================ */
@@ -63,8 +70,9 @@
 /* Tablet */
 @media (max-width: 768px) {
   .authCard {
-    padding: 32px 24px;
+    padding: 32px 28px;
     max-width: 400px;
+    border-radius: 16px;
   }
 
   .authCardTitle {
@@ -86,9 +94,9 @@
   }
 
   .authCard {
-    padding: 24px 16px;
+    padding: 24px 20px;
     max-width: 100%;
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   .authCardTitle {
@@ -109,7 +117,7 @@
   }
 
   .authCard {
-    padding: 20px 12px;
+    padding: 20px 16px;
   }
 
   .authCardTitle {

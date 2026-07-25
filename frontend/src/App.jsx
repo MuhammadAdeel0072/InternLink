@@ -24,6 +24,7 @@ import Messages from './pages/Messages/Messages';
 import Notifications from './pages/Notifications/Notifications';
 import Settings from './pages/Settings/Settings';
 import OAuthCallback from './pages/OAuthCallback/OAuthCallback';
+import SearchResults from './pages/SearchResults/SearchResults';
 
 function App() {
   return (
@@ -157,7 +158,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+              <Route
+               path="/search" 
+               element={
+               <ProtectedRoute>
+                <MainLayout>
+                  <SearchResults />
+                  </MainLayout>
+                </ProtectedRoute>} />
               {/* ── Catch-all / 404 ── */}
               <Route
                 path="*"

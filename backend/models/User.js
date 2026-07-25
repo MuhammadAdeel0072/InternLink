@@ -114,6 +114,7 @@ loginHistory: [{
 lastLogin: {
   type: Date
 },
+following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     authProvider: {
       type: String,
       enum: ['local', 'google', 'github'],

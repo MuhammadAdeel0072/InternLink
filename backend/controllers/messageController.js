@@ -15,7 +15,6 @@ export const startConversation = async (req, res) => {
       return res.status(400).json({ message: 'You cannot chat with yourself' });
     }
 
-    // Check if conversation already exists
     let conversation = await Conversation.findOne({
       participants: { $all: [userId, recipientId] }
     });
@@ -68,7 +67,6 @@ export const getConversations = async (req, res) => {
       })
     );
 
-    // Remove any nulls due to corrupt/deleted user connections
     res.status(200).json(formatted.filter(Boolean));
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -85,14 +83,27 @@ export const getMessages = async (req, res) => {
       return res.status(404).json({ message: 'Conversation thread not found' });
     }
 
-    // Check authorization
     if (!conversation.participants.includes(req.user._id)) {
       return res.status(401).json({ message: 'Not authorized to view these messages' });
     }
 
+    // ✅ Get messages
     const messages = await Message.find({ conversation: req.params.conversationId })
       .populate('sender', 'name email')
-      .sort({ createdAt: 1 }); // Chronological order
+      .sort({ createdAt: 1 });
+
+    // ✅ Mark messages as DELIVERED (not read yet)
+    await Message.updateMany(
+      {
+        conversation: req.params.conversationId,
+        sender: { $ne: req.user._id },
+        status: 'sent'
+      },
+      {
+        status: 'delivered',
+        deliveredAt: new Date()
+      }
+    );
 
     res.status(200).json(messages);
   } catch (error) {
@@ -128,20 +139,62 @@ export const sendMessage = async (req, res) => {
       return res.status(400).json({ message: 'Message text or attachment is required' });
     }
 
+    // ✅ Create message with status 'sent'
     const message = await Message.create({
       conversation: conversationId,
       sender: req.user._id,
       text: text || '',
       attachment: attachmentUrl,
-      attachmentType: attachmentType
+      attachmentType: attachmentType,
+      status: 'sent'  // ✅ Initial status
     });
 
-    // Update conversation summary
     conversation.lastMessage = text || (attachmentType === 'image' ? '[Sent an image]' : '[Sent a document]');
     await conversation.save();
 
     const populatedMessage = await Message.findById(message._id).populate('sender', 'name email');
     res.status(201).json(populatedMessage);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ NEW: Mark messages as READ
+// @desc    Mark messages as read
+// @route   PUT /api/messages/:conversationId/read
+// @access  Private
+export const markMessagesAsRead = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { messageIds } = req.body;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+
+    if (!conversation.participants.includes(req.user._id)) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    // ✅ Mark messages as READ
+    const result = await Message.updateMany(
+      {
+        _id: { $in: messageIds },
+        sender: { $ne: req.user._id },
+        status: { $in: ['sent', 'delivered'] }
+      },
+      {
+        status: 'read',
+        readAt: new Date()
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      updated: result.modifiedCount,
+      message: 'Messages marked as read'
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

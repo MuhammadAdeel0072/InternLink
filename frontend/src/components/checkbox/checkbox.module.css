@@ -1,0 +1,202 @@
+/* Checkbox.module.css */
+
+/* ============================================ */
+/* CHECKBOX CONTAINER                           */
+/* ============================================ */
+.checkboxContainer {
+  margin: 16px 0;
+}
+
+/* ============================================ */
+/* CHECKBOX LABEL                               */
+/* ============================================ */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  user-select: none;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.checkboxLabelDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ============================================ */
+/* CHECKBOX WRAPPER                             */
+/* ============================================ */
+.checkboxWrapper {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* ============================================ */
+/* CHECKBOX INPUT (Hidden)                      */
+/* ============================================ */
+.checkboxInput {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  margin: 0;
+  z-index: 1;
+}
+
+.checkboxLabelDisabled .checkboxInput {
+  cursor: not-allowed;
+}
+
+/* ============================================ */
+/* CHECKBOX BOX (Custom)                        */
+/* ============================================ */
+.checkboxBox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.checkboxBoxChecked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+/* Hover effect when not checked */
+.checkboxInput:not(:checked) + .checkboxBox:hover {
+  border-color: var(--primary);
+}
+
+/* Focus effect for accessibility */
+.checkboxInput:focus + .checkboxBox {
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Disabled state */
+.checkboxInput:disabled + .checkboxBox {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================ */
+/* CHECKBOX LABEL TEXT                          */
+/* ============================================ */
+.checkboxLabelText {
+  line-height: 1.4;
+}
+
+/* ============================================ */
+/* CHECKBOX ERROR                               */
+/* ============================================ */
+.checkboxError {
+  color: var(--danger);
+  font-size: 0.75rem;
+  margin-top: 6px;
+  margin-left: 30px;
+}
+
+/* ============================================ */
+/* RESPONSIVE BREAKPOINTS                      */
+/* ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .checkboxContainer {
+    margin: 14px 0;
+  }
+
+  .checkboxLabel {
+    font-size: 0.8rem;
+    gap: 8px;
+  }
+
+  .checkboxWrapper,
+  .checkboxBox {
+    width: 18px;
+    height: 18px;
+  }
+
+  .checkboxBox svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .checkboxError {
+    font-size: 0.7rem;
+    margin-left: 26px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .checkboxContainer {
+    margin: 12px 0;
+  }
+
+  .checkboxLabel {
+    font-size: 0.75rem;
+    gap: 8px;
+  }
+
+  .checkboxWrapper,
+  .checkboxBox {
+    width: 16px;
+    height: 16px;
+  }
+
+  .checkboxBox {
+    border-width: 1.5px;
+  }
+
+  .checkboxBox svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  .checkboxError {
+    font-size: 0.65rem;
+    margin-left: 24px;
+    margin-top: 4px;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .checkboxContainer {
+    margin: 10px 0;
+  }
+
+  .checkboxLabel {
+    font-size: 0.7rem;
+    gap: 6px;
+  }
+
+  .checkboxWrapper,
+  .checkboxBox {
+    width: 14px;
+    height: 14px;
+  }
+
+  .checkboxBox svg {
+    width: 8px;
+    height: 8px;
+  }
+
+  .checkboxError {
+    font-size: 0.6rem;
+    margin-left: 20px;
+  }
+}

@@ -7,51 +7,82 @@ import { uploadToCloudinary } from '../utils/cloudinary.js';
 const populateAuthorDetails = async (posts) => {
   return await Promise.all(
     posts.map(async (post) => {
-      const authorProfile = await Profile.findOne({ user: post.author }).select('avatar headline');
-     const commentsWithProfiles = await Promise.all(
-  post.comments.map(async (comment) => {
-    const commentProfile = await Profile.findOne({ user: comment.user }).select('avatar');
-    const repliesWithProfiles = await Promise.all(
-      (comment.replies || []).map(async (reply) => {
-        const replyProfile = await Profile.findOne({ user: reply.user }).select('avatar');
-        return {
-          _id: reply._id,
-          text: reply.text,
-          createdAt: reply.createdAt,
-          user: {
-            _id: reply.user._id,
-            name: reply.user.name,
-            avatar: replyProfile?.avatar || ''
-          }
-        };
-      })
-    );
-    return {
-      _id: comment._id,
-      text: comment.text,
-      createdAt: comment.createdAt,
-      replies: repliesWithProfiles,
-      user: {
-        _id: comment.user._id,
-        name: comment.user.name,
-        avatar: commentProfile?.avatar || ''
-      }
-    };
-  })
-);
-        
+      // Get author
+      const authorId = post.author._id || post.author;
+      const authorProfile = await Profile.findOne({ user: authorId }).select('avatar headline');
+      const authorUser = post.author;
+      
+      const commentsWithProfiles = await Promise.all(
+        (post.comments || []).map(async (comment) => {
+          const commentUserId = comment.user?._id || comment.user;
+          const commentProfile = await Profile.findOne({ user: commentUserId }).select('avatar');
+          const commentUser = comment.user;
+          
+          const repliesWithProfiles = await Promise.all(
+            (comment.replies || []).map(async (reply) => {
+              const replyUserId = reply.user?._id || reply.user;
+              const replyProfile = await Profile.findOne({ user: replyUserId }).select('avatar');
+              const replyUser = reply.user;
+              
+              const nestedRepliesWithProfiles = await Promise.all(
+                (reply.nestedReplies || []).map(async (nestedReply) => {
+                  const nestedUserId = nestedReply.user?._id || nestedReply.user;
+                  const nestedProfile = await Profile.findOne({ user: nestedUserId }).select('avatar');
+                  const nestedUser = nestedReply.user;
+                  
+                  return {
+                    _id: nestedReply._id,
+                    text: nestedReply.text,
+                    createdAt: nestedReply.createdAt,
+                    user: {
+                      _id: nestedUserId,
+                      name: nestedUser?.name || 'User',
+                      avatar: nestedProfile?.avatar || ''
+                    }
+                  };
+                })
+              );
+              
+              return {
+                _id: reply._id,
+                text: reply.text,
+                createdAt: reply.createdAt,
+                nestedReplies: nestedRepliesWithProfiles,
+                user: {
+                  _id: replyUserId,
+                  name: replyUser?.name || 'User',
+                  avatar: replyProfile?.avatar || ''
+                }
+              };
+            })
+          );
+          
+          return {
+            _id: comment._id,
+            text: comment.text,
+            createdAt: comment.createdAt,
+            replies: repliesWithProfiles,
+            user: {
+              _id: commentUserId,
+              name: commentUser?.name || 'User',
+              avatar: commentProfile?.avatar || ''
+            }
+          };
+        })
+      );
 
       return {
         _id: post._id,
         content: post.content,
         image: post.image,
+        backgroundColor: post.backgroundColor,
         likes: post.likes,
         comments: commentsWithProfiles,
         createdAt: post.createdAt,
         author: {
-          _id: post.author._id,
-          name: post.author.name,
-          email: post.author.email,
+          _id: authorId,
+          name: authorUser?.name || 'User',
+          email: authorUser?.email || '',
           avatar: authorProfile?.avatar || '',
           headline: authorProfile?.headline || ''
         }
@@ -100,11 +131,13 @@ export const getAllPosts = async (req, res) => {
     const skip = parseInt(req.query.skip) || 0;
 
     const posts = await Post.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name');
+  .sort({ createdAt: -1 })
+  .skip(skip)
+  .limit(limit)
+  .populate('author', 'name email')
+  .populate('comments.user', 'name')
+  .populate('comments.replies.user', 'name')
+  .populate('comments.replies.nestedReplies.user', 'name');
 
     const formattedPosts = await populateAuthorDetails(posts);
     res.status(200).json(formattedPosts);
@@ -232,7 +265,7 @@ export const deletePost = async (req, res) => {
 // @access  Private
 export const replyToComment = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, isNestedReply, parentReplyId } = req.body;
     if (!text) return res.status(400).json({ message: 'Reply text is required' });
 
     const post = await Post.findById(req.params.postId);
@@ -241,7 +274,18 @@ export const replyToComment = async (req, res) => {
     const comment = post.comments.id(req.params.commentId);
     if (!comment) return res.status(404).json({ message: 'Comment not found' });
 
-    comment.replies.push({ user: req.user._id, text });
+    // ✅ If nested reply, add to the parent reply's nestedReplies
+    if (isNestedReply && parentReplyId) {
+      const parentReply = comment.replies.id(parentReplyId);
+      if (!parentReply) return res.status(404).json({ message: 'Parent reply not found' });
+      
+      if (!parentReply.nestedReplies) parentReply.nestedReplies = [];
+      parentReply.nestedReplies.push({ user: req.user._id, text });
+    } else {
+      // Regular reply
+      comment.replies.push({ user: req.user._id, text });
+    }
+
     await post.save();
 
     const updatedPost = await Post.findById(post._id)

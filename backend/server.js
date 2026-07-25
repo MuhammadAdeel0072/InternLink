@@ -28,6 +28,7 @@ import jobRoutes from './routes/jobRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 
+import searchRoutes from './routes/searchRoutes.js';
 
 // Connect to MongoDB
 connectDB();
@@ -108,6 +109,7 @@ app.use('/api/connections', connectionRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/job-alerts', jobAlertRoutes);
+app.use('/api/search', searchRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 

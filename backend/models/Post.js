@@ -1,23 +1,30 @@
 import mongoose from 'mongoose';
 
-const replySchema = new mongoose.Schema(
-  {
+const replySchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  text: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  // ✅ Add nested replies
+  nestedReplies: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
+      ref: 'User'
     },
-    text: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
+    text: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-);
+});
 
 const commentSchema = new mongoose.Schema(
   {

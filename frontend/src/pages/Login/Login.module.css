@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: 8px;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -15,14 +15,17 @@
 .forgotPasswordLink {
   font-size: 0.85rem;
   color: var(--primary);
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .forgotPasswordLink:hover {
   color: var(--primary-hover);
+  background-color: var(--primary-light);
 }
 
 /* ============================================ */
@@ -30,28 +33,32 @@
 /* ============================================ */
 .unverifiedNotice {
   margin-top: 16px;
-  padding: 12px;
-  background-color: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  border-radius: 8px;
-  font-size: 0.8rem;
+  padding: 14px 16px;
+  background-color: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
+  font-size: 0.85rem;
   text-align: center;
 }
 
 .unverifiedText {
   margin: 0;
   color: #92400e;
+  line-height: 1.6;
 }
 
 .resendLink {
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .resendLink:hover {
   color: var(--primary-hover);
+  background-color: var(--primary-light);
   text-decoration: underline;
 }
 
@@ -59,7 +66,44 @@
 /* LOGIN BUTTON WRAPPER                         */
 /* ============================================ */
 .loginButtonWrapper {
-  margin-top: 24px;
+  margin-top: 28px;
+}
+
+/* ============================================ */
+/* FORM GROUP OVERRIDES                         */
+/* ============================================ */
+.loginButtonWrapper :global(.form-group) {
+  margin-bottom: 20px;
+}
+
+.loginButtonWrapper :global(.form-label) {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.loginButtonWrapper :global(.form-input) {
+  background-color: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.loginButtonWrapper :global(.form-input):focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-light);
+  background-color: var(--bg-secondary);
+}
+
+.loginButtonWrapper :global(.form-input):hover {
+  border-color: var(--border-hover);
+}
+
+.loginButtonWrapper :global(.form-input):disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ============================================ */
@@ -79,7 +123,7 @@
   }
 
   .unverifiedNotice {
-    padding: 10px;
+    padding: 10px 14px;
     font-size: 0.75rem;
   }
 
@@ -103,7 +147,7 @@
   .unverifiedNotice {
     padding: 8px 12px;
     font-size: 0.7rem;
-    border-radius: 6px;
+    border-radius: 8px;
   }
 
   .unverifiedText {
@@ -112,6 +156,11 @@
 
   .loginButtonWrapper {
     margin-top: 16px;
+  }
+
+  .loginButtonWrapper :global(.form-input) {
+    padding: 12px 14px;
+    font-size: 0.85rem;
   }
 }
 

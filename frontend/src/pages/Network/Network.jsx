@@ -12,7 +12,10 @@ const Network = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('connections');
-
+  const [sentRequests, setSentRequests] = useState([]);
+const [searchTerm, setSearchTerm] = useState('');
+const [searchResults, setSearchResults] = useState([]);
+const [searchType, setSearchType] = useState('all');
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -117,6 +120,18 @@ const Network = () => {
             </span>
           )}
         </button>
+
+        <button
+  onClick={() => setActiveTab('sent')}
+  className={`${styles.tabBtn} ${activeTab === 'sent' ? styles.tabBtnActive : ''}`}
+>
+  Sent Requests
+  {sentRequests.length > 0 && (
+    <span className={styles.requestBadge}>
+      {sentRequests.length}
+    </span>
+  )}
+</button>
         <button
           onClick={() => setActiveTab('suggestions')}
           className={`${styles.tabBtn} ${activeTab === 'suggestions' ? styles.tabBtnActive : ''}`}

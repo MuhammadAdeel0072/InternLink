@@ -14,16 +14,18 @@ const connectionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'accepted'],
+      enum: ['pending', 'accepted', 'blocked'],
       default: 'pending'
+    },
+    note: {
+      type: String,
+      maxlength: 300,
+      default: ''
     }
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 );
 
-// Ensure there is only one connection request/record between any two users
 connectionSchema.index({ requester: 1, recipient: 1 }, { unique: true });
 
 const Connection = mongoose.model('Connection', connectionSchema);

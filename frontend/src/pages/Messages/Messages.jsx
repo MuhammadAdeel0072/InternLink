@@ -181,16 +181,65 @@ const Messages = () => {
     setMessageText(prev => prev + emoji);
   };
 
-  // Message status icons
+   // ✅ NEW: Mark messages as read when chat is open
+  const markMessagesAsRead = async () => {
+    if (!activeConversation) return;
+    
+    try {
+      // Get unread message IDs (messages not sent by current user and not read)
+      const unreadMessages = messages
+        .filter(msg => 
+          msg.sender._id !== user._id && 
+          msg.status !== 'read'
+        )
+        .map(msg => msg._id);
+      
+      if (unreadMessages.length === 0) return;
+      
+      // Send to backend
+      await api.put(`/messages/${activeConversation._id}/read`, {
+        messageIds: unreadMessages
+      });
+      
+      // Update local state
+      setMessages(prev => 
+        prev.map(msg => 
+          unreadMessages.includes(msg._id) 
+            ? { ...msg, status: 'read' } 
+            : msg
+        )
+      );
+    } catch (err) {
+      console.error('Failed to mark messages as read:', err);
+    }
+  };
+
+    // ✅ Call markMessagesAsRead when messages load or new messages arrive
+  useEffect(() => {
+    if (messages.length > 0 && activeConversation) {
+      markMessagesAsRead();
+    }
+  }, [messages, activeConversation]);
+
+
+
+    // ✅ Updated: Message status icons - uses REAL status from backend
   const getStatusIcon = (msg) => {
     const isMine = msg.sender._id === user._id || msg.sender === user._id;
     if (!isMine) return null;
 
-    const status = msg.status || (Math.random() > 0.3 ? (Math.random() > 0.5 ? 'read' : 'delivered') : 'sent');
+    // ✅ Use real status from message object, not random
+    const status = msg.status || 'sent';
 
-    if (status === 'sent') return <span className={styles.statusSent}>✓</span>;
-    if (status === 'delivered') return <span className={styles.statusDelivered}>✓✓</span>;
-    if (status === 'read') return <span className={styles.statusRead}>✓✓</span>;
+      if (status === 'sent') {
+      return <span className={styles.statusSent}>✓</span>;
+    }
+    if (status === 'delivered') {
+      return <span className={styles.statusDelivered}>✓✓</span>;
+    }
+    if (status === 'read') {
+      return <span className={styles.statusRead}>✓✓</span>;
+    }
     return <span className={styles.statusDefault}>✓</span>;
   };
 
