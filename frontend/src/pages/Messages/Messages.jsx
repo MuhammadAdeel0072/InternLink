@@ -133,14 +133,23 @@ const Messages = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSendMessage = async (e) => {
+ const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!messageText.trim() && !attachment) return;
 
     setSending(true);
     const formData = new FormData();
-    formData.append('text', replyingTo ? `↪ ${messageText}` : messageText);
+    formData.append('text', messageText);
     if (attachment) formData.append('attachment', attachment);
+    
+    // Send reply info to backend
+    if (replyingTo) {
+      formData.append('replyTo', JSON.stringify({
+        messageId: replyingTo._id,
+        text: replyingTo.text,
+        senderName: replyingTo.sender?.name || 'User'
+      }));
+    }
 
     try {
       const res = await api.post(`/messages/${activeConversation._id}`, formData, {
@@ -336,6 +345,17 @@ const Messages = () => {
                       >
                         {msg.text && <p className={styles.messageText}>{msg.text}</p>}
 
+                        {/* ✅ ADD: Show replied message inside bubble */}
+{msg.replyTo && (
+  <div className={styles.quotedMessageInside}>
+    <div className={styles.quotedBar} />
+    <div>
+      <span className={styles.quotedSender}>{msg.replyTo.senderName}</span>
+      <p className={styles.quotedText}>{msg.replyTo.text?.substring(0, 60)}</p>
+    </div>
+  </div>
+)}
+
                         {msg.attachment && msg.attachmentType === 'image' && (
                           <img src={msg.attachment} alt="" className={styles.messageImage} />
                         )}
@@ -369,19 +389,25 @@ const Messages = () => {
             </div>
 
             {/* Reply Preview */}
-            {replyingTo && (
-              <div className={styles.replyPreview}>
-                <div className={styles.replyContent}>
-                  <CornerDownRight size={14} className={styles.replyIcon} />
-                  <span className={styles.replyText}>
-                    Replying to: <strong>{replyingTo.text?.substring(0, 40)}{replyingTo.text?.length > 40 ? '...' : ''}</strong>
-                  </span>
-                </div>
-                <button onClick={cancelReply} className={styles.replyCancel}>
-                  <X size={14} />
-                </button>
-              </div>
-            )}
+           {/* Reply Preview - WhatsApp style */}
+{replyingTo && (
+  <div className={styles.replyPreview}>
+    <div className={styles.replyPreviewBar} />
+    <div className={styles.replyContent}>
+      <div className={styles.replyPreviewHeader}>
+        <span className={styles.replyingToLabel}>
+          Replying to <strong>{replyingTo.sender?.name || replyingTo.sender === user._id ? 'yourself' : 'them'}</strong>
+        </span>
+        <button onClick={cancelReply} className={styles.replyCancel}>
+          <X size={14} />
+        </button>
+      </div>
+      <p className={styles.replyQuotedMessage}>
+        {replyingTo.text?.length > 80 ? replyingTo.text.substring(0, 80) + '...' : replyingTo.text}
+      </p>
+    </div>
+  </div>
+)}
 
             {/* Attachment Preview */}
             {attachment && (

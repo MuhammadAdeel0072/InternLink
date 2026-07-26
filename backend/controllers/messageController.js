@@ -141,13 +141,14 @@ export const sendMessage = async (req, res) => {
 
     // ✅ Create message with status 'sent'
     const message = await Message.create({
-      conversation: conversationId,
-      sender: req.user._id,
-      text: text || '',
-      attachment: attachmentUrl,
-      attachmentType: attachmentType,
-      status: 'sent'  // ✅ Initial status
-    });
+  conversation: conversationId,
+  sender: req.user._id,
+  text: text || '',
+  attachment: attachmentUrl,
+  attachmentType: attachmentType,
+  status: 'sent',
+  replyTo: req.body.replyTo ? JSON.parse(req.body.replyTo) : null
+});
 
     conversation.lastMessage = text || (attachmentType === 'image' ? '[Sent an image]' : '[Sent a document]');
     await conversation.save();

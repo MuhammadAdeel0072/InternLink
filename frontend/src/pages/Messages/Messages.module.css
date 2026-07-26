@@ -844,3 +844,88 @@
     font-size: 0.85rem;
   }
 }
+
+/* Reply Preview - WhatsApp Style */
+.replyPreview {
+  display: flex;
+  gap: 0;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.replyPreviewBar {
+  width: 4px;
+  background-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.replyContent {
+  flex: 1;
+  padding: 10px 14px;
+  min-width: 0;
+}
+
+.replyPreviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.replyingToLabel {
+  font-size: 0.75rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.replyQuotedMessage {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.replyCancel {
+  color: var(--text-muted);
+  padding: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+}
+
+/* Quoted Message Inside Bubble */
+.quotedMessageInside {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 6px 8px;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+.quotedBar {
+  width: 3px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.quotedSender {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.quotedText {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
