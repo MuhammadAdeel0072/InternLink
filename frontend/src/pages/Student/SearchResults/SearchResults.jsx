@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import api from "../../services/api";
-import Loader from "../../components/Loader/Loader";
+import api from "../../../services/api";
+import Loader from "../../../components/Loader/Loader";
 import styles from './SearchResults.module.css';
 import { User, Briefcase, FileText, MapPin, Search, X } from 'lucide-react';
 

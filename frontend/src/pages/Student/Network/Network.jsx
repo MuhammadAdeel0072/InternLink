@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSocket } from '../../context/SocketContext';
-import api from '../../services/api';
-import Loader from '../../components/Loader/Loader';
+import { useSocket } from '../../../context/SocketContext';
+import api from '../../../services/api';
+import Loader from '../../../components/Loader/Loader';
 import styles from './Network.module.css';
 import { Users, UserPlus, Check, X, UserMinus, Sparkles } from 'lucide-react';
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
-import Loader from '../../components/Loader/Loader';
+import api from '../../../services/api';
+import Loader from '../../../components/Loader/Loader';
 import styles from './Notifications.module.css';
 import { Bell, Trash2, CheckSquare, Eye, MessageSquare, UserCheck, Heart, FileText, Calendar } from 'lucide-react';
 

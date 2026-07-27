@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
-import Loader from '../../components/Loader/Loader';
-import Modal from '../../components/Modal/Modal';
-import InputField from '../../components/InputField/InputField';
+import { useAuth } from '../../../context/AuthContext';
+import api from '../../../services/api';
+import Loader from '../../../components/Loader/Loader';
+import Modal from '../../../components/Modal/Modal';
+import InputField from '../../../components/InputField/InputField';
 import styles from './Jobs.module.css';
 import {
   MapPin,

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import api from "../../services/api";     // ✅ Goes to src/services/
-import { useAuth } from "../../context/AuthContext";  // ✅ Goes to src/context/
+import api from "../../../services/api";     // ✅ Goes to src/services/
+import { useAuth } from "../../../context/AuthContext";  // ✅ Goes to src/context/
 import styles from "./OAuthCallback.module.css";
 
 const OAuthCallback = () => {

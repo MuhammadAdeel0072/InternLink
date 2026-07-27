@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import AuthCard from '../../components/AuthCard/AuthCard';
-import InputField from '../../components/InputField/InputField';
-import PasswordStrengthMeter from '../../components/PasswordStrengthMeter/PasswordStrengthMeter';
-import OAuthButtons from '../../components/OAuthButtons/OAuthButtons';
-import PasswordInput from '../../components/passwordInput/passwordInput';
+import { useAuth } from '../../../context/AuthContext';
+import AuthCard from '../../../components/AuthCard/AuthCard';
+import InputField from '../../../components/InputField/InputField';
+import PasswordStrengthMeter from '../../../components/PasswordStrengthMeter/PasswordStrengthMeter';
+import OAuthButtons from '../../../components/OAuthButtons/OAuthButtons';
+import PasswordInput from '../../../components/passwordInput/passwordInput';
 import styles from './Register.module.css';
 
 const Register = () => {

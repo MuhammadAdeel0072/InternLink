@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import AuthCard from '../../components/AuthCard/AuthCard';
-import Loader from '../../components/Loader/Loader';
+import { useAuth } from '../../../context/AuthContext';
+import AuthCard from '../../../components/AuthCard/AuthCard';
+import Loader from '../../../components/Loader/Loader';
 import styles from './VerifyEmail.module.css';
 
 const VerifyEmail = () => {

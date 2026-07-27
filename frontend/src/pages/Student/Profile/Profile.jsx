@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
-import Loader from '../../components/Loader/Loader';
-import Modal from '../../components/Modal/Modal';
-import InputField from '../../components/InputField/InputField';
-import SkillSuggestions from '../../components/SkillSuggestions/SkillSuggestions';
-import CollapsibleText from '../../components/CollapsibleText/CollapsibleText';
+import { useAuth } from '../../../context/AuthContext';
+import api from '../../../services/api';
+import Loader from '../../../components/Loader/Loader';
+import Modal from '../../../components/Modal/Modal';
+import InputField from '../../../components/InputField/InputField';
+import SkillSuggestions from '../../../components/SkillSuggestions/SkillSuggestions';
+import CollapsibleText from '../../../components/CollapsibleText/CollapsibleText';
 import styles from './Profile.module.css';
 import {
   Camera,

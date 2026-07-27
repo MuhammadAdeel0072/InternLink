@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useSocket } from '../../context/SocketContext';
-import api from '../../services/api';
-import Loader from '../../components/Loader/Loader';
+import { useAuth } from '../../../context/AuthContext';
+import { useSocket } from '../../../context/SocketContext';
+import api from '../../../services/api';
+import Loader from '../../../components/Loader/Loader';
 import styles from './Messages.module.css';
 import {
   MessageSquare, Send, Paperclip, FileText, Download, X, CornerDownRight, Smile

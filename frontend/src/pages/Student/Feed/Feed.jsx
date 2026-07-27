@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSocket } from '../../context/SocketContext';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
-import Loader, { CardSkeleton } from '../../components/Loader/Loader';
+import { useSocket } from '../../../context/SocketContext';
+import { useAuth } from '../../../context/AuthContext';
+import api from '../../../services/api';
+import Loader, { CardSkeleton } from '../../../components/Loader/Loader';
 import styles from './Feed.module.css'; // Import CSS Module
 import {
   Image as ImageIcon,

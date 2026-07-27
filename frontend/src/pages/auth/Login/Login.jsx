@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import AuthCard from '../../components/AuthCard/AuthCard';
-import InputField from '../../components/InputField/InputField';
-import PasswordInput from '../../components/passwordInput/passwordInput';
-import PrimaryButton from '../../components/primaryButton/primaryButton';
-import Checkbox from '../../components/checkbox/checkbox';
-import OAuthButtons from '../../components/OAuthButtons/OAuthButtons';
-import AuthDivider from '../../components/AuthDivider/AuthDivider';
-import AuthFooter from '../../components/AuthFooter/AuthFooter';
-import Toast from '../../components/Toast/Toast';
+import { useAuth } from '../../../context/AuthContext';
+import AuthCard from '../../../components/AuthCard/AuthCard';
+import InputField from '../../../components/InputField/InputField';
+import PasswordInput from '../../../components/passwordInput/passwordInput';
+import PrimaryButton from '../../../components/primaryButton/primaryButton';
+import Checkbox from '../../../components/checkbox/checkbox';
+import OAuthButtons from '../../../components/OAuthButtons/OAuthButtons';
+import AuthDivider from '../../../components/AuthDivider/AuthDivider';
+import AuthFooter from '../../../components/AuthFooter/AuthFooter';
+import Toast from '../../../components/Toast/Toast';
 import styles from './Login.module.css';
 
 const Login = () => {

@@ -13,18 +13,18 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import GuestRoute from './components/GuestRoute/GuestRoute';
 
 // Pages - Import from folders
-import Login from './pages/Login/Login';
-import Register from './pages/Register/Register';
-import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
-import Feed from './pages/Feed/Feed';
-import Profile from './pages/Profile/Profile';
-import Network from './pages/Network/Network';
-import Jobs from './pages/Jobs/Jobs';
-import Messages from './pages/Messages/Messages';
-import Notifications from './pages/Notifications/Notifications';
-import Settings from './pages/Settings/Settings';
-import OAuthCallback from './pages/OAuthCallback/OAuthCallback';
-import SearchResults from './pages/SearchResults/SearchResults';
+import Login from './pages/auth/Login/Login';
+import Register from './pages/auth/Register/Register';
+import VerifyEmail from './pages/auth/VerifyEmail/VerifyEmail';
+import Feed from './pages/Student/Feed/Feed';
+import Profile from './pages/Student/Profile/Profile';
+import Network from './pages/Student/Network/Network';
+import Jobs from './pages/Student/Jobs/Jobs';
+import Messages from './pages/Student/Messages/Messages';
+import Notifications from './pages/Student/Notifications/Notifications';
+import Settings from './pages/Student/Settings/Settings';
+import OAuthCallback from './pages/Student/OAuthCallback/OAuthCallback';
+import SearchResults from './pages/Student/SearchResults/SearchResults';
 
 function App() {
   return (
