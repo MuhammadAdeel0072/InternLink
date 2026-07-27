@@ -125,14 +125,27 @@ const clearSearch = () => {
     navigate('/login');
   };
 
-  const navLinks = [
-    { to: '/', label: 'Feed', icon: Home },
-    { to: '/network', label: 'Network', icon: Users },
-    { to: '/jobs', label: 'Jobs', icon: Briefcase },
-    { to: '/messages', label: 'Messages', icon: MessageSquare },
-    { to: '/notifications', label: 'Notifications', icon: Bell, badgeCount: unreadNotifications },
-    { to: `/profile/me`, label: 'Profile', icon: UserIcon }
-  ];
+const isRecruiter = user?.role === 'recruiter';
+
+const studentLinks = [
+  { to: '/', label: 'Feed', icon: Home },
+  { to: '/network', label: 'Network', icon: Users },
+  { to: '/jobs', label: 'Jobs', icon: Briefcase },
+  { to: '/messages', label: 'Messages', icon: MessageSquare },
+  { to: '/notifications', label: 'Notifications', icon: Bell, badgeCount: unreadNotifications },
+  { to: `/profile/me`, label: 'Profile', icon: UserIcon }
+];
+
+const recruiterLinks = [
+  { to: '/recruiter/dashboard', label: 'Dashboard', icon: Home },
+  { to: '/jobs', label: 'Post Jobs', icon: Briefcase },
+  { to: '/network', label: 'Candidates', icon: Users },
+  { to: '/messages', label: 'Messages', icon: MessageSquare },
+  { to: '/notifications', label: 'Notifications', icon: Bell, badgeCount: unreadNotifications },
+  { to: `/profile/me`, label: 'Profile', icon: UserIcon }
+];
+
+const navLinks = isRecruiter ? recruiterLinks : studentLinks;
 
   return (
     <div className={styles.mainLayout}>
@@ -140,7 +153,7 @@ const clearSearch = () => {
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           {/* Logo */}
-          <Link to="/" className={styles.logo}>
+          <Link to={isRecruiter ? '/recruiter/dashboard' : '/'} className={styles.logo}>
   <img src="/Logo.png" alt="InternLink" className={styles.logoImage} />
 </Link>
 

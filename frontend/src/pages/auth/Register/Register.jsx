@@ -48,6 +48,13 @@ const Register = () => {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       tempErrors.email = 'Please enter a valid email address';
     }
+    else if (formData.role === 'recruiter') {
+      const personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'live.com', 'icloud.com', 'proton.me', 'aol.com'];
+      const emailDomain = formData.email.split('@')[1]?.toLowerCase();
+      if (personalDomains.includes(emailDomain)) {
+        tempErrors.email = 'Please use your company email address, not a personal email';
+      }
+    }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!formData.password) {

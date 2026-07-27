@@ -83,10 +83,13 @@ const Login = () => {
           localStorage.removeItem('rememberedEmail');
         }
         
-        // Short delay to show toast before navigation
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 800);
+      // ✅ Get user role from localStorage
+  const userData = JSON.parse(localStorage.getItem('user'));
+  const redirectPath = userData?.role === 'recruiter' ? '/recruiter/dashboard' : '/';
+  
+  setTimeout(() => {
+    navigate(redirectPath, { replace: true });
+  }, 800);
       } else {
         // Handle specific error cases
         if (result.message?.toLowerCase().includes('verify')) {

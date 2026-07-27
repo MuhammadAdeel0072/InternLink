@@ -69,7 +69,8 @@ export const updateProfile = async (req, res) => {
       headline, currentStatus, university, degree, major, graduationYear,
       summary, email, phone, website,
       country, city, postalCode, locationString,
-      github, linkedin, visibility
+      github, linkedin, visibility,
+      jobTitle, department, yearsOfExperience 
     } = req.body;
 
     const profileFields = {};
@@ -80,6 +81,10 @@ export const updateProfile = async (req, res) => {
     if (degree !== undefined) profileFields.degree = degree;
     if (major !== undefined) profileFields.major = major;
     if (graduationYear !== undefined) profileFields.graduationYear = graduationYear;
+
+    if (jobTitle !== undefined) profileFields.jobTitle = jobTitle;
+if (department !== undefined) profileFields.department = department;
+if (yearsOfExperience !== undefined) profileFields.yearsOfExperience = yearsOfExperience;
 
     if (summary !== undefined) {
       if (summary.length > 1000) {

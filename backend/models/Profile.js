@@ -104,6 +104,11 @@ const profileSchema = new mongoose.Schema(
     major: { type: String, default: '' },
     graduationYear: { type: Number },
 
+    // Recruiter-specific fields
+jobTitle: { type: String, default: '' },
+department: { type: String, default: '' },
+yearsOfExperience: { type: Number },
+
     // Professional Summary
     summary: {
       type: String,

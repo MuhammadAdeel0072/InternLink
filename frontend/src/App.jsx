@@ -26,6 +26,9 @@ import Settings from './pages/Student/Settings/Settings';
 import OAuthCallback from './pages/Student/OAuthCallback/OAuthCallback';
 import SearchResults from './pages/Student/SearchResults/SearchResults';
 
+
+//Recruiter
+import RecruiterDashboard from './pages/recruiter/Dashboard/Dashboard';
 function App() {
   return (
     <Router>
@@ -138,6 +141,21 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+        {/* Recruiter Auth Routes */}
+<Route path="/recruiter/login" element={
+  <GuestRoute>
+    <AuthLayout>
+      <Login />
+    </AuthLayout>
+  </GuestRoute>
+} />
+<Route path="/recruiter/register" element={
+  <GuestRoute>
+    <AuthLayout>
+      <Register />
+    </AuthLayout>
+  </GuestRoute>
+} />
               <Route
                 path="/profile/:userId"
                 element={
@@ -158,6 +176,13 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+            <Route path="/recruiter/dashboard" element={
+  <ProtectedRoute>
+    <MainLayout>
+      <RecruiterDashboard />
+    </MainLayout>
+  </ProtectedRoute>
+} />
               <Route
                path="/search" 
                element={

@@ -1,0 +1,237 @@
+/* ============================================ */
+/* CONTAINER                                     */
+/* ============================================ */
+.container {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================ */
+/* HEADER                                        */
+/* ============================================ */
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  margin-bottom: 4px;
+}
+
+.pageSubtitle {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+
+/* ============================================ */
+/* MESSAGE                                       */
+/* ============================================ */
+.messageBox {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.messageSuccess {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.messageError {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* ============================================ */
+/* COVER & AVATAR                                */
+/* ============================================ */
+.coverCard {
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 24px;
+  border-radius: 12px;
+}
+
+.coverImage {
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.coverBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.coverBtn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.avatarSection {
+  padding: 0 24px 20px;
+  margin-top: -40px;
+}
+
+.avatarWrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+}
+
+.avatarImage {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 4px solid var(--bg-primary);
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  border: 4px solid var(--bg-primary);
+}
+
+.avatarBtn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background-color: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.avatarBtn:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* ============================================ */
+/* FORM CARD                                     */
+/* ============================================ */
+.formCard {
+  padding: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.subSectionTitle {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.twoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.charCounter {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: right;
+  display: block;
+  margin-top: 4px;
+}
+
+.disabledInput {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.saveBtn {
+  margin-top: 24px;
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============================================ */
+/* RESPONSIVE                                    */
+/* ============================================ */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+
+  .twoColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .pageTitle {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 8px;
+  }
+
+  .formCard {
+    padding: 16px;
+  }
+
+  .coverImage {
+    height: 140px;
+  }
+
+  .avatarImage,
+  .avatarFallback {
+    width: 70px;
+    height: 70px;
+    font-size: 1.5rem;
+  }
+
+  .avatarSection {
+    margin-top: -35px;
+  }
+
+  .saveBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
