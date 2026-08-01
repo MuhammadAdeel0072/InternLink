@@ -29,6 +29,14 @@ import SearchResults from './pages/Student/SearchResults/SearchResults';
 
 //Recruiter
 import RecruiterDashboard from './pages/recruiter/Dashboard/Dashboard';
+import RecruiterProfile from './pages/recruiter/Profile/Profile';
+import CompanyAssociation from './pages/recruiter/CompanyAssociation/CompanyAssociation';
+import JoinCompany from './pages/recruiter/JoinCompany/JoinCompany';
+import CreateCompany from './pages/recruiter/CreateCompany/CreateCompany';
+import JobList from './pages/recruiter/JobManagement/JobList';
+import CreateJob from './pages/recruiter/JobManagement/CreateJob';
+import ApplicantManagement from './pages/recruiter/Applicants/ApplicantManagement';
+import RecruiterProtectedRoute from './components/RecruiterProtectedRoute/RecruiterProtectedRoute';
 function App() {
   return (
     <Router>
@@ -182,6 +190,69 @@ function App() {
       <RecruiterDashboard />
     </MainLayout>
   </ProtectedRoute>
+} />
+            <Route path="/recruiter/profile" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <RecruiterProfile />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/company-association" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <CompanyAssociation />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/company/join" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <JoinCompany />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/company/create" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <CreateCompany />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/jobs" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <JobList />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/jobs/create" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <CreateJob />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/jobs/:id/edit" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <CreateJob />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/jobs/:id/duplicate" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <CreateJob />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/applicants" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <ApplicantManagement />
+    </MainLayout>
+  </RecruiterProtectedRoute>
 } />
               <Route
                path="/search" 

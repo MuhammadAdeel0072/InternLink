@@ -124,6 +124,11 @@ following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
       type: Boolean,
       default: false,
     },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      default: null,
+    },
   },
   {
     timestamps: true,

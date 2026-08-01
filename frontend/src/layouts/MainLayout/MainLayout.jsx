@@ -5,10 +5,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import api from '../../services/api';
 import styles from './MainLayout.module.css';
+import RecruiterSidebar from '../RecruiterSidebar/RecruiterSidebar';
+
 import {
   Home, Users, Briefcase, MessageSquare, Bell,
   User as UserIcon, LogOut, Search, ChevronDown, Settings,
-  X, TrendingUp, Clock, FileText, User // ← ADD THESE
+  X, TrendingUp, Clock, FileText, User, Building2,
+  UserSearch
 } from 'lucide-react';
 
 const MainLayout = ({ children }) => {
@@ -138,14 +141,15 @@ const studentLinks = [
 
 const recruiterLinks = [
   { to: '/recruiter/dashboard', label: 'Dashboard', icon: Home },
-  { to: '/jobs', label: 'Post Jobs', icon: Briefcase },
-  { to: '/network', label: 'Candidates', icon: Users },
+  { to: '/recruiter/profile', label: 'Profile', icon: UserIcon },
+  { to: '/recruiter/company-association', label: 'Company', icon: Building2 },
+  { to: '/recruiter/jobs', label: 'Jobs', icon: Briefcase },
+  { to: '/recruiter/applicants', label: 'Applicants', icon: UserSearch },
+  { to: '/network', label: 'Talent Pool', icon: Users },
   { to: '/messages', label: 'Messages', icon: MessageSquare },
   { to: '/notifications', label: 'Notifications', icon: Bell, badgeCount: unreadNotifications },
-  { to: `/profile/me`, label: 'Profile', icon: UserIcon }
+  { to: '/settings', label: 'Settings', icon: Settings },
 ];
-
-const navLinks = isRecruiter ? recruiterLinks : studentLinks;
 
   return (
     <div className={styles.mainLayout}>
@@ -325,39 +329,42 @@ const navLinks = isRecruiter ? recruiterLinks : studentLinks;
       {/* Main Wrapper Layout */}
       <div className={styles.mainWrapper}>
         {/* Left Sidebar Menu */}
-        <aside className={styles.sidebar}>
-          <nav className={styles.sidebarNav}>
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  className={({ isActive }) => 
-                    `${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ''}`
-                  }
-                >
-                  <div className={styles.sidebarLinkContent}>
-                    <Icon size={18} />
-                    <span>{link.label}</span>
-                  </div>
-                  {link.badgeCount > 0 && (
-                    <span className={styles.badgeCount}>
-                      {link.badgeCount}
-                    </span>
-                  )}
-                </NavLink>
-              );
-            })}
-          </nav>
+        {isRecruiter ? (
+          <RecruiterSidebar unreadNotifications={unreadNotifications} />
+        ) : (
+          <aside className={styles.sidebar}>
+            <nav className={styles.sidebarNav}>
+              {studentLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    className={({ isActive }) =>
+                      `${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ''}`
+                    }
+                  >
+                    <div className={styles.sidebarLinkContent}>
+                      <Icon size={18} />
+                      <span>{link.label}</span>
+                    </div>
+                    {link.badgeCount > 0 && (
+                      <span className={styles.badgeCount}>
+                        {link.badgeCount}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </nav>
 
-          {/* Quick Stats or Footer notes */}
-          <div className={styles.sidebarFooter}>
-            <span className={styles.footerText}>
-              © 2026 InternLink Inc.
-            </span>
-          </div>
-        </aside>
+            <div className={styles.sidebarFooter}>
+              <span className={styles.footerText}>
+                © 2026 InternLink Inc.
+              </span>
+            </div>
+          </aside>
+        )}
 
         {/* Content Panel */}
         <main className={styles.mainContent}>

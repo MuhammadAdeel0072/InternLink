@@ -4,9 +4,10 @@ import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
 import api from '../../../services/api';
 import styles from './Settings.module.css';
+import ThemeSelector from '../../../components/settings/ThemeSelector';
 import {
   User, Lock, Eye, Palette, Accessibility, Link2,
-  ArrowLeft, Camera, Trash2, Shield, Globe, Moon, Sun, Waves
+  ArrowLeft, Camera, Trash2, Shield
 } from 'lucide-react';
 
 const Settings = () => {
@@ -136,13 +137,6 @@ const Settings = () => {
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
     { id: 'connected', label: 'Connected Accounts', icon: Link2 },
-  ];
-
-  const themes = [
-    { id: 'light', icon: Sun, label: 'Light' },
-    { id: 'dark', icon: Moon, label: 'Dark' },
-    { id: 'ocean', icon: Waves, label: 'Ocean' },
-    { id: 'system', icon: Globe, label: 'System' },
   ];
 
   return (
@@ -339,22 +333,11 @@ const Settings = () => {
         {activeTab === 'appearance' && (
           <div>
             <h2 className={styles.tabTitle}>Appearance</h2>
-            <p className={styles.tabSubtitle}>Choose your theme and font size.</p>
+            <p className={styles.tabSubtitle}>Choose your preferred theme.</p>
 
             <div className={styles.themeSection}>
               <label className="form-label">Choose Theme</label>
-              <div className={styles.themeGrid}>
-                {themes.map(({ id, icon: Icon, label }) => (
-                  <button 
-                    key={id} 
-                    onClick={() => handlePreferenceUpdate('appearance', { ...preferences.appearance, theme: id })}
-                    className={`${styles.themeOption} ${preferences.appearance?.theme === id ? styles.themeOptionActive : ''}`}
-                  >
-                    <Icon size={24} className={preferences.appearance?.theme === id ? styles.themeIconActive : styles.themeIcon} />
-                    <span className={styles.themeLabel}>{label}</span>
-                  </button>
-                ))}
-              </div>
+              <ThemeSelector onChange={(themeId) => handlePreferenceUpdate('appearance', { ...preferences.appearance, theme: themeId })} />
             </div>
           </div>
         )}

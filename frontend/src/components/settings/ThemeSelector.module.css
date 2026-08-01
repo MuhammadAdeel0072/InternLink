@@ -1,0 +1,17 @@
+.themeSelector {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .themeSelector {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .themeSelector {
+    gap: 8px;
+  }
+}

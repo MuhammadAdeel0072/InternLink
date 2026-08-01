@@ -1,0 +1,188 @@
+.themeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  cursor: pointer;
+  min-width: 160px;
+  flex: 1;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.themeCard:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.themeCardSelected {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.preview {
+  width: 100%;
+  height: 100px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.previewNavbar {
+  height: 12px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.previewBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.previewSidebar {
+  width: 24px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-color);
+}
+
+.previewContent {
+  flex: 1;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.previewCard {
+  flex: 1;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.previewLine {
+  height: 3px;
+  border-radius: 2px;
+  width: 100%;
+}
+
+.previewLineShort {
+  height: 3px;
+  border-radius: 2px;
+  width: 60%;
+}
+
+.previewButton {
+  height: 8px;
+  border-radius: 3px;
+  width: 40px;
+  margin-top: auto;
+}
+
+.themeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.themeHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.themeName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.selectedBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+.themeDescription {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+  .themeCard {
+    min-width: 120px;
+    padding: 12px;
+  }
+
+  .preview {
+    height: 80px;
+  }
+
+  .themeName {
+    font-size: 0.75rem;
+  }
+
+  .themeDescription {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .themeCard {
+    min-width: 100px;
+    padding: 10px;
+  }
+
+  .preview {
+    height: 64px;
+  }
+
+  .previewNavbar {
+    height: 10px;
+  }
+
+  .previewSidebar {
+    width: 16px;
+  }
+
+  .previewContent {
+    padding: 4px;
+    gap: 2px;
+  }
+
+  .previewLine {
+    height: 2px;
+  }
+
+  .previewButton {
+    height: 6px;
+    width: 28px;
+  }
+
+  .themeName {
+    font-size: 0.7rem;
+  }
+
+  .themeDescription {
+    font-size: 0.6rem;
+  }
+}
