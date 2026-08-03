@@ -22,12 +22,16 @@ passport.deserializeUser(async (id, done) => {
 
 // Google Strategy - Only initialize if credentials exist
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  const googleCallbackURL = process.env.BACKEND_URL
+    ? `${process.env.BACKEND_URL}/api/auth/google/callback`
+    : 'http://localhost:5000/api/auth/google/callback';
+
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: '/api/auth/google/callback',
+        callbackURL: googleCallbackURL,
         proxy: true,
       },
       async (accessToken, refreshToken, profile, done) => {
@@ -87,12 +91,16 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
 // GitHub Strategy - Only initialize if credentials exist
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  const githubCallbackURL = process.env.BACKEND_URL
+    ? `${process.env.BACKEND_URL}/api/auth/github/callback`
+    : 'http://localhost:5000/api/auth/github/callback';
+
   passport.use(
     new GitHubStrategy(
       {
         clientID: process.env.GITHUB_CLIENT_ID,
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        callbackURL: '/api/auth/github/callback',
+        callbackURL: githubCallbackURL,
         scope: ['user:email'],
         proxy: true,
       },
