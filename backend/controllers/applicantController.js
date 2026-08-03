@@ -3,6 +3,7 @@ import Job from '../models/Job.js';
 import Profile from '../models/Profile.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
+import { escapeRegExp } from '../utils/regex.js';
 
 // Helper to push timeline entry
 const addTimelineEntry = async (applicationId, status, changedBy, reason = '') => {
@@ -110,46 +111,51 @@ export const getApplicants = async (req, res) => {
       { $unwind: { path: '$profileData', preserveNullAndEmptyArrays: true } }
     ];
 
+    const sanitizedSearch = search ? escapeRegExp(search) : null;
+    const sanitizedLocation = location ? escapeRegExp(location) : null;
+    const sanitizedEducation = education ? escapeRegExp(education) : null;
+    const sanitizedSkills = skills ? escapeRegExp(skills) : null;
+
     // Search filter
-    if (search) {
+    if (sanitizedSearch) {
       pipeline.push({
         $match: {
           $or: [
-            { 'studentData.name': { $regex: search, $options: 'i' } },
-            { 'studentData.email': { $regex: search, $options: 'i' } },
-            { 'jobData.title': { $regex: search, $options: 'i' } },
-            { 'profileData.university': { $regex: search, $options: 'i' } },
-            { 'profileData.skills.name': { $regex: search, $options: 'i' } }
+            { 'studentData.name': { $regex: sanitizedSearch, $options: 'i' } },
+            { 'studentData.email': { $regex: sanitizedSearch, $options: 'i' } },
+            { 'jobData.title': { $regex: sanitizedSearch, $options: 'i' } },
+            { 'profileData.university': { $regex: sanitizedSearch, $options: 'i' } },
+            { 'profileData.skills.name': { $regex: sanitizedSearch, $options: 'i' } }
           ]
         }
       });
     }
 
     // Additional filters on profile
-    if (location) {
+    if (sanitizedLocation) {
       pipeline.push({
         $match: {
           $or: [
-            { 'profileData.locationString': { $regex: location, $options: 'i' } },
-            { 'profileData.location.country': { $regex: location, $options: 'i' } },
-            { 'profileData.location.city': { $regex: location, $options: 'i' } }
+            { 'profileData.locationString': { $regex: sanitizedLocation, $options: 'i' } },
+            { 'profileData.location.country': { $regex: sanitizedLocation, $options: 'i' } },
+            { 'profileData.location.city': { $regex: sanitizedLocation, $options: 'i' } }
           ]
         }
       });
     }
 
-    if (education) {
+    if (sanitizedEducation) {
       pipeline.push({
         $match: {
-          'profileData.education.degree': { $regex: education, $options: 'i' }
+          'profileData.education.degree': { $regex: sanitizedEducation, $options: 'i' }
         }
       });
     }
 
-    if (skills) {
+    if (sanitizedSkills) {
       pipeline.push({
         $match: {
-          'profileData.skills.name': { $regex: skills, $options: 'i' }
+          'profileData.skills.name': { $regex: sanitizedSkills, $options: 'i' }
         }
       });
     }
@@ -158,6 +164,25 @@ export const getApplicants = async (req, res) => {
       pipeline.push({
         $match: {
           'profileData.graduationYear': parseInt(graduationYear)
+        }
+      });
+    }
+
+    if (experience) {
+      const minYears = parseInt(experience);
+      if (!isNaN(minYears)) {
+        pipeline.push({
+          $match: {
+            'profileData.yearsOfExperience': { $gte: minYears }
+          }
+        });
+      }
+    }
+
+    if (availability) {
+      pipeline.push({
+        $match: {
+          'profileData.currentStatus': availability
         }
       });
     }
@@ -477,8 +502,11 @@ export const getApplicantAnalytics = async (req, res) => {
         success: true,
         data: {
           total: 0,
+          applied: 0,
+          underReview: 0,
           shortlisted: 0,
           interview: 0,
+          offer: 0,
           rejected: 0,
           hired: 0,
           avgReviewTime: 0,
@@ -490,34 +518,36 @@ export const getApplicantAnalytics = async (req, res) => {
 
     const [
       total,
+      applied,
+      underReview,
       shortlisted,
       interview,
+      offer,
       rejected,
       hired,
       avgReviewTimeResult
     ] = await Promise.all([
       Application.countDocuments({ job: { $in: recruiterJobIds } }),
+      Application.countDocuments({ job: { $in: recruiterJobIds }, status: 'applied' }),
+      Application.countDocuments({ job: { $in: recruiterJobIds }, status: 'under-review' }),
       Application.countDocuments({ job: { $in: recruiterJobIds }, status: 'shortlisted' }),
       Application.countDocuments({ job: { $in: recruiterJobIds }, status: 'interview' }),
+      Application.countDocuments({ job: { $in: recruiterJobIds }, status: 'offer' }),
       Application.countDocuments({ job: { $in: recruiterJobIds }, status: 'rejected' }),
       Application.countDocuments({ job: { $in: recruiterJobIds }, status: 'hired' }),
       Application.aggregate([
         { $match: { job: { $in: recruiterJobIds } } },
+        { $addFields: { lastTimelineEntry: { $arrayElemAt: ['$timeline', -1] } } },
         {
           $group: {
             _id: null,
             avgReviewTime: {
               $avg: {
-                $cond: [
-                  { $gt: ['$timeline', []] },
-                  {
-                    $subtract: [
-                      { $arrayElemAt: ['$timeline.timestamp', -1] },
-                      '$createdAt'
-                    ]
-                  },
-                  0
-                ]
+                $cond: {
+                  if: { $gt: ['$lastTimelineEntry', null] },
+                  then: { $subtract: ['$lastTimelineEntry.timestamp', '$createdAt'] },
+                  else: null
+                }
               }
             }
           }
@@ -529,11 +559,16 @@ export const getApplicantAnalytics = async (req, res) => {
       success: true,
       data: {
         total,
+        applied,
+        underReview,
         shortlisted,
         interview,
+        offer,
         rejected,
         hired,
-        avgReviewTime: avgReviewTimeResult.length > 0 ? Math.round(avgReviewTimeResult[0].avgReviewTime / (1000 * 60 * 60 * 24)) : 0,
+        avgReviewTime: avgReviewTimeResult.length > 0 && avgReviewTimeResult[0].avgReviewTime
+          ? Math.round(avgReviewTimeResult[0].avgReviewTime / (1000 * 60 * 60 * 24))
+          : 0,
         resumeDownloads: 0,
         messagesSent: 0
       }

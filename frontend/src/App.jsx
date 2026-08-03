@@ -36,6 +36,10 @@ import CreateCompany from './pages/recruiter/CreateCompany/CreateCompany';
 import JobList from './pages/recruiter/JobManagement/JobList';
 import CreateJob from './pages/recruiter/JobManagement/CreateJob';
 import ApplicantManagement from './pages/recruiter/Applicants/ApplicantManagement';
+import InterviewManagement from './pages/recruiter/InterviewManagement/InterviewManagement';
+import OfferManagement from './pages/recruiter/OfferManagement/OfferManagement';
+import StudentInterviews from './pages/Student/Interviews/StudentInterviews';
+import StudentOffers from './pages/Student/Offers/StudentOffers';
 import RecruiterProtectedRoute from './components/RecruiterProtectedRoute/RecruiterProtectedRoute';
 function App() {
   return (
@@ -254,14 +258,44 @@ function App() {
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
-              <Route
-               path="/search" 
-               element={
-               <ProtectedRoute>
-                <MainLayout>
-                  <SearchResults />
-                  </MainLayout>
-                </ProtectedRoute>} />
+            <Route path="/recruiter/interviews" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <InterviewManagement />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+            <Route path="/recruiter/offers" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <OfferManagement />
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+               <Route
+                path="/search" 
+                element={
+                <ProtectedRoute>
+                 <MainLayout>
+                   <SearchResults />
+                   </MainLayout>
+                 </ProtectedRoute>} />
+               <Route
+                 path="/interviews"
+                 element={
+                 <ProtectedRoute>
+                  <MainLayout>
+                    <StudentInterviews />
+                    </MainLayout>
+                  </ProtectedRoute>} />
+               <Route
+                 path="/offers"
+                 element={
+                 <ProtectedRoute>
+                  <MainLayout>
+                    <StudentOffers />
+                    </MainLayout>
+                  </ProtectedRoute>} />
               {/* ── Catch-all / 404 ── */}
               <Route
                 path="*"

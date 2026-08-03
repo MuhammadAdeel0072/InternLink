@@ -10,20 +10,24 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      // Connect to the socket server
-      const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
-        transports: ['websocket'],
+      const newSocket = io(import.meta.env.VITE_API_URL, {
+        withCredentials: true,
+        transports: ['websocket', 'polling'],
       });
 
       newSocket.on('connect', () => {
         console.log('Socket client connected:', newSocket.id);
-        // Register user ID on socket connection
         newSocket.emit('register', user._id);
+      });
+
+      newSocket.on('connect_error', (error) => {
+        if (import.meta.env.DEV) {
+          console.error('Socket connection error:', error.message);
+        }
       });
 
       setSocket(newSocket);
 
-      // Clean up on unmount or user change
       return () => {
         newSocket.disconnect();
         console.log('Socket client disconnected');

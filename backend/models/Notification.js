@@ -20,7 +20,28 @@ const notificationSchema = new mongoose.Schema(
         'message',
         'job-application',
         'like',
-        'comment'
+        'comment',
+        'interview-scheduled',
+        'interview-confirmed',
+        'interview-rescheduled',
+        'interview-cancelled',
+        'interview-completed',
+        'interview-reschedule-requested',
+        'interview-declined',
+        'interview-no-show',
+        'interview-reminder',
+        'interview-feedback',
+        'interview-reschedule-approved',
+        'interview-reschedule-rejected',
+        'offer-sent',
+        'offer-viewed',
+        'offer-accepted',
+        'offer-rejected',
+        'offer-negotiation',
+        'offer-withdrawn',
+        'offer-updated',
+        'offer-reminder',
+        'offer-expiring'
       ],
       required: true
     },
@@ -43,4 +64,6 @@ const notificationSchema = new mongoose.Schema(
 );
 
 const Notification = mongoose.model('Notification', notificationSchema);
+notificationSchema.index({ recipient: 1, createdAt: -1 });
+notificationSchema.index({ recipient: 1, isRead: 1 });
 export default Notification;

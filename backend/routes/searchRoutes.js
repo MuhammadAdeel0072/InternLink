@@ -5,20 +5,23 @@ import User from '../models/User.js';
 import Profile from '../models/Profile.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
+import { escapeRegExp } from '../utils/regex.js';
+
 const router = express.Router();
 
 router.get('/', protect, async (req, res) => {
   try {
     const { q } = req.query;
-    if (!q) return res.json({ people: [], jobs: [], posts: [] });
+    const sanitizedQ = q ? escapeRegExp(q) : null;
+    if (!sanitizedQ) return res.json({ people: [], jobs: [], posts: [] });
 
     const results = {};
 
     // Search People
     const users = await User.find({
       $or: [
-        { name: { $regex: q, $options: 'i' } },
-        { email: { $regex: q, $options: 'i' } }
+        { name: { $regex: sanitizedQ, $options: 'i' } },
+        { email: { $regex: sanitizedQ, $options: 'i' } }
       ]
     }).select('name email role').limit(5);
 
@@ -35,15 +38,15 @@ router.get('/', protect, async (req, res) => {
     results.jobs = await Job.find({
       isActive: true,
       $or: [
-        { title: { $regex: q, $options: 'i' } },
-        { company: { $regex: q, $options: 'i' } },
-        { skills: { $regex: q, $options: 'i' } }
+        { title: { $regex: sanitizedQ, $options: 'i' } },
+        { company: { $regex: sanitizedQ, $options: 'i' } },
+        { skills: { $regex: sanitizedQ, $options: 'i' } }
       ]
     }).select('title company location jobType salaryRange').limit(5);
 
     // Search Posts
     const posts = await Post.find({
-      content: { $regex: q, $options: 'i' }
+      content: { $regex: sanitizedQ, $options: 'i' }
     }).populate('author', 'name').limit(5).sort({ createdAt: -1 });
 
     results.posts = posts.map(p => ({

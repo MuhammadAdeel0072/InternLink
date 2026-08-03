@@ -11,7 +11,7 @@ import {
   Home, Users, Briefcase, MessageSquare, Bell,
   User as UserIcon, LogOut, Search, ChevronDown, Settings,
   X, TrendingUp, Clock, FileText, User, Building2,
-  UserSearch
+  UserSearch, Calendar
 } from 'lucide-react';
 
 const MainLayout = ({ children }) => {
@@ -134,6 +134,7 @@ const studentLinks = [
   { to: '/', label: 'Feed', icon: Home },
   { to: '/network', label: 'Network', icon: Users },
   { to: '/jobs', label: 'Jobs', icon: Briefcase },
+  { to: '/interviews', label: 'Interviews', icon: Calendar },
   { to: '/messages', label: 'Messages', icon: MessageSquare },
   { to: '/notifications', label: 'Notifications', icon: Bell, badgeCount: unreadNotifications },
   { to: `/profile/me`, label: 'Profile', icon: UserIcon }

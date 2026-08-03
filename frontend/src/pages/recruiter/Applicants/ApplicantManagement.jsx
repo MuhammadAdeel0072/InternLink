@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
-import Loader from '../../../components/Loader/Loader';
 import styles from './ApplicantManagement.module.css';
 import {
   Search,
@@ -31,6 +30,7 @@ import {
   ClipboardList,
   Award,
   Globe,
+  BarChart3,
 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
@@ -39,7 +39,7 @@ const STATUS_OPTIONS = [
   { value: 'under-review', label: 'Under Review' },
   { value: 'shortlisted', label: 'Shortlisted' },
   { value: 'interview', label: 'Interview Scheduled' },
-  { value: 'offer', label: 'Offer' },
+  { value: 'offer', label: 'Offer Sent' },
   { value: 'hired', label: 'Hired' },
   { value: 'rejected', label: 'Rejected' },
 ];
@@ -47,11 +47,13 @@ const STATUS_OPTIONS = [
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest Applications' },
   { value: 'oldest', label: 'Oldest Applications' },
-  { value: 'highest-experience', label: 'Highest Experience' },
+  { value: 'highest-experience', label: 'Most Experienced' },
   { value: 'recently-updated', label: 'Recently Updated' },
   { value: 'profile-completion', label: 'Profile Completion' },
   { value: 'alphabetical', label: 'Alphabetical' },
 ];
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 const PIPELINE_STAGES = [
   { value: 'all', label: 'All', icon: Users },
@@ -70,7 +72,7 @@ const ApplicantManagement = () => {
   const [loading, setLoading] = useState(true);
   const [applicants, setApplicants] = useState([]);
   const [analytics, setAnalytics] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0, limit: 10 });
   const [selectedIds, setSelectedIds] = useState([]);
   const [filters, setFilters] = useState({
     search: '',
@@ -82,6 +84,7 @@ const ApplicantManagement = () => {
     skills: '',
     appliedDate: '',
     graduationYear: '',
+    availability: '',
     sort: 'newest',
   });
   const [showFilters, setShowFilters] = useState(false);
@@ -105,6 +108,8 @@ const ApplicantManagement = () => {
   });
   const [noteText, setNoteText] = useState('');
   const [saving, setSaving] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const searchTimeoutRef = useRef(null);
 
   useEffect(() => {
     fetchJobs();
@@ -113,7 +118,7 @@ const ApplicantManagement = () => {
   useEffect(() => {
     fetchApplicants();
     fetchAnalytics();
-  }, [filters, pagination.page]);
+  }, [filters, pagination.page, pagination.limit]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -141,13 +146,13 @@ const ApplicantManagement = () => {
       setLoading(true);
       const params = new URLSearchParams({
         page: pagination.page.toString(),
-        limit: '10',
+        limit: pagination.limit.toString(),
         ...filters,
       });
       const res = await api.get(`/applicants?${params.toString()}`);
       if (res.data.success) {
         setApplicants(res.data.data);
-        setPagination(res.data.pagination);
+        setPagination(prev => ({ ...prev, ...res.data.pagination }));
       }
     } catch (err) {
       console.error('Failed to fetch applicants:', err);
@@ -165,6 +170,17 @@ const ApplicantManagement = () => {
     } catch (err) {
       console.error('Failed to fetch analytics:', err);
     }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: value, page: 1 }));
+    }, 300);
   };
 
   const handleStatusChange = async (applicationId, newStatus, reason = '') => {
@@ -229,7 +245,16 @@ const ApplicantManagement = () => {
 
   const handleBulkAction = async (action) => {
     try {
-      await api.post('/applicants/bulk', { applicantIds: selectedIds, action });
+      if (action === 'message') {
+        const promises = selectedIds.map(id => api.post(`/applicants/${id}/message`));
+        await Promise.all(promises);
+        const firstConv = await api.post(`/applicants/${selectedIds[0]}/message`);
+        if (firstConv.data.success) {
+          navigate(`/messages/${firstConv.data.data._id}`);
+        }
+      } else {
+        await api.post('/applicants/bulk', { applicantIds: selectedIds, action });
+      }
       setSelectedIds([]);
       fetchApplicants();
       fetchAnalytics();
@@ -251,6 +276,18 @@ const ApplicantManagement = () => {
     } catch (err) {
       console.error('Export failed:', err);
     }
+  };
+
+  const handleDownloadResume = (e, resumeUrl) => {
+    e.stopPropagation();
+    if (!resumeUrl) return;
+    const link = document.createElement('a');
+    link.href = resumeUrl;
+    link.setAttribute('download', 'resume');
+    link.setAttribute('target', '_blank');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   const toggleSelect = (id) => {
@@ -291,20 +328,100 @@ const ApplicantManagement = () => {
     return Math.min(profile.completionPercentage || 0, 100);
   };
 
-  const filteredApplicants = useMemo(() => {
-    let result = [...applicants];
-    if (filters.status !== 'all') {
-      result = result.filter(a => a.status === filters.status);
-    }
-    if (filters.jobId !== 'all') {
-      result = result.filter(a => a.job?._id === filters.jobId);
-    }
-    return result;
-  }, [applicants, filters]);
+  const getFileType = (url) => {
+    if (!url) return 'Unknown';
+    const ext = url.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return 'PDF';
+    if (ext === 'docx' || ext === 'doc') return 'DOCX';
+    return 'File';
+  };
 
-  if (loading && applicants.length === 0) {
-    return <Loader fullPage />;
-  }
+  const handleLimitChange = (e) => {
+    const newLimit = parseInt(e.target.value);
+    setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }));
+  };
+
+  const renderSkeletonCards = () => {
+    return Array.from({ length: 5 }).map((_, idx) => (
+      <div key={idx} className={styles.applicantCard}>
+        <div className={styles.applicantHeader}>
+          <div className={styles.applicantInfo}>
+            <div className={styles.skeletonAvatar} />
+            <div className={styles.skeletonDetails}>
+              <div className={styles.skeletonLine} style={{ width: '40%' }} />
+              <div className={styles.skeletonLine} style={{ width: '60%' }} />
+              <div className={styles.skeletonLine} style={{ width: '30%' }} />
+            </div>
+          </div>
+          <div className={styles.skeletonBadge} />
+        </div>
+        <div className={styles.skeletonFooter}>
+          <div className={styles.skeletonLine} style={{ width: '20%' }} />
+          <div className={styles.skeletonActions}>
+            <div className={styles.skeletonButton} />
+            <div className={styles.skeletonButton} />
+            <div className={styles.skeletonButton} />
+          </div>
+        </div>
+      </div>
+    ));
+  };
+
+  const renderAnalyticsCharts = () => {
+    if (!analytics) return null;
+    const maxValue = Math.max(analytics.total || 1, 1);
+    const chartData = [
+      { label: 'Applied', value: analytics.applied || 0, color: 'var(--text-muted)' },
+      { label: 'Under Review', value: analytics.underReview || 0, color: 'var(--info)' },
+      { label: 'Shortlisted', value: analytics.shortlisted || 0, color: 'var(--primary)' },
+      { label: 'Interview', value: analytics.interview || 0, color: '#8b5cf6' },
+      { label: 'Offer', value: analytics.offer || 0, color: 'var(--warning)' },
+      { label: 'Hired', value: analytics.hired || 0, color: 'var(--success)' },
+      { label: 'Rejected', value: analytics.rejected || 0, color: 'var(--danger)' },
+    ];
+
+    return (
+      <div className={styles.analyticsSection}>
+        <h3 className={styles.analyticsTitle}>
+          <BarChart3 size={20} />
+          Hiring Analytics
+        </h3>
+        <div className={styles.chartsContainer}>
+          <div className={styles.chartBars}>
+            {chartData.map(item => (
+              <div key={item.label} className={styles.chartBarWrapper}>
+                <div className={styles.chartBarLabel}>{item.label}</div>
+                <div className={styles.chartBarTrack}>
+                  <div
+                    className={styles.chartBarFill}
+                    style={{
+                      width: `${(item.value / maxValue) * 100}%`,
+                      background: item.color,
+                    }}
+                  />
+                </div>
+                <div className={styles.chartBarValue}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+          <div className={styles.chartStats}>
+            <div className={styles.chartStatItem}>
+              <span className={styles.chartStatLabel}>Avg. Time to Hire</span>
+              <span className={styles.chartStatValue}>{analytics.avgReviewTime || 0} days</span>
+            </div>
+            <div className={styles.chartStatItem}>
+              <span className={styles.chartStatLabel}>Resume Downloads</span>
+              <span className={styles.chartStatValue}>{analytics.resumeDownloads || 0}</span>
+            </div>
+            <div className={styles.chartStatItem}>
+              <span className={styles.chartStatLabel}>Messages Sent</span>
+              <span className={styles.chartStatValue}>{analytics.messagesSent || 0}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className={styles.container}>
@@ -324,6 +441,24 @@ const ApplicantManagement = () => {
             <div className={styles.statContent}>
               <div className={styles.statValue}>{analytics.total}</div>
               <div className={styles.statLabel}>Total Applicants</div>
+            </div>
+          </div>
+          <div className={styles.statCard} onClick={() => setFilters(prev => ({ ...prev, status: 'applied' }))}>
+            <div className={styles.statIcon} style={{ background: 'rgba(107, 114, 128, 0.15)', color: '#9ca3af' }}>
+              <FileText size={24} />
+            </div>
+            <div className={styles.statContent}>
+              <div className={styles.statValue}>{analytics.applied}</div>
+              <div className={styles.statLabel}>Applied</div>
+            </div>
+          </div>
+          <div className={styles.statCard} onClick={() => setFilters(prev => ({ ...prev, status: 'under-review' }))}>
+            <div className={styles.statIcon} style={{ background: 'rgba(6, 182, 212, 0.15)', color: 'var(--info)' }}>
+              <Clock size={24} />
+            </div>
+            <div className={styles.statContent}>
+              <div className={styles.statValue}>{analytics.underReview}</div>
+              <div className={styles.statLabel}>Under Review</div>
             </div>
           </div>
           <div className={styles.statCard} onClick={() => setFilters(prev => ({ ...prev, status: 'shortlisted' }))}>
@@ -365,14 +500,16 @@ const ApplicantManagement = () => {
         </div>
       )}
 
+      {renderAnalyticsCharts()}
+
       <div className={styles.toolbar}>
         <div className={styles.searchBox}>
           <Search size={18} className={styles.searchIcon} />
           <input
             type="text"
             placeholder="Search applicants by name, email, skills, job..."
-            value={filters.search}
-            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
+            value={searchInput}
+            onChange={handleSearchChange}
             className={styles.searchInput}
           />
         </div>
@@ -387,6 +524,15 @@ const ApplicantManagement = () => {
         >
           {SORT_OPTIONS.map(option => (
             <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <select
+          value={pagination.limit}
+          onChange={handleLimitChange}
+          className={styles.sortSelect}
+        >
+          {PAGE_SIZE_OPTIONS.map(size => (
+            <option key={size} value={size}>{size} / page</option>
           ))}
         </select>
       </div>
@@ -448,6 +594,51 @@ const ApplicantManagement = () => {
               className={styles.filterSelect}
             />
           </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Experience (min years)</label>
+            <input
+              type="number"
+              placeholder="e.g. 2"
+              value={filters.experience}
+              onChange={(e) => setFilters(prev => ({ ...prev, experience: e.target.value, page: 1 }))}
+              className={styles.filterSelect}
+              min="0"
+            />
+          </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Graduation Year</label>
+            <input
+              type="number"
+              placeholder="e.g. 2025"
+              value={filters.graduationYear}
+              onChange={(e) => setFilters(prev => ({ ...prev, graduationYear: e.target.value, page: 1 }))}
+              className={styles.filterSelect}
+            />
+          </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Availability</label>
+            <select
+              value={filters.availability}
+              onChange={(e) => setFilters(prev => ({ ...prev, availability: e.target.value, page: 1 }))}
+              className={styles.filterSelect}
+            >
+              <option value="">All</option>
+              <option value="looking-internship">Looking for Internship</option>
+              <option value="looking-job">Looking for Job</option>
+              <option value="employed">Employed</option>
+              <option value="student">Student</option>
+              <option value="graduate">Graduate</option>
+            </select>
+          </div>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Applied Date</label>
+            <input
+              type="date"
+              value={filters.appliedDate}
+              onChange={(e) => setFilters(prev => ({ ...prev, appliedDate: e.target.value, page: 1 }))}
+              className={styles.filterSelect}
+            />
+          </div>
         </div>
       )}
 
@@ -482,6 +673,10 @@ const ApplicantManagement = () => {
             <XCircle size={16} />
             Reject
           </button>
+          <button className={`${styles.bulkButton} ${styles.bulkButtonSecondary}`} onClick={() => handleBulkAction('message')}>
+            <MessageSquare size={16} />
+            Message
+          </button>
           <button className={`${styles.bulkButton} ${styles.bulkButtonSecondary}`} onClick={handleExport}>
             <Download size={16} />
             Export
@@ -494,14 +689,15 @@ const ApplicantManagement = () => {
 
       {loading ? (
         <div className={styles.loadingContainer}>
-          <Loader fullPage />
+          {renderSkeletonCards()}
         </div>
       ) : applicants.length === 0 ? (
         <div className={styles.emptyState}>
           <div className={styles.emptyStateIcon}>
             <Users size={32} />
           </div>
-          <p>No applicants found matching your criteria.</p>
+          <p>No applicants yet.</p>
+          <p className={styles.emptyStateSubtext}>Once candidates apply for your jobs, they will appear here.</p>
         </div>
       ) : (
         <>
@@ -586,14 +782,6 @@ const ApplicantManagement = () => {
                           ))}
                         </div>
                       )}
-                      {applicant.profileData?.resume && (
-                        <div className={styles.resumeInfo}>
-                          <FileText size={14} />
-                          <a href={applicant.profileData.resume} target="_blank" rel="noopener noreferrer" className={styles.resumeLink}>
-                            Download Resume
-                          </a>
-                        </div>
-                      )}
                     </div>
                   </div>
                   <div className={styles.applicantActions}>
@@ -645,8 +833,21 @@ const ApplicantManagement = () => {
                         <div className={styles.completionBarFill} style={{ width: `${getCompletionPercentage(applicant.profileData)}%` }} />
                       </div>
                     </div>
+                    {applicant.profileData?.resume && (
+                      <div className={styles.resumeInfo}>
+                        <FileText size={14} />
+                        <span className={styles.resumeType}>{getFileType(applicant.profileData.resume)}</span>
+                        <span className={styles.resumeUpdated}>Updated {formatDate(applicant.profileData.updatedAt)}</span>
+                      </div>
+                    )}
                   </div>
                   <div className={styles.footerRight}>
+                    {applicant.profileData?.resume && (
+                      <button className={styles.actionButton} onClick={(e) => handleDownloadResume(e, applicant.profileData.resume)}>
+                        <Download size={16} />
+                        Resume
+                      </button>
+                    )}
                     <button className={styles.actionButton} onClick={() => { setSelectedApplicant(applicant); setShowProfileModal(true); }}>
                       <Eye size={16} />
                       View Profile
@@ -723,6 +924,26 @@ const ApplicantManagement = () => {
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>{selectedApplicant.studentData?.name}</h3>
                   <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{selectedApplicant.profileData?.headline || 'No headline'}</p>
+                  <div style={{ marginTop: '8px' }}>{getStatusBadge(selectedApplicant.status)}</div>
+                </div>
+              </div>
+
+              <div className={styles.profileDetailsGrid}>
+                <div className={styles.profileDetailItem}>
+                  <span className={styles.profileDetailLabel}>Applied Job</span>
+                  <span className={styles.profileDetailValue}>{selectedApplicant.jobData?.title}</span>
+                </div>
+                <div className={styles.profileDetailItem}>
+                  <span className={styles.profileDetailLabel}>Applied Date</span>
+                  <span className={styles.profileDetailValue}>{formatDate(selectedApplicant.createdAt)}</span>
+                </div>
+                <div className={styles.profileDetailItem}>
+                  <span className={styles.profileDetailLabel}>Last Updated</span>
+                  <span className={styles.profileDetailValue}>{formatDate(selectedApplicant.updatedAt)}</span>
+                </div>
+                <div className={styles.profileDetailItem}>
+                  <span className={styles.profileDetailLabel}>Current Status</span>
+                  <span className={styles.profileDetailValue}>{selectedApplicant.profileData?.currentStatus || 'N/A'}</span>
                 </div>
               </div>
 
@@ -786,7 +1007,7 @@ const ApplicantManagement = () => {
                     <FileText size={18} /> Resume
                   </h4>
                   <a href={selectedApplicant.profileData.resume} target="_blank" rel="noopener noreferrer" className={styles.resumeLink}>
-                    Download Resume
+                    Download Resume ({getFileType(selectedApplicant.profileData.resume)})
                   </a>
                 </div>
               )}

@@ -15,4 +15,5 @@ const conversationSchema = new mongoose.Schema(
 );
 
 const Conversation = mongoose.model('Conversation', conversationSchema);
+conversationSchema.index({ participants: 1, createdAt: -1 });
 export default Conversation;

@@ -4,15 +4,14 @@ dotenv.config();
 
 import express from 'express';
 import http from 'http';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
 import './config/passport.js'; // Initialize Passport strategies
 import { Server } from 'socket.io';
 import cors from 'cors';
 
 import passport from 'passport';
-console.log("Google Client ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("Google Client Secret:", process.env.GOOGLE_CLIENT_SECRET);
-console.log("GitHub Client ID:", process.env.GITHUB_CLIENT_ID);
-console.log("GitHub Client Secret:", process.env.GITHUB_CLIENT_SECRET);
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
@@ -34,6 +33,8 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import recruiterJobRoutes from './routes/recruiterJobRoutes.js';
 import applicantRoutes from './routes/applicantRoutes.js';
+import interviewRoutes from './routes/interviewRoutes.js';
+import offerRoutes from './routes/offerRoutes.js';
 
 // Connect to MongoDB
 connectDB();
@@ -105,9 +106,13 @@ app.use((req, res, next) => {
 });
 
 // Express Middlewares
+app.use(helmet());
+app.use(mongoSanitize());
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+    const isDev = process.env.NODE_ENV !== 'production';
+    if (!origin || allowedOrigins.includes(origin) || (isDev && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')))) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -115,6 +120,15 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -122,7 +136,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
 // Mount API routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/posts', postRoutes);
@@ -136,6 +150,8 @@ app.use('/api/recruiter', recruiterProfileRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/recruiter/dashboard', recruiterDashboardRoutes);
 app.use('/api/applicants', applicantRoutes);
+app.use('/api/interviews', interviewRoutes);
+app.use('/api/offers', offerRoutes);
 
 // Root Check Endpoint
 app.get('/health', (req, res) => {
@@ -154,4 +170,13 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+
+  // Auto-start Interview Reminder Scheduler in production
+  if (process.env.NODE_ENV === 'production' || process.env.ENABLE_REMINDERS === 'true') {
+    import('./utils/reminderScheduler.js').then(module => {
+      module.startReminderScheduler(io, userSocketMap);
+    }).catch(err => {
+      console.error('Failed to start reminder scheduler:', err);
+    });
+  }
 });

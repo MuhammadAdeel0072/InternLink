@@ -274,7 +274,7 @@ const Settings = () => {
               </h4>
               <div className={styles.sessionCard}>
                 <p className={styles.sessionDevice}>Current Device • Chrome • Windows</p>
-                <p className={styles.sessionMeta}>Login: Today • IP: 127.0.0.1</p>
+                <p className={styles.sessionMeta}>Login: Today • IP: ***.***.***.***</p>
               </div>
               <button onClick={handleLogoutAll} className={`btn btn-secondary ${styles.logoutAllBtn}`}>
                 Logout All Devices
@@ -402,7 +402,7 @@ const Settings = () => {
                       } catch (err) { 
                         showMessage('Failed', 'error'); 
                       }
-                    } : () => window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/${name.toLowerCase()}`}
+                    } : () => window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/${name.toLowerCase()}`}
                   >
                     {connected ? 'Disconnect' : 'Connect'}
                   </button>

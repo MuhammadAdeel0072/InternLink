@@ -2,6 +2,7 @@ import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import Notification from '../models/Notification.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
+import { escapeRegExp } from '../utils/regex.js';
 import JobAlert from '../models/JobAlert.js';
 
 // @desc    Create a new job posting (Recruiter action)
@@ -35,19 +36,21 @@ export const createJob = async (req, res) => {
 export const getAllJobs = async (req, res) => {
   try {
     const { search, location, jobType, remote } = req.query;
+    const sanitizedSearch = search ? escapeRegExp(search) : null;
+    const sanitizedLocation = location ? escapeRegExp(location) : null;
 
     const query = { isActive: true };
 
-    if (search) {
+    if (sanitizedSearch) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { title: { $regex: sanitizedSearch, $options: 'i' } },
+        { company: { $regex: sanitizedSearch, $options: 'i' } },
+        { description: { $regex: sanitizedSearch, $options: 'i' } }
       ];
     }
 
-    if (location) {
-      query.location = { $regex: location, $options: 'i' };
+    if (sanitizedLocation) {
+      query.location = { $regex: sanitizedLocation, $options: 'i' };
     }
 
     if (jobType) {
@@ -196,11 +199,13 @@ export const getRecommendedJobs = async (req, res) => {
     const profile = await Profile.findOne({ user: req.user._id });
     const skills = profile?.skills?.map(s => typeof s === 'object' ? s.name : s) || [];
     
+    const sanitizedSkills = skills.map(s => escapeRegExp(s)).join('|');
+    
     const jobs = await Job.find({
       isActive: true,
       $or: [
         { skills: { $in: skills } },
-        { title: { $regex: skills.join('|'), $options: 'i' } }
+        { title: { $regex: sanitizedSkills, $options: 'i' } }
       ]
     }).limit(6).sort({ createdAt: -1 });
     
@@ -218,12 +223,13 @@ export const getSimilarJobs = async (req, res) => {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: 'Job not found' });
 
+    const sanitizedTitlePart = escapeRegExp(job.title.split(' ')[0]);
     const similar = await Job.find({
       _id: { $ne: job._id },
       isActive: true,
       $or: [
         { skills: { $in: job.skills || [] } },
-        { title: { $regex: job.title.split(' ')[0], $options: 'i' } },
+        { title: { $regex: sanitizedTitlePart, $options: 'i' } },
         { jobType: job.jobType }
       ]
     }).limit(4).sort({ createdAt: -1 });

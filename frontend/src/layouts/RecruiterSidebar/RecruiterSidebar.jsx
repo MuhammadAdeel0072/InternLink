@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   Home, User, Building2, Briefcase, Users,
-  MessageSquare, Bell, Settings, UserSearch
+  MessageSquare, Bell, Settings, UserSearch, Calendar, FileText
 } from 'lucide-react';
 import styles from './RecruiterSidebar.module.css';
 
@@ -12,6 +12,8 @@ const RecruiterSidebar = ({ unreadNotifications }) => {
     { to: '/recruiter/company-association', label: 'Company', icon: Building2 },
     { to: '/recruiter/jobs', label: 'Jobs', icon: Briefcase },
     { to: '/recruiter/applicants', label: 'Applicants', icon: UserSearch },
+    { to: '/recruiter/interviews', label: 'Interview Management', icon: Calendar },
+    { to: '/recruiter/offers', label: 'Offer Management', icon: FileText },
     { to: '/network', label: 'Talent Pool', icon: Users },
     { to: '/messages', label: 'Messages', icon: MessageSquare },
     { to: '/notifications', label: 'Notifications', icon: Bell, badgeCount: unreadNotifications },

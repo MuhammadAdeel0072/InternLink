@@ -6,14 +6,14 @@ import { sendVerificationEmail } from '../utils/sendEmail.js'; // You'll need to
 
 // Helper: Generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secretkey', {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '1d',
   });
 };
 
 // Helper: Generate Refresh Token
 const generateRefreshToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET || 'refreshsecretkey', {
+  return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: '7d',
   });
 };
@@ -118,7 +118,6 @@ export const registerUser = async (req, res) => {
         role: user.role,
         isVerified: user.isVerified,
         token,
-        verificationToken, // Include for development convenience
       }
     });
   } catch (error) {
@@ -253,21 +252,20 @@ export const loginUser = async (req, res) => {
         success: false,
         message: 'Please verify your email first',
         needsVerification: true,
-        email: user.email,
-        verificationToken: user.verificationToken
+        email: user.email
       });
     }
 
     // Generate tokens with remember me option
     const token = jwt.sign(
       { id: user._id }, 
-      process.env.JWT_SECRET || 'secretkey', 
+      process.env.JWT_SECRET, 
       { expiresIn: rememberMe ? '30d' : '1d' }
     );
     
     const refreshToken = jwt.sign(
       { id: user._id }, 
-      process.env.JWT_REFRESH_SECRET || 'refreshsecretkey', 
+      process.env.JWT_REFRESH_SECRET, 
       { expiresIn: rememberMe ? '30d' : '7d' }
     );
     

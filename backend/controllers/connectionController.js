@@ -2,6 +2,7 @@ import Connection from '../models/Connection.js';
 import User from '../models/User.js';
 import Profile from '../models/Profile.js';
 import Notification from '../models/Notification.js';
+import { escapeRegExp } from '../utils/regex.js';
 
 // @desc    Send a connection request
 // @route   POST /api/connections/request/:userId
@@ -310,10 +311,11 @@ export const searchNetwork = async (req, res) => {
   try {
     const { q, type } = req.query;
     const query = {};
-    if (q) {
+    const sanitizedQ = q ? escapeRegExp(q) : null;
+    if (sanitizedQ) {
       query.$or = [
-        { name: { $regex: q, $options: 'i' } },
-        { email: { $regex: q, $options: 'i' } }
+        { name: { $regex: sanitizedQ, $options: 'i' } },
+        { email: { $regex: sanitizedQ, $options: 'i' } }
       ];
     }
     if (type && type !== 'all') query.role = type;

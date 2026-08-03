@@ -2,6 +2,7 @@ import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import Company from '../models/Company.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
+import { escapeRegExp } from '../utils/regex.js';
 
 const generateSlug = (title) => {
   return title
@@ -25,14 +26,16 @@ export const getRecruiterJobs = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, status, jobType, department, location, sort = 'newest' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
+    const sanitizedSearch = search ? escapeRegExp(search) : null;
+    const sanitizedLocation = location ? escapeRegExp(location) : null;
 
     let query = { recruiter: req.user._id, isDeleted: false };
 
-    if (search) {
+    if (sanitizedSearch) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { skills: { $in: [new RegExp(search, 'i')] } }
+        { title: { $regex: sanitizedSearch, $options: 'i' } },
+        { description: { $regex: sanitizedSearch, $options: 'i' } },
+        { skills: { $in: [new RegExp(sanitizedSearch, 'i')] } }
       ];
     }
 
@@ -48,8 +51,8 @@ export const getRecruiterJobs = async (req, res) => {
       query.department = department;
     }
 
-    if (location && location !== 'all') {
-      query.location = { $regex: location, $options: 'i' };
+    if (sanitizedLocation) {
+      query.location = { $regex: sanitizedLocation, $options: 'i' };
     }
 
     let sortOption = { createdAt: -1 };
