@@ -133,6 +133,7 @@
   padding: 12px 28px;
   border-radius: 12px;
   font-weight: 600;
+  min-height: 44px;
 }
 
 /* ============================================ */
@@ -146,7 +147,7 @@
 }
 
 .tabBtn {
-  padding: 8px 18px;
+  padding: 10px 20px;
   border-radius: 20px;
   border: 1px solid var(--border-color);
   background-color: transparent;
@@ -154,6 +155,10 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tabBtn:hover {
@@ -233,9 +238,15 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
   color: var(--text-muted);
   transition: all 0.2s ease;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
 }
 
 .saveBtn:hover {
@@ -343,12 +354,16 @@
   background-color: var(--primary);
   color: #fff;
   border: none;
-  padding: 8px 18px;
+  padding: 10px 20px;
   border-radius: 10px;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .viewDetailsBtn:hover {
@@ -499,6 +514,8 @@
   font-weight: 500;
   font-size: 0.85rem;
   transition: all 0.2s;
+  min-height: 44px;
+  justify-content: center;
 }
 
 .detailSaveBtn:hover {
@@ -515,7 +532,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 16px;
+  padding: 10px 20px;
   border-radius: 10px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-tertiary);
@@ -524,6 +541,8 @@
   font-weight: 500;
   font-size: 0.85rem;
   transition: all 0.2s;
+  min-height: 44px;
+  justify-content: center;
 }
 
 .detailShareBtn:hover {
@@ -545,6 +564,8 @@
   font-size: 0.85rem;
   margin-left: auto;
   transition: background-color 0.2s;
+  min-height: 44px;
+  justify-content: center;
 }
 
 .detailApplyBtn:hover:not(:disabled) {

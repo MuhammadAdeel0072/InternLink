@@ -3,11 +3,6 @@
 /* ============================================ */
 /* MAIN CONTAINER                               */
 /* ============================================ */
-.settingsContainer {
-  display: flex;
-  min-height: calc(100vh - 64px);
-  background-color: var(--bg-primary);
-}
 
 /* ============================================ */
 /* SIDEBAR                                      */
@@ -38,7 +33,7 @@
 .sidebarLink {
   width: 100%;
   text-align: left;
-  padding: 10px 20px;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -49,6 +44,7 @@
   color: var(--text-secondary);
   font-weight: 400;
   transition: all 0.15s;
+  min-height: 44px;
 }
 
 .sidebarLink:hover {
@@ -81,8 +77,10 @@
 /* ============================================ */
 .settingsContainer {
   display: flex;
-  gap: 20px;  /* ← Add gap between sidebar and content */
-  padding: 20px;  /* ← Add padding around the whole container */
+  gap: 20px;
+  padding: 20px;
+  min-height: calc(100vh - 64px);
+  background-color: var(--bg-primary);
 }
 
 /* ============================================ */
@@ -187,10 +185,14 @@
   background-color: #ef4444;
   color: #fff;
   border: none;
-  padding: 8px 20px;
-  border-radius: 6px;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dangerZoneBtn:hover {
@@ -231,6 +233,10 @@
 .logoutAllBtn {
   margin-top: 12px;
   font-size: 0.85rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ============================================ */

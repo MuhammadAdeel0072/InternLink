@@ -193,5 +193,9 @@ profileSchema.virtual('completionPercentage').get(function() {
 profileSchema.set('toJSON', { virtuals: true });
 profileSchema.set('toObject', { virtuals: true });
 
+profileSchema.index({ user: 1 });
+profileSchema.index({ visibility: 1 });
+profileSchema.index({ 'skills.name': 1 });
+
 const Profile = mongoose.model('Profile', profileSchema);
 export default Profile;

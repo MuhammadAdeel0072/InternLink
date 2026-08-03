@@ -16,6 +16,10 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (!user.isVerified) {
+    return <Navigate to="/verify-email" state={{ email: user.email, message: 'Please verify your email before continuing.' }} replace />;
+  }
+
   return children;
 };
 

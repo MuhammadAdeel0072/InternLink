@@ -79,4 +79,7 @@ const postSchema = new mongoose.Schema(
 );
 
 const Post = mongoose.model('Post', postSchema);
+postSchema.index({ author: 1, createdAt: -1 });
+postSchema.index({ createdAt: -1 });
+postSchema.index({ 'comments.user': 1 });
 export default Post;

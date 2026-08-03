@@ -81,6 +81,7 @@
   background-color: var(--bg-tertiary);
   transition: all 0.15s ease;
   position: relative;
+  min-height: 44px;
 }
 
 .conversationItem:hover {

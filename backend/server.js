@@ -5,15 +5,18 @@ dotenv.config();
 import express from 'express';
 import http from 'http';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
-import './config/passport.js'; // Initialize Passport strategies
+import xss from 'xss-clean';
+import compression from 'compression';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 import passport from 'passport';
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
+import TokenBlacklist from './models/TokenBlacklist.js';
+import { authLimiter, generalLimiter, passwordResetLimiter } from './middlewares/rateLimiter.js';
 
 import jobAlertRoutes from './routes/jobAlertRoutes.js';
 import recruiterProfileRoutes from './routes/recruiterProfileRoutes.js';
@@ -54,7 +57,7 @@ const io = new Server(server, {
         callback(new Error('Not allowed by CORS'));
       }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST'],
     credentials: true,
   }
 });
@@ -105,9 +108,37 @@ app.use((req, res, next) => {
   next();
 });
 
-// Express Middlewares
-app.use(helmet());
+// Security Middlewares
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+      fontSrc: ["'self'", "data:", "https:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Trust proxy for correct X-Frame-Options behind reverse proxy
+app.set('trust proxy', 1);
+
 app.use(mongoSanitize());
+app.use(xss());
+app.use(compression());
+app.use(cookieParser());
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -119,39 +150,32 @@ app.use(cors({
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }));
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { success: false, message: 'Too many requests, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Initialize Passport
 app.use(passport.initialize());
 
-// Mount API routes
+// Mount API routes with rate limiters
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/connections', connectionRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/recruiter/jobs', recruiterJobRoutes);
-app.use('/api/job-alerts', jobAlertRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/recruiter', recruiterProfileRoutes);
-app.use('/api/companies', companyRoutes);
-app.use('/api/recruiter/dashboard', recruiterDashboardRoutes);
-app.use('/api/applicants', applicantRoutes);
-app.use('/api/interviews', interviewRoutes);
-app.use('/api/offers', offerRoutes);
+app.use('/api/profile', generalLimiter, profileRoutes);
+app.use('/api/connections', generalLimiter, connectionRoutes);
+app.use('/api/posts', generalLimiter, postRoutes);
+app.use('/api/jobs', generalLimiter, jobRoutes);
+app.use('/api/recruiter/jobs', generalLimiter, recruiterJobRoutes);
+app.use('/api/job-alerts', generalLimiter, jobAlertRoutes);
+app.use('/api/search', generalLimiter, searchRoutes);
+app.use('/api/messages', generalLimiter, messageRoutes);
+app.use('/api/notifications', generalLimiter, notificationRoutes);
+app.use('/api/recruiter', generalLimiter, recruiterProfileRoutes);
+app.use('/api/companies', generalLimiter, companyRoutes);
+app.use('/api/recruiter/dashboard', generalLimiter, recruiterDashboardRoutes);
+app.use('/api/applicants', generalLimiter, applicantRoutes);
+app.use('/api/interviews', generalLimiter, interviewRoutes);
+app.use('/api/offers', generalLimiter, offerRoutes);
 
 // Root Check Endpoint
 app.get('/health', (req, res) => {

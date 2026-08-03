@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { useSocket } from '../../../context/SocketContext';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
@@ -26,7 +26,7 @@ const BG_COLORS = [
   { name: 'Teal', color: '#14b8a6' },
 ];
 
-const Feed = () => {
+const Feed = memo(() => {
   const { user } = useAuth();
   const { emitNotificationAlert } = useSocket();
 
@@ -260,9 +260,9 @@ const Feed = () => {
           {imagePreview && (
             <div className={styles.imagePreviewContainer}>
               <img src={imagePreview} alt="preview" className={styles.imagePreview} />
-              <button type="button" onClick={clearImageSelection} className={styles.imageClearBtn}>
-                <X size={14} />
-              </button>
+              <button type="button" onClick={clearImageSelection} className={styles.imageClearBtn} aria-label="Remove image">
+                 <X size={14} />
+               </button>
             </div>
           )}
 
@@ -353,7 +353,7 @@ const Feed = () => {
                   </div>
                 </div>
                 {post.author._id === user._id && (
-                  <button onClick={() => handleDeletePost(post._id)} className={styles.deleteBtn}>
+                  <button onClick={() => handleDeletePost(post._id)} className={styles.deleteBtn} aria-label="Delete post">
                     <Trash2 size={16} />
                   </button>
                 )}
@@ -418,6 +418,7 @@ const Feed = () => {
                       onClick={() => handlePostComment(post._id)}
                       disabled={!commentInputs[post._id]?.trim()}
                       className={styles.sendCommentBtn}
+                      aria-label="Send comment"
                     >
                       <Send size={14} />
                     </button>
@@ -667,6 +668,6 @@ const Feed = () => {
       )}
     </div>
   );
-};
+});
 
 export default Feed;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
@@ -12,35 +12,46 @@ import AuthLayout from './layouts/AuthLayout/AuthLayout';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import GuestRoute from './components/GuestRoute/GuestRoute';
 
-// Pages - Import from folders
-import Login from './pages/auth/Login/Login';
-import Register from './pages/auth/Register/Register';
-import VerifyEmail from './pages/auth/VerifyEmail/VerifyEmail';
-import Feed from './pages/Student/Feed/Feed';
-import Profile from './pages/Student/Profile/Profile';
-import Network from './pages/Student/Network/Network';
-import Jobs from './pages/Student/Jobs/Jobs';
-import Messages from './pages/Student/Messages/Messages';
-import Notifications from './pages/Student/Notifications/Notifications';
-import Settings from './pages/Student/Settings/Settings';
-import OAuthCallback from './pages/Student/OAuthCallback/OAuthCallback';
-import SearchResults from './pages/Student/SearchResults/SearchResults';
+// Lazy-loaded pages for code splitting
+const Login = lazy(() => import('./pages/auth/Login/Login'));
+const Register = lazy(() => import('./pages/auth/Register/Register'));
+const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail/VerifyEmail'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword/ResetPassword'));
+const Feed = lazy(() => import('./pages/Student/Feed/Feed'));
+const Profile = lazy(() => import('./pages/Student/Profile/Profile'));
+const Network = lazy(() => import('./pages/Student/Network/Network'));
+const Jobs = lazy(() => import('./pages/Student/Jobs/Jobs'));
+const Messages = lazy(() => import('./pages/Student/Messages/Messages'));
+const Notifications = lazy(() => import('./pages/Student/Notifications/Notifications'));
+const Settings = lazy(() => import('./pages/Student/Settings/Settings'));
+const OAuthCallback = lazy(() => import('./pages/Student/OAuthCallback/OAuthCallback'));
+const SearchResults = lazy(() => import('./pages/Student/SearchResults/SearchResults'));
 
 
 //Recruiter
-import RecruiterDashboard from './pages/recruiter/Dashboard/Dashboard';
-import RecruiterProfile from './pages/recruiter/Profile/Profile';
-import CompanyAssociation from './pages/recruiter/CompanyAssociation/CompanyAssociation';
-import JoinCompany from './pages/recruiter/JoinCompany/JoinCompany';
-import CreateCompany from './pages/recruiter/CreateCompany/CreateCompany';
-import JobList from './pages/recruiter/JobManagement/JobList';
-import CreateJob from './pages/recruiter/JobManagement/CreateJob';
-import ApplicantManagement from './pages/recruiter/Applicants/ApplicantManagement';
-import InterviewManagement from './pages/recruiter/InterviewManagement/InterviewManagement';
-import OfferManagement from './pages/recruiter/OfferManagement/OfferManagement';
-import StudentInterviews from './pages/Student/Interviews/StudentInterviews';
-import StudentOffers from './pages/Student/Offers/StudentOffers';
+const RecruiterDashboard = lazy(() => import('./pages/recruiter/Dashboard/Dashboard'));
+const RecruiterProfile = lazy(() => import('./pages/recruiter/Profile/Profile'));
+const CompanyAssociation = lazy(() => import('./pages/recruiter/CompanyAssociation/CompanyAssociation'));
+const JoinCompany = lazy(() => import('./pages/recruiter/JoinCompany/JoinCompany'));
+const CreateCompany = lazy(() => import('./pages/recruiter/CreateCompany/CreateCompany'));
+const JobList = lazy(() => import('./pages/recruiter/JobManagement/JobList'));
+const CreateJob = lazy(() => import('./pages/recruiter/JobManagement/CreateJob'));
+const ApplicantManagement = lazy(() => import('./pages/recruiter/Applicants/ApplicantManagement'));
+const InterviewManagement = lazy(() => import('./pages/recruiter/InterviewManagement/InterviewManagement'));
+const OfferManagement = lazy(() => import('./pages/recruiter/OfferManagement/OfferManagement'));
+const StudentInterviews = lazy(() => import('./pages/Student/Interviews/StudentInterviews'));
+const StudentOffers = lazy(() => import('./pages/Student/Offers/StudentOffers'));
+
 import RecruiterProtectedRoute from './components/RecruiterProtectedRoute/RecruiterProtectedRoute';
+import Loader from './components/Loader/Loader';
+
+const PageLoader = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <Loader size={40} />
+  </div>
+);
+
 function App() {
   return (
     <Router>
@@ -54,7 +65,9 @@ function App() {
                 element={
                   <GuestRoute>
                     <AuthLayout>
-                      <Login />
+                      <Suspense fallback={<PageLoader />}>
+                        <Login />
+                      </Suspense>
                     </AuthLayout>
                   </GuestRoute>
                 }
@@ -64,7 +77,9 @@ function App() {
                 element={
                   <GuestRoute>
                     <AuthLayout>
-                      <Register />
+                      <Suspense fallback={<PageLoader />}>
+                        <Register />
+                      </Suspense>
                     </AuthLayout>
                   </GuestRoute>
                 }
@@ -73,22 +88,50 @@ function App() {
                 path="/verify-email"
                 element={
                   <AuthLayout>
-                    <VerifyEmail />
+                    <Suspense fallback={<PageLoader />}>
+                      <VerifyEmail />
+                    </Suspense>
+                  </AuthLayout>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <AuthLayout>
+                    <Suspense fallback={<PageLoader />}>
+                      <ForgotPassword />
+                    </Suspense>
+                  </AuthLayout>
+                }
+              />
+              <Route
+                path="/reset-password"
+                element={
+                  <AuthLayout>
+                    <Suspense fallback={<PageLoader />}>
+                      <ResetPassword />
+                    </Suspense>
                   </AuthLayout>
                 }
               />
               <Route
                 path="/oauth/callback"
-                element={<OAuthCallback />}
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <OAuthCallback />
+                  </Suspense>
+                }
               />
-              
-              {/* ── Protected / Authenticated Routes ── */}
-              <Route
+               
+               {/* ── Protected / Authenticated Routes ── */}
+               <Route
                 path="/"
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Feed />
+                      <Suspense fallback={<PageLoader />}>
+                        <Feed />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -98,7 +141,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Network />
+                      <Suspense fallback={<PageLoader />}>
+                        <Network />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -108,7 +153,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Jobs />
+                      <Suspense fallback={<PageLoader />}>
+                        <Jobs />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -118,7 +165,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Messages />
+                      <Suspense fallback={<PageLoader />}>
+                        <Messages />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -128,7 +177,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Messages />
+                      <Suspense fallback={<PageLoader />}>
+                        <Messages />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -138,7 +189,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Notifications />
+                      <Suspense fallback={<PageLoader />}>
+                        <Notifications />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -148,7 +201,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Profile />
+                      <Suspense fallback={<PageLoader />}>
+                        <Profile />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -157,14 +212,18 @@ function App() {
 <Route path="/recruiter/login" element={
   <GuestRoute>
     <AuthLayout>
-      <Login />
+      <Suspense fallback={<PageLoader />}>
+        <Login />
+      </Suspense>
     </AuthLayout>
   </GuestRoute>
 } />
 <Route path="/recruiter/register" element={
   <GuestRoute>
     <AuthLayout>
-      <Register />
+      <Suspense fallback={<PageLoader />}>
+        <Register />
+      </Suspense>
     </AuthLayout>
   </GuestRoute>
 } />
@@ -173,7 +232,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Profile />
+                      <Suspense fallback={<PageLoader />}>
+                        <Profile />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -183,7 +244,9 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MainLayout>
-                      <Settings />
+                      <Suspense fallback={<PageLoader />}>
+                        <Settings />
+                      </Suspense>
                     </MainLayout>
                   </ProtectedRoute>
                 }
@@ -191,84 +254,108 @@ function App() {
             <Route path="/recruiter/dashboard" element={
   <ProtectedRoute>
     <MainLayout>
-      <RecruiterDashboard />
+      <Suspense fallback={<PageLoader />}>
+        <RecruiterDashboard />
+      </Suspense>
     </MainLayout>
   </ProtectedRoute>
 } />
             <Route path="/recruiter/profile" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <RecruiterProfile />
+      <Suspense fallback={<PageLoader />}>
+        <RecruiterProfile />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/company-association" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <CompanyAssociation />
+      <Suspense fallback={<PageLoader />}>
+        <CompanyAssociation />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/company/join" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <JoinCompany />
+      <Suspense fallback={<PageLoader />}>
+        <JoinCompany />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/company/create" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <CreateCompany />
+      <Suspense fallback={<PageLoader />}>
+        <CreateCompany />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/jobs" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <JobList />
+      <Suspense fallback={<PageLoader />}>
+        <JobList />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/jobs/create" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <CreateJob />
+      <Suspense fallback={<PageLoader />}>
+        <CreateJob />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/jobs/:id/edit" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <CreateJob />
+      <Suspense fallback={<PageLoader />}>
+        <CreateJob />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/jobs/:id/duplicate" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <CreateJob />
+      <Suspense fallback={<PageLoader />}>
+        <CreateJob />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/applicants" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <ApplicantManagement />
+      <Suspense fallback={<PageLoader />}>
+        <ApplicantManagement />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/interviews" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <InterviewManagement />
+      <Suspense fallback={<PageLoader />}>
+        <InterviewManagement />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
             <Route path="/recruiter/offers" element={
   <RecruiterProtectedRoute>
     <MainLayout>
-      <OfferManagement />
+      <Suspense fallback={<PageLoader />}>
+        <OfferManagement />
+      </Suspense>
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
@@ -277,74 +364,80 @@ function App() {
                 element={
                 <ProtectedRoute>
                  <MainLayout>
-                   <SearchResults />
-                   </MainLayout>
+                   <Suspense fallback={<PageLoader />}>
+                     <SearchResults />
+                   </Suspense>
+                  </MainLayout>
                  </ProtectedRoute>} />
                <Route
                  path="/interviews"
                  element={
                  <ProtectedRoute>
                   <MainLayout>
-                    <StudentInterviews />
-                    </MainLayout>
+                    <Suspense fallback={<PageLoader />}>
+                      <StudentInterviews />
+                    </Suspense>
+                   </MainLayout>
                   </ProtectedRoute>} />
                <Route
                  path="/offers"
                  element={
                  <ProtectedRoute>
                   <MainLayout>
-                    <StudentOffers />
-                    </MainLayout>
+                    <Suspense fallback={<PageLoader />}>
+                      <StudentOffers />
+                    </Suspense>
+                   </MainLayout>
                   </ProtectedRoute>} />
-              {/* ── Catch-all / 404 ── */}
-              <Route
-                path="*"
-                element={
-                  <AuthLayout>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: '100vh',
-                        gap: '16px',
-                        textAlign: 'center',
-                        padding: '24px'
-                      }}
-                    >
-                      <h1
-                        style={{
-                          fontSize: '5rem',
-                          fontWeight: 800,
-                          fontFamily: 'var(--font-display)',
-                          background: 'linear-gradient(135deg, var(--primary) 0%, #a855f7 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent'
-                        }}
-                      >
-                        404
-                      </h1>
-                      <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
-                        This page doesn't exist.
-                      </p>
-                      <a
-                        href="/"
-                        className="btn btn-primary"
-                        style={{ marginTop: '12px' }}
-                      >
-                        Back to Feed
-                      </a>
-                    </div>
-                  </AuthLayout>
-                }
-              />
-            </Routes>
-          </SocketProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </Router>
-  );
-}
+               {/* ── Catch-all / 404 ── */}
+               <Route
+                 path="*"
+                 element={
+                   <AuthLayout>
+                     <div
+                       style={{
+                         display: 'flex',
+                         flexDirection: 'column',
+                         alignItems: 'center',
+                         justifyContent: 'center',
+                         minHeight: '100vh',
+                         gap: '16px',
+                         textAlign: 'center',
+                         padding: '24px'
+                       }}
+                     >
+                       <h1
+                         style={{
+                           fontSize: '5rem',
+                           fontWeight: 800,
+                           fontFamily: 'var(--font-display)',
+                           background: 'linear-gradient(135deg, var(--primary) 0%, #a855f7 100%)',
+                           WebkitBackgroundClip: 'text',
+                           WebkitTextFillColor: 'transparent'
+                         }}
+                       >
+                         404
+                       </h1>
+                       <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
+                         This page doesn't exist.
+                       </p>
+                       <a
+                         href="/"
+                         className="btn btn-primary"
+                         style={{ marginTop: '12px' }}
+                       >
+                         Back to Feed
+                       </a>
+                     </div>
+                   </AuthLayout>
+                 }
+               />
+             </Routes>
+           </SocketProvider>
+         </ThemeProvider>
+       </AuthProvider>
+     </Router>
+   );
+ }
 
-export default App;
+ export default App;

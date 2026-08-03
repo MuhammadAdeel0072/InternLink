@@ -11,19 +11,30 @@ import {
   changePassword,
   updatePreferences,
   getSessions,
+  logout,
   logoutAllDevices,
   deleteAccount,
-  disconnectProvider
+  disconnectProvider,
+  forgotPassword,
+  validateResetToken,
+  resetPassword
 } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
+import { passwordResetLimiter, loginLimiter } from '../middlewares/rateLimiter.js';
+import { validateRegister, validateLogin, validatePasswordReset } from '../middlewares/validationMiddleware.js';
 
 const router = express.Router();
 
 // Local authentication
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/verify/:token', verifyEmail);
+router.post('/register', validateRegister, registerUser);
+router.post('/login', loginLimiter, validateLogin, loginUser);
+router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', resendVerification);
+
+// Password reset routes with stricter rate limiting
+router.post('/forgot-password', passwordResetLimiter, forgotPassword);
+router.get('/validate-reset-token/:token', passwordResetLimiter, validateResetToken);
+router.post('/reset-password/:token', passwordResetLimiter, validatePasswordReset, resetPassword);
 
 // Google OAuth
 router.get('/google', passport.authenticate('google', {
@@ -61,6 +72,7 @@ router.put('/change-password', protect, changePassword);
 router.put('/preferences', protect, updatePreferences);
 router.put('/disconnect-provider', protect, disconnectProvider);
 router.get('/sessions', protect, getSessions);
+router.post('/logout', protect, logout);
 router.post('/logout-all', protect, logoutAllDevices);
 router.delete('/account', protect, deleteAccount);
 

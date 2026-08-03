@@ -12,6 +12,7 @@
   text-align: center;
   border: 1px solid transparent;
   line-height: 1.5;
+  animation: fadeIn 0.3s ease;
 }
 
 .statusSuccess {
@@ -67,6 +68,7 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
   padding: 4px 0;
+  line-height: 1.5;
 }
 
 .termsCheckbox {
@@ -211,6 +213,20 @@
 }
 
 /* ============================================ */
+/* ANIMATIONS                                   */
+/* ============================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================ */
 /* FORM GROUP OVERRIDES                         */
 /* ============================================ */
 .submitBtn :global(.form-group) {
@@ -221,6 +237,7 @@
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 6px;
+  transition: color 0.2s ease;
 }
 
 .submitBtn :global(.form-input) {
@@ -236,6 +253,7 @@
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-light);
   background-color: var(--bg-secondary);
+  outline: none;
 }
 
 .submitBtn :global(.form-input):hover {

@@ -87,7 +87,7 @@
 /* Mobile */
 @media (max-width: 480px) {
   .primaryButton {
-    height: 40px;
+    height: 44px;
     font-size: 0.85rem;
     gap: 6px;
   }
@@ -106,7 +106,7 @@
 /* Very Small Mobile */
 @media (max-width: 360px) {
   .primaryButton {
-    height: 36px;
+    height: 44px;
     font-size: 0.8rem;
     gap: 4px;
   }

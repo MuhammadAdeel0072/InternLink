@@ -1,6 +1,5 @@
 import express from 'express';
 
-
 import {
   createPost,
   getAllPosts,
@@ -11,24 +10,24 @@ import {
 } from '../controllers/postController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import upload from '../middlewares/uploadMiddleware.js';
+import { validatePost, validateComment, validateObjectId } from '../middlewares/validationMiddleware.js';
 
 const router = express.Router();
 
 router.route('/')
   .get(protect, getAllPosts)
-  .post(protect, upload.single('postImage'), createPost);
+  .post(protect, upload.single('postImage'), validatePost, createPost);
 
 router.route('/:postId')
-  .delete(protect, deletePost);
+  .delete(protect, validateObjectId, deletePost);
 
 router.route('/:postId/like')
-  .put(protect, likePost);
+  .put(protect, validateObjectId, likePost);
 
 router.route('/:postId/comment')
-  .post(protect, commentPost);
+  .post(protect, validateObjectId, validateComment, commentPost);
 
-// Reply to comment
 router.route('/:postId/comments/:commentId/reply')
-  .post(protect, replyToComment);
+  .post(protect, validateObjectId, validateComment, replyToComment);
 
 export default router;

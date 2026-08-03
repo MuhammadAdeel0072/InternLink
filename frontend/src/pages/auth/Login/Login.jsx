@@ -92,8 +92,8 @@ const Login = () => {
   }, 800);
       } else {
         // Handle specific error cases
-        if (result.message?.toLowerCase().includes('verify')) {
-          setUnverifiedEmail(formData.email);
+        if (result.needsVerification || result.message?.toLowerCase().includes('verify')) {
+          setUnverifiedEmail(result.email || formData.email);
           showToast('Please verify your email before logging in.', 'warning');
         } else if (result.message?.toLowerCase().includes('invalid')) {
           showToast('Invalid email or password. Please try again.', 'error');

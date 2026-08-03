@@ -184,27 +184,20 @@ const Register = () => {
   autoComplete="new-password"
 />
 
-{formData.password && (
-  <PasswordStrengthMeter password={formData.password} />
-)}
-
-<PasswordInput
-  label="Confirm Password"
-  name="confirmPassword"
-  placeholder="Re-enter password"
-  value={formData.confirmPassword}
-  onChange={handleChange}
-  error={errors.confirmPassword}
-  required
-  autoComplete="new-password"
-/>
-
-
         {formData.password && (
           <PasswordStrengthMeter password={formData.password} />
         )}
 
-      
+        <PasswordInput
+          label="Confirm Password"
+          name="confirmPassword"
+          placeholder="Re-enter password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          error={errors.confirmPassword}
+          required
+          autoComplete="new-password"
+        />
 
         {/* Terms and Privacy Policy Checkbox */}
         <div className={styles.termsContainer}>

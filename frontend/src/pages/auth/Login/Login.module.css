@@ -39,6 +39,7 @@
   border-radius: 10px;
   font-size: 0.85rem;
   text-align: center;
+  animation: fadeIn 0.3s ease;
 }
 
 .unverifiedText {
@@ -80,6 +81,7 @@
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 6px;
+  transition: color 0.2s ease;
 }
 
 .loginButtonWrapper :global(.form-input) {
@@ -95,6 +97,7 @@
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-light);
   background-color: var(--bg-secondary);
+  outline: none;
 }
 
 .loginButtonWrapper :global(.form-input):hover {
@@ -104,6 +107,20 @@
 .loginButtonWrapper :global(.form-input):disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ============================================ */
+/* ANIMATIONS                                   */
+/* ============================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============================================ */

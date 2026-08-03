@@ -73,6 +73,9 @@ const jobSchema = new mongoose.Schema(
 jobSchema.index({ recruiter: 1, status: 1, createdAt: -1 });
 jobSchema.index({ title: 'text', description: 'text', skills: 'text' });
 jobSchema.index({ slug: 1 });
+jobSchema.index({ isActive: 1, createdAt: -1 });
+jobSchema.index({ location: 1, jobType: 1 });
+jobSchema.index({ company: 1, isActive: 1 });
 
 const Job = mongoose.model('Job', jobSchema);
 export default Job;

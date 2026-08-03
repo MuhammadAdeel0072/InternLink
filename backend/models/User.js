@@ -135,17 +135,25 @@ following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   }
 );
 
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
+userSchema.index({ role: 1, isVerified: 1 });
+userSchema.index({ verificationToken: 1 });
+userSchema.index({ resetPasswordToken: 1 });
+userSchema.index({ createdAt: -1 });
+
 // Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) {
     return next();
   }
-  const salt = await bcrypt.genSalt(12); // Increased to 12 for production
+  const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
+  const salt = await bcrypt.genSalt(saltRounds);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// Match password
+// Match password - bcrypt.compare is timing-safe
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
