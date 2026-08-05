@@ -3,12 +3,13 @@ import styles from './OAuthButtons.module.css';
 
 const OAuthButtons = ({ mode = 'login' }) => {
   const [loading, setLoading] = useState(null);
-  console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
   const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
 
   const handleOAuth = (provider) => {
     setLoading(provider);
-    window.location.href = `${API_BASE_URL}/auth/${provider}`;
+    // Pass current origin so backend can redirect back to the correct frontend after OAuth
+    const origin = encodeURIComponent(window.location.origin);
+    window.location.href = `${API_BASE_URL}/auth/${provider}?origin=${origin}`;
   };
 
   const buttons = [

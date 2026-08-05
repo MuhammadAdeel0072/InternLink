@@ -17,6 +17,13 @@ import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 import TokenBlacklist from './models/TokenBlacklist.js';
 import { authLimiter, generalLimiter, passwordResetLimiter } from './middlewares/rateLimiter.js';
+import {
+  ALLOWED_ORIGINS,
+  isAllowedOrigin,
+  storeOAuthOrigin,
+  getOAuthOrigin,
+  APP_VERSION,
+} from './config/cors.js';
 
 import jobAlertRoutes from './routes/jobAlertRoutes.js';
 import recruiterProfileRoutes from './routes/recruiterProfileRoutes.js';
@@ -24,7 +31,6 @@ import companyRoutes from './routes/companyRoutes.js';
 import recruiterDashboardRoutes from './routes/recruiterDashboardRoutes.js';
 import Conversation from './models/Conversation.js';
 import Message from './models/Message.js';
-
 
 // Route Imports
 import authRoutes from './routes/authRoutes.js';
@@ -49,19 +55,11 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-const allowedOrigins = [process.env.FRONTEND_URL, 'http://localhost:5173'].filter(Boolean);
-
 // Configure Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST'],
+    origin: isAllowedOrigin,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   }
 });
@@ -303,17 +301,23 @@ app.use(xss());
 app.use(compression());
 app.use(cookieParser());
 
+// Development-only CORS logging middleware
+const corsLogger = (req, res, next) => {
+  if (process.env.NODE_ENV !== 'production') {
+    const origin = req.get('origin') || '<no-origin>';
+    console.log(`[CORS] ${req.method} ${req.originalUrl} | Origin: ${origin}`);
+  }
+  next();
+};
+app.use(corsLogger);
+
 app.use(cors({
-  origin: (origin, callback) => {
-    const isDev = process.env.NODE_ENV !== 'production';
-    if (!origin || allowedOrigins.includes(origin) || (isDev && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')))) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: isAllowedOrigin,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Authorization'],
+  maxAge: 86400, // 24 hours preflight cache
 }));
 
 app.use(express.json({ limit: '10kb' }));
@@ -342,12 +346,14 @@ app.use('/api/offers', generalLimiter, offerRoutes);
 app.use('/api/hiring', generalLimiter, hiringRoutes);
 app.use('/api/talent-pool', generalLimiter, talentPoolRoutes);
 
-// Root Check Endpoint
+// Health Check Endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    message: 'InternLink Backend Server running smoothly',
+  res.status(200).json({
+    status: 'OK',
+    environment: process.env.NODE_ENV || 'development',
+    version: APP_VERSION,
     timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
   });
 });
 
@@ -359,6 +365,7 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+  console.log(`Allowed CORS origins: ${ALLOWED_ORIGINS.join(', ')}`);
 
   // Auto-start Interview Reminder Scheduler in production
   if (process.env.NODE_ENV === 'production' || process.env.ENABLE_REMINDERS === 'true') {

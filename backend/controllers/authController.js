@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/sendEmail.js';
 import { blacklistToken } from '../middlewares/tokenBlacklist.js';
+import { isAllowedOrigin, getOAuthOrigin } from '../config/cors.js';
 
 /**
  * Generate a JWT access token for a user
@@ -34,12 +35,17 @@ export const generateRefreshToken = (id) => {
  * @param {number} days - Cookie max age in days (default: 7)
  */
 export const setRefreshTokenCookie = (res, refreshToken, days = 7) => {
-  res.cookie('refreshToken', refreshToken, {
+  const isProduction = process.env.NODE_ENV === 'production';
+  // Cross-site cookies require SameSite=None + Secure in production.
+  // Development (localhost) uses SameSite=Lax with Secure=false.
+  const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: days * 24 * 60 * 60 * 1000,
-  });
+    path: '/',
+  };
+  res.cookie('refreshToken', refreshToken, cookieOptions);
 };
 
 /**
@@ -481,11 +487,30 @@ export const oAuthSuccess = async (req, res) => {
     const refreshToken = generateRefreshToken(user._id);
     setRefreshTokenCookie(res, refreshToken);
 
-    const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
+    // Determine the correct frontend origin for redirect.
+    // Priority: state nonce → Origin header → Referer header → FRONTEND_URL env → localhost fallback
+    let frontendURL =
+      getOAuthOrigin(req.query.state) ||
+      req.get('origin') ||
+      req.get('referer')?.replace(/\/$/, '') ||
+      process.env.FRONTEND_URL ||
+      'http://localhost:5173';
+
+    // Ensure the resolved origin is in our allow-list
+    if (!isAllowedOrigin(frontendURL)) {
+      frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
+    }
+
+    // Strip any trailing path from referer (it may be a full page URL)
+    if (frontendURL.includes('/') && !frontendURL.startsWith('http')) {
+      frontendURL = `http://${frontendURL}`;
+    }
+
     res.redirect(`${frontendURL}/oauth/callback?token=${token}&userId=${user._id}`);
   } catch (error) {
     console.error('OAuth success error:', error);
-    res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+    const fallbackURL = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${fallbackURL}/login?error=oauth_failed`);
   }
 };
 
@@ -660,7 +685,12 @@ export const logout = async (req, res) => {
     if (token) {
       await blacklistToken(token, req.user._id, 'logout');
     }
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
+    });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -680,7 +710,12 @@ export const logoutAllDevices = async (req, res) => {
     if (token) {
       await blacklistToken(token, req.user._id, 'logout');
     }
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
+    });
     res.status(200).json({ success: true, message: 'Logged out from all devices' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -694,7 +729,12 @@ export const deleteAccount = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.user._id);
     await Profile.findOneAndDelete({ user: req.user._id });
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
+    });
     res.status(200).json({ success: true, message: 'Account deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

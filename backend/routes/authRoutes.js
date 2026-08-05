@@ -22,6 +22,7 @@ import {
 import { protect } from '../middlewares/authMiddleware.js';
 import { passwordResetLimiter, loginLimiter } from '../middlewares/rateLimiter.js';
 import { validateRegister, validateLogin, validatePasswordReset } from '../middlewares/validationMiddleware.js';
+import { storeOAuthOrigin } from '../config/cors.js';
 
 const router = express.Router();
 
@@ -36,8 +37,29 @@ router.post('/forgot-password', passwordResetLimiter, forgotPassword);
 router.get('/validate-reset-token/:token', passwordResetLimiter, validateResetToken);
 router.post('/reset-password/:token', passwordResetLimiter, validatePasswordReset, resetPassword);
 
+// Middleware to capture origin before OAuth handshake.
+// Stores origin in a short-lived map and attaches a nonce to the request.
+// The nonce is then passed as the OAuth2 `state` parameter, which also
+// serves as the CSRF token (passport does not auto-generate one when `state` is provided).
+const captureOAuthOrigin = (req, res, next) => {
+  const origin = req.query.origin || req.get('origin');
+  const nonce = storeOAuthOrigin(origin);
+  req.oauthNonce = nonce; // Attach to req for the route handler
+  next();
+};
+
+// Wrapper that conditionally sets the OAuth state parameter
+const startOAuth = (strategy, options) => (req, res, next) => {
+  const opts = { ...options };
+  // Use our nonce as the OAuth state when available (also serves as CSRF token)
+  if (req.oauthNonce) {
+    opts.state = req.oauthNonce;
+  }
+  passport.authenticate(strategy, opts)(req, res, next);
+};
+
 // Google OAuth
-router.get('/google', passport.authenticate('google', {
+router.get('/google', captureOAuthOrigin, startOAuth('google', {
   scope: ['profile', 'email'],
   session: false,
 }));
@@ -51,7 +73,7 @@ router.get('/google/callback',
 );
 
 // GitHub OAuth
-router.get('/github', passport.authenticate('github', {
+router.get('/github', captureOAuthOrigin, startOAuth('github', {
   scope: ['user:email'],
   session: false,
 }));
