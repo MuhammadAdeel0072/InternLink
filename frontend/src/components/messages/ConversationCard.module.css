@@ -1,0 +1,190 @@
+.conversationCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  background-color: var(--bg-tertiary);
+  transition: all 0.15s ease;
+  position: relative;
+  min-height: 68px;
+}
+
+.conversationCard:hover {
+  border-color: var(--border-hover);
+  background-color: var(--bg-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.conversationCardActive {
+  border: 1px solid var(--primary);
+  background-color: var(--primary-light);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.conversationCardActive:hover {
+  background-color: var(--primary-light);
+  transform: none;
+}
+
+.avatarWrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--border-color);
+  transition: border-color 0.2s;
+}
+
+.conversationCard:hover .avatarWrapper {
+  border-color: var(--border-hover);
+}
+
+.conversationCardActive .avatarWrapper {
+  border-color: var(--primary);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-tertiary) 100%);
+}
+
+.onlineIndicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  border: 2px solid var(--bg-tertiary);
+}
+
+.conversationCardActive .onlineIndicator {
+  border-color: var(--primary-light);
+}
+
+.conversationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.conversationName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.conversationNameUnread {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.conversationTime {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.conversationPreview {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.conversationPreviewUnread {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.unreadBadge {
+  background-color: var(--primary);
+  color: #ffffff;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.pinnedBadge {
+  font-size: 0.7rem;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mutedBadge {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background-color: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .conversationCard {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .avatarWrapper {
+    width: 44px;
+    height: 44px;
+  }
+
+  .conversationName {
+    font-size: 0.9rem;
+  }
+
+  .conversationPreview {
+    font-size: 0.8rem;
+  }
+}

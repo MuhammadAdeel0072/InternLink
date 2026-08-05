@@ -14,6 +14,8 @@ import {
   Plus,
   Trash2,
   Building2,
+  MapPin,
+  ExternalLink,
 } from 'lucide-react';
 
 const INDUSTRIES = [

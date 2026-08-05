@@ -135,8 +135,6 @@ following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   }
 );
 
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
 userSchema.index({ role: 1, isVerified: 1 });
 userSchema.index({ verificationToken: 1 });
 userSchema.index({ resetPasswordToken: 1 });

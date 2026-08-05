@@ -138,7 +138,6 @@ const companySchema = new mongoose.Schema(
 );
 
 companySchema.index({ companyName: 1, industry: 1 });
-companySchema.index({ slug: 1 });
 
 companySchema.methods.isRecruiterAssociated = function (userId) {
   return this.recruiters.some(

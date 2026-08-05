@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 import Loader from '../../../components/Loader/Loader';
+import NotificationBell from '../../../components/notifications/NotificationBell';
 import styles from './JobList.module.css';
 import {
   Plus,
@@ -50,9 +51,21 @@ const JobList = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const res = await api.get('/notifications');
+      const unread = res.data.filter((n) => !n.isRead).length;
+      setUnreadNotifications(unread);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    }
+  };
 
   useEffect(() => {
     fetchJobs();
+    fetchUnreadNotifications();
   }, [filters, pagination.page]);
 
   const fetchJobs = async () => {
@@ -153,10 +166,13 @@ const JobList = () => {
           <h1 className={styles.title}>Job Management</h1>
           <p className={styles.subtitle}>Manage your job postings and track applications</p>
         </div>
-        <button className={styles.createButton} onClick={() => navigate('/recruiter/jobs/create')}>
-          <Plus size={20} />
-          Create Job
-        </button>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <NotificationBell unreadCount={unreadNotifications} />
+          <button className={styles.createButton} onClick={() => navigate('/recruiter/jobs/create')}>
+            <Plus size={20} />
+            Create Job
+          </button>
+        </div>
       </div>
 
       <div className={styles.statsGrid}>

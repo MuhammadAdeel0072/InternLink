@@ -6,6 +6,7 @@ import Modal from '../../../components/Modal/Modal';
 import StatusBadge from '../../../components/StatusBadge/StatusBadge';
 import PrimaryButton from '../../../components/primaryButton/primaryButton';
 import Toast from '../../../components/Toast/Toast';
+import NotificationBell from '../../../components/notifications/NotificationBell';
 import styles from './OfferManagement.module.css';
 import {
   Search,
@@ -99,6 +100,7 @@ const OfferManagement = () => {
   const [toast, setToast] = useState({ message: '', type: 'success', isVisible: false });
   const [searchInput, setSearchInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const searchTimeoutRef = useRef(null);
 
   const [createForm, setCreateForm] = useState({
@@ -136,6 +138,7 @@ const OfferManagement = () => {
   useEffect(() => {
     fetchJobs();
     fetchApplications();
+    fetchUnreadNotifications();
   }, []);
 
   useEffect(() => {
@@ -409,6 +412,16 @@ const OfferManagement = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
+  const fetchUnreadNotifications = async () => {
+    try {
+      const res = await api.get('/notifications');
+      const unread = res.data.filter((n) => !n.isRead).length;
+      setUnreadNotifications(unread);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    }
+  };
+
   const formatDate = (date) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -542,12 +555,12 @@ const OfferManagement = () => {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>
-            <FileText size={28} />
             Offer Management
           </h1>
           <p className={styles.subtitle}>Manage employment offers and hiring decisions</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <NotificationBell unreadCount={unreadNotifications} />
           <button className={styles.secondaryBtn} onClick={handleExport}>
             <Download size={18} />
             Export

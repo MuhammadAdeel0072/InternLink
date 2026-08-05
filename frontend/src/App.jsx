@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { MessageProvider } from './context/MessageContext';
 
 // Layout wrappers
 import MainLayout from './layouts/MainLayout/MainLayout';
@@ -40,8 +42,14 @@ const CreateJob = lazy(() => import('./pages/recruiter/JobManagement/CreateJob')
 const ApplicantManagement = lazy(() => import('./pages/recruiter/Applicants/ApplicantManagement'));
 const InterviewManagement = lazy(() => import('./pages/recruiter/InterviewManagement/InterviewManagement'));
 const OfferManagement = lazy(() => import('./pages/recruiter/OfferManagement/OfferManagement'));
+const HiringOnboarding = lazy(() => import('./pages/recruiter/HiringOnboarding/HiringOnboarding'));
 const StudentInterviews = lazy(() => import('./pages/Student/Interviews/StudentInterviews'));
 const StudentOffers = lazy(() => import('./pages/Student/Offers/StudentOffers'));
+const StudentOnboarding = lazy(() => import('./pages/Student/Onboarding/Onboarding'));
+
+const RecruiterTalentPool = lazy(() => import('./pages/recruiter/TalentPool/TalentPool'));
+const RecruiterTalentPoolCandidate = lazy(() => import('./pages/recruiter/TalentPool/TalentPoolCandidate'));
+const RecruiterTalentCollections = lazy(() => import('./pages/recruiter/TalentPool/TalentCollections'));
 
 import RecruiterProtectedRoute from './components/RecruiterProtectedRoute/RecruiterProtectedRoute';
 import Loader from './components/Loader/Loader';
@@ -54,11 +62,12 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ThemeProvider>
-          <SocketProvider>
-            <Routes>
+      <Router>
+        <AuthProvider>
+          <ThemeProvider>
+            <SocketProvider>
+              <NotificationProvider>
+                <Routes>
               {/* ── Public / Guest Routes ── */}
               <Route
                 path="/login"
@@ -164,11 +173,13 @@ function App() {
                 path="/messages"
                 element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <Suspense fallback={<PageLoader />}>
-                        <Messages />
-                      </Suspense>
-                    </MainLayout>
+                    <MessageProvider>
+                      <MainLayout>
+                        <Suspense fallback={<PageLoader />}>
+                          <Messages />
+                        </Suspense>
+                      </MainLayout>
+                    </MessageProvider>
                   </ProtectedRoute>
                 }
               />
@@ -176,11 +187,13 @@ function App() {
                 path="/messages/:conversationId"
                 element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <Suspense fallback={<PageLoader />}>
-                        <Messages />
-                      </Suspense>
-                    </MainLayout>
+                    <MessageProvider>
+                      <MainLayout>
+                        <Suspense fallback={<PageLoader />}>
+                          <Messages />
+                        </Suspense>
+                      </MainLayout>
+                    </MessageProvider>
                   </ProtectedRoute>
                 }
               />
@@ -350,7 +363,7 @@ function App() {
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
-            <Route path="/recruiter/offers" element={
+<Route path="/recruiter/offers" element={
   <RecruiterProtectedRoute>
     <MainLayout>
       <Suspense fallback={<PageLoader />}>
@@ -359,36 +372,91 @@ function App() {
     </MainLayout>
   </RecruiterProtectedRoute>
 } />
-               <Route
-                path="/search" 
-                element={
-                <ProtectedRoute>
-                 <MainLayout>
-                   <Suspense fallback={<PageLoader />}>
-                     <SearchResults />
-                   </Suspense>
-                  </MainLayout>
-                 </ProtectedRoute>} />
-               <Route
-                 path="/interviews"
+             <Route path="/recruiter/hiring" element={
+  <RecruiterProtectedRoute>
+    <MainLayout>
+      <Suspense fallback={<PageLoader />}>
+        <HiringOnboarding />
+      </Suspense>
+    </MainLayout>
+  </RecruiterProtectedRoute>
+} />
+             <Route path="/recruiter/hiring/:id" element={
+   <RecruiterProtectedRoute>
+     <MainLayout>
+       <Suspense fallback={<PageLoader />}>
+         <HiringOnboarding />
+       </Suspense>
+     </MainLayout>
+   </RecruiterProtectedRoute>
+ } />
+             <Route path="/recruiter/talent-pool" element={
+   <RecruiterProtectedRoute>
+     <MainLayout>
+       <Suspense fallback={<PageLoader />}>
+         <RecruiterTalentPool />
+       </Suspense>
+     </MainLayout>
+   </RecruiterProtectedRoute>
+ } />
+             <Route path="/recruiter/talent-pool/candidate/:id" element={
+   <RecruiterProtectedRoute>
+     <MainLayout>
+       <Suspense fallback={<PageLoader />}>
+         <RecruiterTalentPoolCandidate />
+       </Suspense>
+     </MainLayout>
+   </RecruiterProtectedRoute>
+ } />
+             <Route path="/recruiter/talent-pool/collections" element={
+   <RecruiterProtectedRoute>
+     <MainLayout>
+       <Suspense fallback={<PageLoader />}>
+         <RecruiterTalentCollections />
+       </Suspense>
+     </MainLayout>
+   </RecruiterProtectedRoute>
+ } />
+                <Route
+                 path="/search" 
                  element={
                  <ProtectedRoute>
                   <MainLayout>
                     <Suspense fallback={<PageLoader />}>
-                      <StudentInterviews />
+                      <SearchResults />
                     </Suspense>
                    </MainLayout>
                   </ProtectedRoute>} />
-               <Route
-                 path="/offers"
-                 element={
-                 <ProtectedRoute>
-                  <MainLayout>
-                    <Suspense fallback={<PageLoader />}>
-                      <StudentOffers />
-                    </Suspense>
-                   </MainLayout>
-                  </ProtectedRoute>} />
+                <Route
+                  path="/interviews"
+                  element={
+                  <ProtectedRoute>
+                   <MainLayout>
+                     <Suspense fallback={<PageLoader />}>
+                       <StudentInterviews />
+                     </Suspense>
+                    </MainLayout>
+                   </ProtectedRoute>} />
+                <Route
+                  path="/offers"
+                  element={
+                  <ProtectedRoute>
+                   <MainLayout>
+                     <Suspense fallback={<PageLoader />}>
+                       <StudentOffers />
+                     </Suspense>
+                    </MainLayout>
+                   </ProtectedRoute>} />
+                <Route
+                  path="/onboarding"
+                  element={
+                  <ProtectedRoute>
+                   <MainLayout>
+                     <Suspense fallback={<PageLoader />}>
+                       <StudentOnboarding />
+                     </Suspense>
+                    </MainLayout>
+                   </ProtectedRoute>} />
                {/* ── Catch-all / 404 ── */}
                <Route
                  path="*"
@@ -432,11 +500,12 @@ function App() {
                    </AuthLayout>
                  }
                />
-             </Routes>
-           </SocketProvider>
-         </ThemeProvider>
-       </AuthProvider>
-     </Router>
+              </Routes>
+                </NotificationProvider>
+            </SocketProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </Router>
    );
  }
 

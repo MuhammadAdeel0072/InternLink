@@ -3,6 +3,7 @@ import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 import Loader from '../../../components/Loader/Loader';
 import InputField from '../../../components/InputField/InputField';
+import SkillSuggestions from '../../../components/SkillSuggestions/SkillSuggestions';
 import styles from './RecruiterProfile.module.css';
 import {
   Camera,

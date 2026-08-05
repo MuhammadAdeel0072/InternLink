@@ -22,6 +22,8 @@ import jobAlertRoutes from './routes/jobAlertRoutes.js';
 import recruiterProfileRoutes from './routes/recruiterProfileRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import recruiterDashboardRoutes from './routes/recruiterDashboardRoutes.js';
+import Conversation from './models/Conversation.js';
+import Message from './models/Message.js';
 
 
 // Route Imports
@@ -38,6 +40,8 @@ import recruiterJobRoutes from './routes/recruiterJobRoutes.js';
 import applicantRoutes from './routes/applicantRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
 import offerRoutes from './routes/offerRoutes.js';
+import hiringRoutes from './routes/hiringRoutes.js';
+import talentPoolRoutes from './routes/talentPoolRoutes.js';
 
 // Connect to MongoDB
 connectDB();
@@ -79,6 +83,11 @@ io.on('connection', (socket) => {
     const recipientSocketId = userSocketMap.get(recipientId);
     if (recipientSocketId) {
       io.to(recipientSocketId).emit('receive_message', message);
+      io.to(recipientSocketId).emit('message:new', {
+        conversationId: message.conversation || message._id,
+        message,
+        senderId: message.sender?._id || message.sender
+      });
     }
   });
 
@@ -86,6 +95,160 @@ io.on('connection', (socket) => {
     const recipientSocketId = userSocketMap.get(recipientId);
     if (recipientSocketId) {
       io.to(recipientSocketId).emit('receive_notification', notification);
+    }
+  });
+
+  socket.on('notification:read', ({ notificationId, userId }) => {
+    const recipientSocketId = userSocketMap.get(userId);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('notification:updated', { notificationId, isRead: true });
+    }
+  });
+
+  socket.on('notification:delete', ({ notificationId, userId }) => {
+    const recipientSocketId = userSocketMap.get(userId);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('notification:updated', { notificationId, isDeleted: true });
+    }
+  });
+
+  socket.on('message:typing', ({ conversationId, userId, recipientId }) => {
+    const recipientSocketId = userSocketMap.get(recipientId);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('message:typing', { conversationId, userId });
+    }
+  });
+
+  socket.on('message:stopTyping', ({ conversationId, userId, recipientId }) => {
+    const recipientSocketId = userSocketMap.get(recipientId);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('message:stopTyping', { conversationId, userId });
+    }
+  });
+
+  socket.on('message:seen', async ({ conversationId, userId, messageIds }) => {
+    try {
+      await Message.updateMany(
+        { _id: { $in: messageIds }, sender: { $ne: userId } },
+        { status: 'read' }
+      );
+      const recipientSocketId = userSocketMap.get(userId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('message:seen', { conversationId, messageIds });
+      }
+    } catch (error) {
+      console.error('Error marking messages as seen:', error);
+    }
+  });
+
+  socket.on('message:reaction', async ({ messageId, userId, emoji, recipientId }) => {
+    try {
+      const msg = await Message.findById(messageId);
+      if (!msg) return;
+
+      const existingReaction = msg.reactions.find(
+        (r) => r.userId.toString() === userId.toString() && r.emoji === emoji
+      );
+
+      if (existingReaction) {
+        msg.reactions = msg.reactions.filter(
+          (r) => !(r.userId.toString() === userId.toString() && r.emoji === emoji)
+        );
+      } else {
+        msg.reactions = msg.reactions.filter(
+          (r) => !(r.userId.toString() === userId.toString())
+        );
+        msg.reactions.push({ userId, emoji });
+      }
+
+      await msg.save();
+
+      const recipientSocketId = userSocketMap.get(recipientId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('message:reaction', {
+          messageId,
+          reactions: msg.reactions
+        });
+      }
+    } catch (error) {
+      console.error('Error handling reaction:', error);
+    }
+  });
+
+  socket.on('message:edit', async ({ messageId, userId, newMessage, recipientId }) => {
+    try {
+      const msg = await Message.findById(messageId);
+      if (!msg || msg.sender.toString() !== userId.toString()) return;
+
+      msg.message = newMessage;
+      msg.edited = true;
+      msg.editedAt = new Date();
+      await msg.save();
+
+      const recipientSocketId = userSocketMap.get(recipientId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('message:edit', {
+          messageId,
+          message: newMessage,
+          edited: true,
+          editedAt: msg.editedAt
+        });
+      }
+    } catch (error) {
+      console.error('Error handling message edit:', error);
+    }
+  });
+
+  socket.on('message:delete', async ({ messageId, userId, recipientId, deleteForEveryone }) => {
+    try {
+      const msg = await Message.findById(messageId);
+      if (!msg) return;
+
+      if (deleteForEveryone && msg.sender.toString() === userId.toString()) {
+        msg.deleted = true;
+        msg.message = 'This message was deleted';
+        msg.attachments = [];
+        await msg.save();
+      } else {
+        if (!msg.deletedFor.includes(userId)) {
+          msg.deletedFor.push(userId);
+          await msg.save();
+        }
+      }
+
+      const recipientSocketId = userSocketMap.get(recipientId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('message:delete', {
+          messageId,
+          deleted: msg.deleted
+        });
+      }
+    } catch (error) {
+      console.error('Error handling message delete:', error);
+    }
+  });
+
+  socket.on('conversation:update', async ({ conversationId, userId }) => {
+    try {
+      const conversation = await Conversation.findById(conversationId);
+      if (!conversation) return;
+
+      const recipientId = conversation.participants.find(
+        (p) => p.toString() !== userId.toString()
+      );
+
+      if (recipientId) {
+        const recipientSocketId = userSocketMap.get(recipientId.toString());
+        if (recipientSocketId) {
+          io.to(recipientSocketId).emit('conversation:update', {
+            conversationId,
+            lastMessage: conversation.lastMessage,
+            lastMessageAt: conversation.lastMessageAt
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error handling conversation update:', error);
     }
   });
 
@@ -176,6 +339,8 @@ app.use('/api/recruiter/dashboard', generalLimiter, recruiterDashboardRoutes);
 app.use('/api/applicants', generalLimiter, applicantRoutes);
 app.use('/api/interviews', generalLimiter, interviewRoutes);
 app.use('/api/offers', generalLimiter, offerRoutes);
+app.use('/api/hiring', generalLimiter, hiringRoutes);
+app.use('/api/talent-pool', generalLimiter, talentPoolRoutes);
 
 // Root Check Endpoint
 app.get('/health', (req, res) => {

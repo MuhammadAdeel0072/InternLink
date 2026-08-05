@@ -3,9 +3,12 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { useNotifications } from '../../context/NotificationContext';
 import api from '../../services/api';
 import styles from './MainLayout.module.css';
 import RecruiterSidebar from '../RecruiterSidebar/RecruiterSidebar';
+import NotificationBell from '../../components/notifications/NotificationBell';
+import NotificationDropdown from '../../components/notifications/NotificationDropdown';
 
 import {
   Home, Users, Briefcase, MessageSquare, Bell,
@@ -20,6 +23,7 @@ const MainLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
   const [userAvatar, setUserAvatar] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,8 +127,20 @@ const MainLayout = ({ children }) => {
 
       socket.on('receive_notification', handleNewNotification);
 
+      socket.on('notification:new', (notification) => {
+        setUnreadNotifications((prev) => prev + 1);
+      });
+
+      socket.on('notification:updated', (update) => {
+        if (update.isRead) {
+          setUnreadNotifications((prev) => Math.max(0, prev - 1));
+        }
+      });
+
       return () => {
         socket.off('receive_notification', handleNewNotification);
+        socket.off('notification:new');
+        socket.off('notification:updated');
       };
     }
   }, [socket]);
@@ -184,7 +200,7 @@ const MainLayout = ({ children }) => {
             <Search size={20} />
           </button>
 
-          <div className={`${styles.searchContainer} ${showMobileSearch ? styles.searchVisible : ''}`} ref={searchRef}>
+          <div className={`${styles.searchContainer} ${showMobileSearch ? styles.mobileSearchVisible : ''}`} ref={searchRef}>
             <Search size={18} className={styles.searchIcon} />
             <form onSubmit={handleSearchSubmit} style={{ width: '100%' }}>
               <input
@@ -289,6 +305,16 @@ const MainLayout = ({ children }) => {
 
         {/* User Dropdown controls */}
         <div className={styles.headerRight}>
+          <div style={{ position: 'relative' }}>
+            <NotificationBell
+              onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
+              unreadCount={unreadNotifications}
+            />
+            <NotificationDropdown
+              isOpen={showNotificationDropdown}
+              onClose={() => setShowNotificationDropdown(false)}
+            />
+          </div>
           <div className={styles.profileDropdownWrapper}>
             <button
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}

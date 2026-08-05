@@ -8,6 +8,7 @@ import InterviewCard from '../../../components/InterviewCard/InterviewCard';
 import CalendarView from '../../../components/CalendarView/CalendarView';
 import PrimaryButton from '../../../components/primaryButton/primaryButton';
 import Toast from '../../../components/Toast/Toast';
+import NotificationBell from '../../../components/notifications/NotificationBell';
 import {
   Search,
   Filter,
@@ -152,11 +153,13 @@ const InterviewManagement = () => {
   const [searchInput, setSearchInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const searchTimeoutRef = useRef(null);
 
   useEffect(() => {
     fetchJobs();
     fetchApplications();
+    fetchUnreadNotifications();
   }, []);
 
   useEffect(() => {
@@ -402,6 +405,16 @@ const InterviewManagement = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
+  const fetchUnreadNotifications = async () => {
+    try {
+      const res = await api.get('/notifications');
+      const unread = res.data.filter((n) => !n.isRead).length;
+      setUnreadNotifications(unread);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    }
+  };
+
   const formatDate = (date) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -549,9 +562,12 @@ const InterviewManagement = () => {
 
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ margin: '0 0 4px', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>Interview Management</h1>
-        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Schedule, manage, and track all candidate interviews</p>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ margin: '0 0 4px', fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>Interview Management</h1>
+          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Schedule, manage, and track all candidate interviews</p>
+        </div>
+        <NotificationBell unreadCount={unreadNotifications} />
       </div>
 
       {renderStatsCards()}

@@ -554,3 +554,130 @@ export const sendOfferNegotiationEmail = async (email, recruiterName, offer, neg
 
   await transporter.sendMail(mailOptions);
 };
+
+export const sendWelcomeEmail = async (email, candidateName, hiring) => {
+  const companyName = hiring.companyData?.companyName || 'Our Company';
+  const jobTitle = hiring.jobData?.title || 'the position';
+  const department = hiring.department || 'N/A';
+  const managerName = hiring.managerData?.name || 'To be assigned';
+  const joiningDate = hiring.joiningDate ? formatDate(hiring.joiningDate) : 'TBD';
+  const reportingTime = hiring.reportingTime || '09:00 AM';
+  const officeLocation = hiring.officeLocation || 'To be determined';
+  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const onboardingLink = `${baseUrl}/student/onboarding`;
+
+  const mailOptions = {
+    from: `"InternLink" <${process.env.SMTP_FROM || 'noreply@internlink.com'}>`,
+    to: email,
+    subject: `Welcome to ${companyName} - Your Onboarding Details`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Welcome to ${companyName} - InternLink</title></head>
+        <body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Inter', Arial, sans-serif;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f9; padding: 40px 0;">
+            <tr><td align="center">
+              <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                <tr><td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 32px; text-align: center;">
+                  <div style="width: 64px; height: 64px; background: rgba(255,255,255,0.2); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v7m9 4v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3M9 18h6M9 5V3a3 3 0 0 1 3-3h0a3 3 0 0 1 3 3v2M9 5h6"></path></svg>
+                  </div>
+                  <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0 0 8px 0; font-family: 'Outfit', 'Inter', Arial, sans-serif;">InternLink</h1>
+                  <p style="color: rgba(255,255,255,0.85); font-size: 14px; margin: 0;">Your Professional Internship Platform</p>
+                </td></tr>
+                <tr><td style="padding: 40px 32px;">
+                  <h2 style="color: #1e293b; font-size: 24px; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', 'Inter', Arial, sans-serif;">Welcome to the Team, ${candidateName}! 🎉</h2>
+                  <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">We are thrilled to welcome you to <strong>${companyName}</strong>. Your journey begins on <strong>${joiningDate}</strong> at <strong>${reportingTime}</strong>.</p>
+
+                  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #166534; margin-top: 0; font-size: 16px; font-weight: 600;">First Day Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <tr><td style="padding: 8px 0; border-bottom: 1px solid #c7f0d8; font-weight: 600; color: #475569; font-size: 14px;">Position</td><td style="padding: 8px 0; border-bottom: 1px solid #c7f0d8; color: #1e293b; font-size: 14px;">${jobTitle}</td></tr>
+                      <tr><td style="padding: 8px 0; border-bottom: 1px solid #c7f0d8; font-weight: 600; color: #475569; font-size: 14px;">Department</td><td style="padding: 8px 0; border-bottom: 1px solid #c7f0d8; color: #1e293b; font-size: 14px;">${department}</td></tr>
+                      <tr><td style="padding: 8px 0; border-bottom: 1px solid #c7f0d8; font-weight: 600; color: #475569; font-size: 14px;">Manager</td><td style="padding: 8px 0; border-bottom: 1px solid #c7f0d8; color: #1e293b; font-size: 14px;">${managerName}</td></tr>
+                      <tr><td style="padding: 8px 0; border-bottom: 1px solid #c7f0d8; font-weight: 600; color: #475569; font-size: 14px;">Reporting Time</td><td style="padding: 8px 0; border-bottom: 1px solid #c7f0d8; color: #1e293b; font-size: 14px;">${reportingTime}</td></tr>
+                      <tr><td style="padding: 8px 0; font-weight: 600; color: #475569; font-size: 14px;">Office Location</td><td style="padding: 8px 0; color: #1e293b; font-size: 14px;">${officeLocation || 'TBD'}</td></tr>
+                    </table>
+                  </div>
+
+                  <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">Please review your onboarding checklist and complete all required steps. You can track your progress in your <strong>My Onboarding</strong> dashboard.</p>
+
+                  <div style="text-align: center; margin: 32px 0;">
+                    <a href="${onboardingLink}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; border-radius: 14px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 16px rgba(99,102,241,0.3);">
+                      View My Onboarding Dashboard
+                    </a>
+                  </div>
+
+                  <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0;">If you have any questions, please reach out to your recruiting team. We look forward to working with you!</p>
+                </td></tr>
+                <tr><td style="padding: 24px 32px; border-top: 1px solid #f1f5f9; text-align: center;">
+                  <p style="color: #94a3b8; font-size: 12px; margin: 0;">InternLink Inc. - This is an automated message. Please do not reply to this email.</p>
+                </td></tr>
+              </table>
+            </td></tr>
+          </table>
+        </body>
+      </html>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+export const sendJoiningReminderEmail = async (email, candidateName, hiring) => {
+  const companyName = hiring.companyData?.companyName || 'Our Company';
+  const jobTitle = hiring.jobData?.title || 'the position';
+  const joiningDate = hiring.joiningDate ? formatDate(hiring.joiningDate) : 'TBD';
+  const reportingTime = hiring.reportingTime || '09:00 AM';
+  const officeLocation = hiring.officeLocation || 'To be determined';
+  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const onboardingLink = `${baseUrl}/student/onboarding`;
+
+  const mailOptions = {
+    from: `"InternLink" <${process.env.SMTP_FROM || 'noreply@internlink.com'}>`,
+    to: email,
+    subject: `Joining Reminder - ${joiningDate} | InternLink`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Joining Reminder - InternLink</title></head>
+        <body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Inter', Arial, sans-serif;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f9; padding: 40px 0;">
+            <tr><td align="center">
+              <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                <tr><td style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 40px 32px; text-align: center;">
+                  <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0 0 8px 0; font-family: 'Outfit', 'Inter', Arial, sans-serif;">InternLink</h1>
+                  <p style="color: rgba(255,255,255,0.85); font-size: 14px; margin: 0;">Your Professional Internship Platform</p>
+                </td></tr>
+                <tr><td style="padding: 40px 32px;">
+                  <h2 style="color: #1e293b; font-size: 22px; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', 'Inter', Arial, sans-serif;">Joining Reminder</h2>
+                  <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Dear ${candidateName},</p>
+                  <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">This is a friendly reminder that your first day at <strong>${companyName}</strong> is coming up soon.</p>
+                  <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569; font-size: 14px;">Position</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b; font-size: 14px;">${jobTitle}</td></tr>
+                      <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569; font-size: 14px;">Joining Date</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b; font-size: 14px;">${joiningDate}</td></tr>
+                      <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569; font-size: 14px;">Reporting Time</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #1e293b; font-size: 14px;">${reportingTime}</td></tr>
+                      <tr><td style="padding: 8px 0; font-weight: 600; color: #475569; font-size: 14px;">Office Location</td><td style="padding: 8px 0; color: #1e293b; font-size: 14px;">${officeLocation || 'TBD'}</td></tr>
+                    </table>
+                  </div>
+                  <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">Please ensure you complete all onboarding steps before your first day. You can check your progress at your My Onboarding dashboard.</p>
+                  <div style="text-align: center; margin: 32px 0;">
+                    <a href="${onboardingLink}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; border-radius: 14px; font-weight: 600; font-size: 15px;">
+                      View My Onboarding Dashboard
+                    </a>
+                  </div>
+                </td></tr>
+                <tr><td style="padding: 24px 32px; border-top: 1px solid #f1f5f9; text-align: center;">
+                  <p style="color: #94a3b8; font-size: 12px; margin: 0;">InternLink Inc. - This is an automated message.</p>
+                </td></tr>
+              </table>
+            </td></tr>
+          </table>
+        </body>
+      </html>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
