@@ -5,6 +5,7 @@ import { SocketProvider } from './context/SocketContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { MessageProvider } from './context/MessageContext';
+import { AIContextProvider } from './contexts/AIContext';
 
 // Layout wrappers
 import MainLayout from './layouts/MainLayout/MainLayout';
@@ -46,6 +47,7 @@ const HiringOnboarding = lazy(() => import('./pages/recruiter/HiringOnboarding/H
 const StudentInterviews = lazy(() => import('./pages/Student/Interviews/StudentInterviews'));
 const StudentOffers = lazy(() => import('./pages/Student/Offers/StudentOffers'));
 const StudentOnboarding = lazy(() => import('./pages/Student/Onboarding/Onboarding'));
+const AIAssistant = lazy(() => import('./pages/Student/AIAssistant'));
 
 const RecruiterTalentPool = lazy(() => import('./pages/recruiter/TalentPool/TalentPool'));
 const RecruiterTalentPoolCandidate = lazy(() => import('./pages/recruiter/TalentPool/TalentPoolCandidate'));
@@ -67,6 +69,7 @@ function App() {
           <ThemeProvider>
             <SocketProvider>
               <NotificationProvider>
+                <AIContextProvider>
                 <Routes>
               {/* ── Public / Guest Routes ── */}
               <Route
@@ -450,14 +453,28 @@ function App() {
                 <Route
                   path="/onboarding"
                   element={
-                  <ProtectedRoute>
-                   <MainLayout>
-                     <Suspense fallback={<PageLoader />}>
-                       <StudentOnboarding />
-                     </Suspense>
-                    </MainLayout>
-                   </ProtectedRoute>} />
-               {/* ── Catch-all / 404 ── */}
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Suspense fallback={<PageLoader />}>
+                          <StudentOnboarding />
+                        </Suspense>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+               <Route
+                  path="/ai-assistant"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Suspense fallback={<PageLoader />}>
+                          <AIAssistant />
+                        </Suspense>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* ── Catch-all / 404 ── */}
                <Route
                  path="*"
                  element={
@@ -501,7 +518,8 @@ function App() {
                  }
                />
               </Routes>
-                </NotificationProvider>
+                </AIContextProvider>
+              </NotificationProvider>
             </SocketProvider>
           </ThemeProvider>
         </AuthProvider>

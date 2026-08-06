@@ -9,6 +9,8 @@ import styles from './MainLayout.module.css';
 import RecruiterSidebar from '../RecruiterSidebar/RecruiterSidebar';
 import NotificationBell from '../../components/notifications/NotificationBell';
 import NotificationDropdown from '../../components/notifications/NotificationDropdown';
+import AIFloatingButton from '../../components/AI/AIFloatingButton';
+import AIChatDrawer from '../../components/AI/AIChatDrawer';
 
 import {
   Home, Users, Briefcase, MessageSquare, Bell,
@@ -487,6 +489,10 @@ const MainLayout = ({ children }) => {
         <main className={styles.mainContent}>
           <div className={styles.contentWrapper}>{children}</div>
         </main>
+
+        {/* Global AI Components */}
+        <AIFloatingButton />
+        <AIChatDrawer />
       </div>
     </div>
   );
