@@ -1,0 +1,119 @@
+{
+  "worktrees": {
+    "wt-1785617378718-1": {
+      "branch": "quirky-gander",
+      "path": "d:\\InternLink-Product\\InternLink\\.kilo\\worktrees\\quirky-gander",
+      "parentBranch": "main",
+      "createdAt": "2026-08-01T20:49:38.718Z",
+      "remote": "origin",
+      "branchOwned": true,
+      "autoNameSessionId": "ses_040e902b6ffetKsAnvoAqwoEc4",
+      "autoNamePromptCount": 0
+    },
+    "wt-1785661670202-1": {
+      "branch": "periwinkle-rain",
+      "path": "d:\\InternLink-Product\\InternLink\\.kilo\\worktrees\\periwinkle-rain",
+      "parentBranch": "main",
+      "createdAt": "2026-08-02T09:07:50.202Z",
+      "remote": "origin",
+      "branchOwned": true,
+      "autoNameSessionId": "ses_03e453873ffeGore3Ak92hoYT8",
+      "autoNamePromptCount": 0
+    },
+    "wt-1785662894687-2": {
+      "branch": "garnet-haddock",
+      "path": "d:\\InternLink-Product\\InternLink\\.kilo\\worktrees\\garnet-haddock",
+      "parentBranch": "main",
+      "createdAt": "2026-08-02T09:28:14.687Z",
+      "remote": "origin",
+      "branchOwned": true,
+      "autoNameSessionId": "ses_03e328965fferEu4cQXx8Y95Sg",
+      "autoNamePromptCount": 0
+    },
+    "wt-1785857993355-1": {
+      "branch": "luck-bellflower",
+      "path": "d:\\internlink-product\\internlink\\.kilo\\worktrees\\luck-bellflower",
+      "parentBranch": "main",
+      "createdAt": "2026-08-04T15:39:53.355Z",
+      "remote": "origin",
+      "branchOwned": true,
+      "autoNameSessionId": "ses_03291889bffeHAoPDm59kqroq7",
+      "autoNamePromptCount": 0
+    },
+    "wt-1785858186076-2": {
+      "branch": "blue-newt",
+      "path": "d:\\internlink-product\\internlink\\.kilo\\worktrees\\blue-newt",
+      "parentBranch": "main",
+      "createdAt": "2026-08-04T15:43:06.076Z",
+      "remote": "origin",
+      "branchOwned": true,
+      "autoNameSessionId": "ses_0328e94ddffeRDMKDb4322DT9y",
+      "autoNamePromptCount": 0
+    },
+    "wt-1785858203986-3": {
+      "branch": "amenable-hovercraft",
+      "path": "d:\\internlink-product\\internlink\\.kilo\\worktrees\\amenable-hovercraft",
+      "parentBranch": "main",
+      "createdAt": "2026-08-04T15:43:23.986Z",
+      "remote": "origin",
+      "branchOwned": true,
+      "autoNameSessionId": "ses_0328e3bd6ffeNPsRrjTrBsZQsE",
+      "autoNamePromptCount": 0
+    },
+    "wt-1785949255904-1": {
+      "branch": "wistful-baryonyx",
+      "path": "d:\\internlink-product\\internlink\\.kilo\\worktrees\\wistful-baryonyx",
+      "parentBranch": "main",
+      "createdAt": "2026-08-05T17:00:55.904Z",
+      "remote": "origin",
+      "branchOwned": true,
+      "autoNameSessionId": "ses_02d20e4ceffeYrF3mkmavpj66n",
+      "autoNamePromptCount": 0
+    }
+  },
+  "sessions": {
+    "ses_040e902b6ffetKsAnvoAqwoEc4": {
+      "worktreeId": "wt-1785617378718-1",
+      "createdAt": "2026-08-01T20:49:42.860Z"
+    },
+    "ses_03e453873ffeGore3Ak92hoYT8": {
+      "worktreeId": "wt-1785661670202-1",
+      "createdAt": "2026-08-02T09:07:51.365Z"
+    },
+    "ses_03e328965fferEu4cQXx8Y95Sg": {
+      "worktreeId": "wt-1785662894687-2",
+      "createdAt": "2026-08-02T09:28:15.810Z"
+    },
+    "ses_03291889bffeHAoPDm59kqroq7": {
+      "worktreeId": "wt-1785857993355-1",
+      "createdAt": "2026-08-04T15:39:56.673Z"
+    },
+    "ses_0328e94ddffeRDMKDb4322DT9y": {
+      "worktreeId": "wt-1785858186076-2",
+      "createdAt": "2026-08-04T15:43:10.218Z"
+    },
+    "ses_0328e3bd6ffeNPsRrjTrBsZQsE": {
+      "worktreeId": "wt-1785858203986-3",
+      "createdAt": "2026-08-04T15:43:32.964Z"
+    },
+    "ses_02d20e4ceffeYrF3mkmavpj66n": {
+      "worktreeId": "wt-1785949255904-1",
+      "createdAt": "2026-08-05T17:01:04.806Z"
+    }
+  },
+  "tabOrder": {
+    "local": [
+      "pending:497bd763-42dc-451c-bf9c-734f20d4f213"
+    ]
+  },
+  "worktreeOrder": [
+    "wt-1785617378718-1",
+    "wt-1785661670202-1",
+    "wt-1785662894687-2",
+    "wt-1785857993355-1",
+    "wt-1785858186076-2",
+    "wt-1785858203986-3",
+    "wt-1785949255904-1"
+  ],
+  "sessionsCollapsed": true
+}
