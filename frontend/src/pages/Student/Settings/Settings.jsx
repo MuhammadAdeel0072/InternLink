@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
-import api from '../../../services/api';
+import api, { API_URL } from '../../../services/api';
 import styles from './Settings.module.css';
 import ThemeSelector from '../../../components/settings/ThemeSelector';
 import {
@@ -402,7 +402,7 @@ const Settings = () => {
                       } catch (err) { 
                         showMessage('Failed', 'error'); 
                       }
-                    } : () => window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/${name.toLowerCase()}`}
+                    } : () => window.location.href = `${API_URL}/api/auth/${name.toLowerCase()}`}
                   >
                     {connected ? 'Disconnect' : 'Connect'}
                   </button>

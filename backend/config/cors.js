@@ -10,9 +10,25 @@ export const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5173',
 ].filter(Boolean);
 
-export const isAllowedOrigin = (origin) => {
-  if (!origin) return true; // Allow non-browser requests (curl, Postman, server-to-server)
+// Synchronous checker for internal non-CORS use
+export const checkOriginSync = (origin) => {
+  if (!origin) return true;
   return ALLOWED_ORIGINS.includes(origin);
+};
+
+// CORS-compatible origin checker (uses callback pattern required by cors package)
+export const isAllowedOrigin = (origin, callback) => {
+  console.log(`[CORS] isAllowedOrigin called | origin: ${origin || '<null>'}`);
+  if (!origin) {
+    console.log(`[CORS] isAllowedOrigin → true (no origin)`);
+    return callback(null, true); // Allow non-browser requests (curl, Postman, server-to-server)
+  }
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    console.log(`[CORS] isAllowedOrigin → true (matched)`);
+    return callback(null, true);
+  }
+  console.log(`[CORS] isAllowedOrigin → false (not in list)`);
+  return callback(null, false);
 };
 
 // ─────────────────────────────────────────────────────
@@ -25,7 +41,7 @@ const oauthOriginMap = new Map();
 const OAUTH_ORIGIN_TTL = 5 * 60 * 1000; // 5 minutes
 
 export const storeOAuthOrigin = (origin) => {
-  if (!origin || !isAllowedOrigin(origin)) return null;
+  if (!origin || !checkOriginSync(origin)) return null;
   const nonce = crypto.randomBytes(16).toString('hex');
   oauthOriginMap.set(nonce, origin);
   setTimeout(() => oauthOriginMap.delete(nonce), OAUTH_ORIGIN_TTL);

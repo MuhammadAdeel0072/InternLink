@@ -1,7 +1,15 @@
 import axios from 'axios';
 
+const rawApiUrl = import.meta.env.VITE_API_URL;
+if (!rawApiUrl) {
+  throw new Error('❌ Missing VITE_API_URL environment variable. Set VITE_API_URL in frontend/.env for development or in your production deployment environment.');
+}
+
+export const API_URL = rawApiUrl.replace(/\/$/, '');
+export const API_BASE_URL = `${API_URL}/api`;
+
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   },

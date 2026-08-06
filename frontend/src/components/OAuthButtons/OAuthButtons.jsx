@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import styles from './OAuthButtons.module.css';
+import { API_URL } from '../../services/api';
 
 const OAuthButtons = ({ mode = 'login' }) => {
   const [loading, setLoading] = useState(null);
-  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+  const API_BASE_URL = `${API_URL}/api`;
 
   const handleOAuth = (provider) => {
     setLoading(provider);

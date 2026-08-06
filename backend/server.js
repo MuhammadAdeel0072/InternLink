@@ -14,6 +14,7 @@ import cookieParser from 'cookie-parser';
 
 import passport from 'passport';
 import connectDB from './config/db.js';
+import './config/passport.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 import TokenBlacklist from './models/TokenBlacklist.js';
 import { authLimiter, generalLimiter, passwordResetLimiter } from './middlewares/rateLimiter.js';
@@ -54,6 +55,12 @@ connectDB();
 
 const app = express();
 const server = http.createServer(app);
+
+// Debug test route - placed BEFORE all middleware to verify basic Express response
+app.get('/debug-test', (req, res) => {
+  console.log('[DEBUG-TEST] Hit /debug-test');
+  res.status(200).json({ success: true, message: 'Debug test works', timestamp: new Date().toISOString() });
+});
 
 // Configure Socket.IO
 const io = new Server(server, {
@@ -277,7 +284,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https://internlink.adeelkhan.online", "https://intern-link-brrv.vercel.app"],
       fontSrc: ["'self'", "data:", "https:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
@@ -291,10 +298,25 @@ app.use(helmet({
   },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false,
 }));
 
 // Trust proxy for correct X-Frame-Options behind reverse proxy
 app.set('trust proxy', 1);
+
+// Temporary request logging middleware for debugging
+const requestLogger = (req, res, next) => {
+  if (process.env.NODE_ENV === 'development' || process.env.ENABLE_REQUEST_LOGGING === 'true') {
+    console.log(`[REQ] ${req.method} ${req.originalUrl} | Origin: ${req.get('origin') || '<no-origin>'} | IP: ${req.ip}`);
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      console.log(`[RES] ${req.method} ${req.originalUrl} | Status: ${res.statusCode} | Duration: ${duration}ms`);
+    });
+  }
+  next();
+};
+app.use(requestLogger);
 
 app.use(mongoSanitize());
 app.use(xss());
@@ -311,6 +333,33 @@ const corsLogger = (req, res, next) => {
 };
 app.use(corsLogger);
 
+// Temporary CORS execution tracer
+const corsTracer = (req, res, next) => {
+  const start = Date.now();
+  const method = req.method;
+  const url = req.originalUrl;
+  const origin = req.get('origin');
+
+  console.log(`[CORS-TRACE] ENTER ${method} ${url} | Origin: ${origin || '<none>'}`);
+
+  // Monitor response finish
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[CORS-TRACE] EXIT ${method} ${url} | Status: ${res.statusCode} | Duration: ${duration}ms`);
+  });
+
+  // Monitor response close (client cancelled)
+  res.on('close', () => {
+    if (!res.writableEnded) {
+      const duration = Date.now() - start;
+      console.log(`[CORS-TRACE] CLOSE ${method} ${url} | Client cancelled | Duration: ${duration}ms`);
+    }
+  });
+
+  next();
+};
+app.use(corsTracer);
+
 app.use(cors({
   origin: isAllowedOrigin,
   credentials: true,
@@ -319,6 +368,13 @@ app.use(cors({
   exposedHeaders: ['Authorization'],
   maxAge: 86400, // 24 hours preflight cache
 }));
+
+// Temporary post-CORS tracer
+const postCorsTracer = (req, res, next) => {
+  console.log(`[POST-CORS] ${req.method} ${req.originalUrl} reached post-CORS middleware`);
+  next();
+};
+app.use(postCorsTracer);
 
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/sendEmail.js';
 import { blacklistToken } from '../middlewares/tokenBlacklist.js';
-import { isAllowedOrigin, getOAuthOrigin } from '../config/cors.js';
+import { getOAuthOrigin, checkOriginSync } from '../config/cors.js';
 
 /**
  * Generate a JWT access token for a user
@@ -62,6 +62,7 @@ export const hashToken = (token) => {
 // @access  Public
 export const registerUser = async (req, res) => {
   try {
+    console.log('[registerUser] Step 1: Start registration');
     const { name, email, password, role, acceptedTerms } = req.body;
 
     if (!name || !email || !password) {
@@ -86,18 +87,22 @@ export const registerUser = async (req, res) => {
       });
     }
 
+    console.log('[registerUser] Step 2: Checking if user exists');
     const userExists = await User.findOne({ email });
     if (userExists) {
+      console.log('[registerUser] User already exists');
       return res.status(409).json({ 
         success: false,
         message: 'An account with this email already exists' 
       });
     }
 
+    console.log('[registerUser] Step 3: Creating verification token');
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationTokenHash = hashToken(verificationToken);
     const verificationTokenExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
 
+    console.log('[registerUser] Step 4: Creating user');
     const user = await User.create({
       name,
       email,
@@ -109,7 +114,9 @@ export const registerUser = async (req, res) => {
       hasAcceptedTerms: true,
       authProvider: 'local',
     });
+    console.log('[registerUser] User created:', user._id);
 
+    console.log('[registerUser] Step 5: Creating profile');
     await Profile.create({
       user: user._id,
       skills: [],
@@ -118,14 +125,18 @@ export const registerUser = async (req, res) => {
       projects: [],
       certifications: [],
     });
+    console.log('[registerUser] Profile created');
 
+    console.log('[registerUser] Step 6: Sending verification email');
     try {
       await sendVerificationEmail(user.email, verificationToken);
+      console.log('[registerUser] Verification email sent');
     } catch (emailError) {
-      console.error('Verification email failed:', emailError);
+      console.error('[registerUser] Verification email failed:', emailError);
     }
 
     // Do not issue JWT for unverified users - they must verify email first
+    console.log('[registerUser] Step 7: Sending response');
     res.status(201).json({
       success: true,
       message: 'Registration successful! Please check your email to verify your account.',
@@ -139,8 +150,9 @@ export const registerUser = async (req, res) => {
         requiresVerification: true
       }
     });
+    console.log('[registerUser] Response sent');
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('[registerUser] Registration error:', error);
     res.status(500).json({ 
       success: false,
       message: 'Server error during registration' 
@@ -394,6 +406,7 @@ export const resetPassword = async (req, res) => {
 // @access  Public
 export const loginUser = async (req, res) => {
   try {
+    console.log('[loginUser] Step 1: Start login');
     const { email, password, rememberMe } = req.body;
 
     if (!email || !password) {
@@ -403,30 +416,37 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    console.log('[loginUser] Step 2: Finding user by email');
     const user = await User.findOne({ email }).select('+password');
-
     if (!user) {
+      console.log('[loginUser] User not found');
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       });
     }
+    console.log('[loginUser] User found:', user._id);
 
     if (user.authProvider !== 'local') {
+      console.log('[loginUser] Auth provider mismatch:', user.authProvider);
       return res.status(400).json({
         success: false,
         message: `This account uses ${user.authProvider} authentication. Please sign in with ${user.authProvider}.`
       });
     }
 
+    console.log('[loginUser] Step 3: Comparing password');
     if (!(await user.comparePassword(password))) {
+      console.log('[loginUser] Password mismatch');
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       });
     }
+    console.log('[loginUser] Password matched');
 
     if (!user.isVerified) {
+      console.log('[loginUser] User not verified');
       return res.status(403).json({
         success: false,
         message: 'Please verify your email first',
@@ -435,6 +455,7 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    console.log('[loginUser] Step 4: Generating tokens');
     const token = jwt.sign(
       { id: user._id }, 
       process.env.JWT_SECRET, 
@@ -449,27 +470,31 @@ export const loginUser = async (req, res) => {
     
     setRefreshTokenCookie(res, refreshToken, rememberMe ? 30 : 7);
 
+    console.log('[loginUser] Step 5: Updating lastLogin');
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
+    console.log('[loginUser] lastLogin updated');
 
-  res.status(200).json({
-  success: true,
-  message: 'Login successful',
-  token,
-  _id: user._id,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  avatar: user.avatar,
-  isVerified: user.isVerified,
-  username: user.username,
-  phone: user.phone,
-  googleId: user.googleId,
-  githubId: user.githubId,
-  preferences: user.preferences
-  });
+    console.log('[loginUser] Step 6: Sending response');
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      isVerified: user.isVerified,
+      username: user.username,
+      phone: user.phone,
+      googleId: user.googleId,
+      githubId: user.githubId,
+      preferences: user.preferences
+    });
+    console.log('[loginUser] Response sent');
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('[loginUser] Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during login'
@@ -497,7 +522,7 @@ export const oAuthSuccess = async (req, res) => {
       'http://localhost:5173';
 
     // Ensure the resolved origin is in our allow-list
-    if (!isAllowedOrigin(frontendURL)) {
+    if (!checkOriginSync(frontendURL)) {
       frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
     }
 

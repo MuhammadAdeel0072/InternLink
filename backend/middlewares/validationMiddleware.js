@@ -1,8 +1,10 @@
 import { body, param, query, validationResult } from 'express-validator';
 
 export const validateRequest = (req, res, next) => {
+  console.log(`[VALIDATE] ${req.method} ${req.originalUrl} - checking validation result`);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log(`[VALIDATE] ${req.method} ${req.originalUrl} - validation failed:`, errors.array().map(e => e.msg).join(', '));
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
@@ -12,6 +14,7 @@ export const validateRequest = (req, res, next) => {
       }))
     });
   }
+  console.log(`[VALIDATE] ${req.method} ${req.originalUrl} - validation passed, calling next()`);
   next();
 };
 

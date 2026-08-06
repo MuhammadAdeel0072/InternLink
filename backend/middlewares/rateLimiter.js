@@ -6,6 +6,7 @@ export const authLimiter = rateLimit({
   message: { success: false, message: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
 });
 
 export const loginLimiter = rateLimit({
@@ -14,6 +15,7 @@ export const loginLimiter = rateLimit({
   message: { success: false, message: 'Too many login attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
 });
 
 export const generalLimiter = rateLimit({
@@ -22,6 +24,7 @@ export const generalLimiter = rateLimit({
   message: { success: false, message: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
 });
 
 export const passwordResetLimiter = rateLimit({
@@ -30,4 +33,5 @@ export const passwordResetLimiter = rateLimit({
   message: { success: false, message: 'Too many password reset requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
 });
