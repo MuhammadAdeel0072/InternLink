@@ -1,14 +1,70 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+let transporter = null;
+
+const buildTransporter = () => {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT, 10);
+  const secure = String(process.env.SMTP_SECURE).toLowerCase() === 'true';
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    authMethod: 'LOGIN',
+  });
+};
+
+const getTransporter = async () => {
+  if (!transporter) {
+    transporter = buildTransporter();
+    try {
+      await transporter.verify();
+      console.log('SMTP transporter verified successfully');
+    } catch (error) {
+      console.error('SMTP transporter verification failed:', {
+        message: error.message,
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode,
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: process.env.SMTP_SECURE,
+      });
+    }
+  }
+  return transporter;
+};
+
+const logSmtpError = (error, context = 'sendMail') => {
+  console.error(`SMTP ${context} error:`, {
+    message: error.message,
+    code: error.code,
+    command: error.command,
+    response: error.response,
+    responseCode: error.responseCode,
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_SECURE,
+  });
+};
+
+const sendMail = async (mailOptions, context = 'sendMail') => {
+  try {
+    await (await getTransporter()).sendMail(mailOptions);
+  } catch (error) {
+    logSmtpError(error, context);
+    throw error;
+  }
+};
 
 export const sendVerificationEmail = async (email, token) => {
   const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
@@ -78,7 +134,7 @@ export const sendVerificationEmail = async (email, token) => {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendPasswordResetEmail = async (email, token) => {
@@ -149,7 +205,7 @@ export const sendPasswordResetEmail = async (email, token) => {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 const formatDate = (dateString) => {
@@ -210,7 +266,7 @@ export const sendInterviewScheduledEmail = async (email, candidateName, jobTitle
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendInterviewCancelledEmail = async (email, candidateName, jobTitle, interview) => {
@@ -245,7 +301,7 @@ export const sendInterviewCancelledEmail = async (email, candidateName, jobTitle
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendInterviewRescheduledEmail = async (email, candidateName, jobTitle, interview) => {
@@ -285,7 +341,7 @@ export const sendInterviewRescheduledEmail = async (email, candidateName, jobTit
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 const formatCurrency = (amount, currency = 'USD') => {
@@ -342,7 +398,7 @@ export const sendOfferSentEmail = async (email, candidateName, offer) => {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendOfferAcceptedEmail = async (email, recruiterName, offer) => {
@@ -390,7 +446,7 @@ export const sendOfferAcceptedEmail = async (email, recruiterName, offer) => {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendOfferRejectedEmail = async (email, recruiterName, offer, reason = '') => {
@@ -430,7 +486,7 @@ export const sendOfferRejectedEmail = async (email, recruiterName, offer, reason
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendOfferWithdrawnEmail = async (email, candidateName, offer, reason = '') => {
@@ -469,7 +525,7 @@ export const sendOfferWithdrawnEmail = async (email, candidateName, offer, reaso
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendOfferUpdatedEmail = async (email, candidateName, offer, updateNote = '') => {
@@ -507,7 +563,7 @@ export const sendOfferUpdatedEmail = async (email, candidateName, offer, updateN
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendOfferNegotiationEmail = async (email, recruiterName, offer, negotiationDetails) => {
@@ -552,7 +608,7 @@ export const sendOfferNegotiationEmail = async (email, recruiterName, offer, neg
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendWelcomeEmail = async (email, candidateName, hiring) => {
@@ -621,7 +677,7 @@ export const sendWelcomeEmail = async (email, candidateName, hiring) => {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
 
 export const sendJoiningReminderEmail = async (email, candidateName, hiring) => {
@@ -679,5 +735,5 @@ export const sendJoiningReminderEmail = async (email, candidateName, hiring) => 
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendMail(mailOptions);
 };
