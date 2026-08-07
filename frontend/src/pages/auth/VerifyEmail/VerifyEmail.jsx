@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import AuthCard from '../../../components/AuthCard/AuthCard';
 import Loader from '../../../components/Loader/Loader';
@@ -10,10 +10,11 @@ import { Mail, RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 const VerifyEmail = () => {
   const { verifyEmail, resendVerification } = useAuth();
-  const [searchParams] = useSearchParams();
+  const { token: pathToken } = useParams();
   const location = useLocation();
-  const token = searchParams.get('token');
   const stateEmail = location.state?.email;
+
+  const token = pathToken;
 
   const [verifying, setVerifying] = useState(true);
   const [verified, setVerified] = useState(false);
@@ -116,7 +117,7 @@ const VerifyEmail = () => {
     );
   }
 
-  if (errorMsg && !token) {
+  if (!token) {
     return (
       <AuthCard title="Verify Your Email" subtitle="Enter your email to resend verification">
         <div className={styles.resendContainer}>

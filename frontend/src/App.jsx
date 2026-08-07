@@ -97,6 +97,16 @@ function App() {
                 }
               />
               <Route
+                path="/verify-email/:token"
+                element={
+                  <AuthLayout>
+                    <Suspense fallback={<PageLoader />}>
+                      <VerifyEmail />
+                    </Suspense>
+                  </AuthLayout>
+                }
+              />
+              <Route
                 path="/verify-email"
                 element={
                   <AuthLayout>

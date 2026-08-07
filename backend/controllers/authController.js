@@ -61,11 +61,15 @@ export const hashToken = (token) => {
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res) => {
+  console.log('[registerUser] Register request received', {
+    body: { name: req.body.name, email: req.body.email, role: req.body.role, acceptedTerms: req.body.acceptedTerms },
+  });
   try {
     console.log('[registerUser] Step 1: Start registration');
     const { name, email, password, role, acceptedTerms } = req.body;
 
     if (!name || !email || !password) {
+      console.log('[registerUser] Validation failed: missing fields');
       return res.status(400).json({ 
         success: false,
         message: 'All fields are required' 
@@ -73,6 +77,7 @@ export const registerUser = async (req, res) => {
     }
 
     if (acceptedTerms !== true) {
+      console.log('[registerUser] Validation failed: terms not accepted');
       return res.status(400).json({
         success: false,
         message: 'You must accept the Terms of Service and Privacy Policy'
@@ -81,6 +86,7 @@ export const registerUser = async (req, res) => {
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
+      console.log('[registerUser] Validation failed: password does not meet complexity requirements');
       return res.status(400).json({
         success: false,
         message: 'Password must be 8+ characters with uppercase, lowercase, number, and special character'
@@ -99,8 +105,11 @@ export const registerUser = async (req, res) => {
 
     console.log('[registerUser] Step 3: Creating verification token');
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    console.log('[registerUser] Verification token generated:', verificationToken);
     const verificationTokenHash = hashToken(verificationToken);
+    console.log('[registerUser] Verification token hashed:', verificationTokenHash);
     const verificationTokenExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
+    console.log('[registerUser] Verification token expires at:', new Date(verificationTokenExpire).toISOString());
 
     console.log('[registerUser] Step 4: Creating user');
     const user = await User.create({
@@ -115,6 +124,8 @@ export const registerUser = async (req, res) => {
       authProvider: 'local',
     });
     console.log('[registerUser] User created:', user._id);
+    console.log('[registerUser] User verificationToken stored:', user.verificationToken);
+    console.log('[registerUser] User verificationTokenExpire stored:', user.verificationTokenExpire);
 
     console.log('[registerUser] Step 5: Creating profile');
     await Profile.create({
@@ -128,11 +139,35 @@ export const registerUser = async (req, res) => {
     console.log('[registerUser] Profile created');
 
     console.log('[registerUser] Step 6: Sending verification email');
+
+    // Log SMTP environment variables (mask the password)
+    console.log('[registerUser] SMTP env vars:', {
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_SECURE: process.env.SMTP_SECURE,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_FROM: process.env.SMTP_FROM,
+      SMTP_PASS: process.env.SMTP_PASS ? '***' + process.env.SMTP_PASS.slice(-4) : '<not set>',
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      NODE_ENV: process.env.NODE_ENV,
+    });
+
     try {
+      console.log('[registerUser] sendVerificationEmail() called with:', {
+        email: user.email,
+        token: verificationToken,
+      });
       await sendVerificationEmail(user.email, verificationToken);
       console.log('[registerUser] Verification email sent');
     } catch (emailError) {
-      console.error('[registerUser] Verification email failed:', emailError);
+      console.error('[registerUser] Verification email failed:', {
+        message: emailError.message,
+        code: emailError.code,
+        stack: emailError.stack,
+        command: emailError.command,
+        response: emailError.response,
+        responseCode: emailError.responseCode,
+      });
     }
 
     // Do not issue JWT for unverified users - they must verify email first
@@ -152,7 +187,15 @@ export const registerUser = async (req, res) => {
     });
     console.log('[registerUser] Response sent');
   } catch (error) {
-    console.error('[registerUser] Registration error:', error);
+    console.error('[registerUser] Registration error:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+    });
+    console.error('[registerUser] Controller catch block: error details:', error);
     res.status(500).json({ 
       success: false,
       message: 'Server error during registration' 
@@ -164,40 +207,56 @@ export const registerUser = async (req, res) => {
 // @route   GET /api/auth/verify-email/:token
 // @access  Public
 export const verifyEmail = async (req, res) => {
+  console.log('[verifyEmail] Verify email request received, token:', req.params.token);
   try {
     const { token } = req.params;
 
     if (!token) {
+      console.log('[verifyEmail] Token is missing from request params');
       return res.status(400).json({
         success: false,
         message: 'Verification token is required'
       });
     }
 
+    console.log('[verifyEmail] Hashing token for lookup');
     const tokenHash = hashToken(token);
+    console.log('[verifyEmail] Token hash:', tokenHash);
+
+    console.log('[verifyEmail] Searching for user with matching token');
     const user = await User.findOne({
       verificationToken: tokenHash,
       verificationTokenExpire: { $gt: Date.now() }
     });
 
     if (!user) {
+      console.log('[verifyEmail] No user found with this token (invalid or expired)');
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired verification token'
       });
     }
 
+    console.log('[verifyEmail] User found:', user._id, user.email);
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpire = undefined;
     await user.save();
+    console.log('[verifyEmail] User verified and token cleared');
 
     res.status(200).json({
       success: true,
       message: 'Email verified successfully! You can now log in.'
     });
   } catch (error) {
-    console.error('Email verification error:', error);
+    console.error('[verifyEmail] Error:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+    });
     res.status(500).json({
       success: false,
       message: 'Server error during email verification'
@@ -209,11 +268,14 @@ export const verifyEmail = async (req, res) => {
 // @route   POST /api/auth/resend-verification
 // @access  Public
 export const resendVerification = async (req, res) => {
+  console.log('[resendVerification] request received', { email: req.body.email });
   try {
     const { email } = req.body;
-    
+
+    console.log('[resendVerification] Step 1: Finding user', { email });
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('[resendVerification] User not found');
       return res.status(404).json({
         success: false,
         message: 'No account found with this email'
@@ -221,26 +283,55 @@ export const resendVerification = async (req, res) => {
     }
 
     if (user.isVerified) {
+      console.log('[resendVerification] User already verified');
       return res.status(400).json({
         success: false,
         message: 'Email is already verified'
       });
     }
 
+    console.log('[resendVerification] Step 2: Generating new verification token');
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    console.log('[resendVerification] New token generated:', verificationToken);
     const verificationTokenHash = hashToken(verificationToken);
     user.verificationToken = verificationTokenHash;
     user.verificationTokenExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
+    console.log('[resendVerification] Token expire:', new Date(user.verificationTokenExpire).toISOString());
     await user.save();
+    console.log('[resendVerification] Token saved to database');
 
-    await sendVerificationEmail(user.email, verificationToken);
+    console.log('[resendVerification] Step 3: Calling sendVerificationEmail');
+    try {
+      await sendVerificationEmail(user.email, verificationToken);
+      console.log('[resendVerification] Verification email sent successfully');
+    } catch (emailError) {
+      console.error('[resendVerification] Verification email failed:', {
+        message: emailError.message,
+        code: emailError.code,
+        stack: emailError.stack,
+        command: emailError.command,
+        response: emailError.response,
+        responseCode: emailError.responseCode,
+      });
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send verification email. Please try again later.'
+      });
+    }
 
     res.status(200).json({
       success: true,
       message: 'Verification email sent successfully'
     });
   } catch (error) {
-    console.error('Resend verification error:', error);
+    console.error('[resendVerification] Error:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+    });
     res.status(500).json({
       success: false,
       message: 'Error sending verification email'
