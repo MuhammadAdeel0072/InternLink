@@ -280,6 +280,28 @@ app.use((req, res, next) => {
   next();
 });
 
+// Set timeout for long-running requests to prevent hanging connections
+app.use((req, res, next) => {
+  req.setTimeout(30000);
+  res.setTimeout(30000);
+  next();
+});
+
+// Performance timing middleware — logs request duration in development mode.
+// Stripped in production to avoid log overhead.
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      const status = res.statusCode;
+      const statusEmoji = status >= 200 && status < 300 ? '✓' : status >= 400 ? '✗' : '·';
+      console.log(`[${statusEmoji} ${status}] ${req.method} ${req.originalUrl} - ${duration}ms`);
+    });
+    next();
+  });
+}
+
 // Security Middlewares
 app.use(helmet({
   contentSecurityPolicy: {

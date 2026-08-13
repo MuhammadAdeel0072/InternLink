@@ -1,10 +1,10 @@
 .messageList {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0px;
   scrollbar-width: none;
   background-color: var(--bg-primary);
 }
@@ -17,7 +17,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 20px 0;
+  margin: 24px 0 16px;
   position: relative;
 }
 
@@ -25,14 +25,14 @@
   content: '';
   flex: 1;
   height: 1px;
-  background-color: var(--border-color);
+  background-color: rgba(255, 255, 255, 0.1);
   max-width: 120px;
 }
 
 .dateSeparatorText {
   padding: 0 16px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -43,7 +43,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background-color: var(--border-color);
+  background-color: rgba(255, 255, 255, 0.1);
   max-width: 120px;
 }
 
@@ -71,17 +71,17 @@
 
 .newMessageButton {
   position: sticky;
-  bottom: 16px;
+  bottom: 20px;
   align-self: center;
   background-color: var(--primary);
   color: #ffffff;
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: 24px;
   padding: 8px 16px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
   transition: all 0.2s ease;
   z-index: 10;
 }
@@ -89,6 +89,7 @@
 .newMessageButton:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.5);
 }
 
 @media (max-width: 768px) {
@@ -99,5 +100,24 @@
 
   .dateSeparator {
     margin: 16px 0;
+  }
+}
+
+.highlightedMessage {
+  animation: highlightFlash 2s ease;
+}
+
+@keyframes highlightFlash {
+  0% {
+    background-color: transparent;
+  }
+  15% {
+    background-color: rgba(139, 92, 246, 0.15);
+  }
+  85% {
+    background-color: rgba(139, 92, 246, 0.15);
+  }
+  100% {
+    background-color: transparent;
   }
 }

@@ -4,108 +4,145 @@ import User from '../models/User.js';
 import { createNotification } from '../services/notificationService.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 
-// Helper to populate user details including profile avatar
+/**
+ * Batch-enriches posts with author/comment/reply profile and user data.
+ *
+ * Instead of issuing a separate DB query for every post, comment, and reply
+ * (the old N+1 pattern), this function:
+ *   1. Collects all unique user IDs in a single pass through the post tree.
+ *   2. Fetches all User documents in ONE query (User.find with $in).
+ *   3. Fetches all Profile documents in ONE query (Profile.find with $in).
+ *   4. Maps the data back into the response objects in memory.
+ *
+ * Result: 3 queries total regardless of how many posts/comments/replies exist.
+ */
 const populateAuthorDetails = async (posts) => {
-  return await Promise.all(
-    posts.map(async (post) => {
-      const authorId = post.author?._id || post.author;
-      let authorProfile = null;
-      let authorUser = null;
+  // --- Step 1: Collect all unique user IDs ---
+  const userIds = new Set();
+  const profileUserIds = new Set(); // Track which user IDs need profile lookups
 
-      if (authorId) {
-        try {
-          authorProfile = await Profile.findOne({ user: authorId }).select('avatar headline');
-          authorUser = typeof post.author === 'object' && post.author !== null ? post.author : null;
-          if (!authorUser) {
-            authorUser = await User.findById(authorId).select('name email');
-          }
-        } catch (err) {
-          console.error('[POST_CONTROLLER] populateAuthorDetails - error fetching author:', err.message);
-        }
+  posts.forEach((post) => {
+    const authorId = post.author?._id || post.author;
+    if (authorId) {
+      const idStr = authorId.toString();
+      profileUserIds.add(authorId);
+      userIds.add(idStr);
+    }
+
+    (post.comments || []).forEach((comment) => {
+      const commentUserId = comment.user?._id || comment.user;
+      if (commentUserId) {
+        const idStr = commentUserId.toString();
+        profileUserIds.add(commentUserId);
+        userIds.add(idStr);
       }
 
-      const commentsWithProfiles = await Promise.all(
-        (post.comments || []).map(async (comment) => {
-          const commentUserId = comment.user?._id || comment.user;
-          let commentProfile = null;
-          let commentUser = null;
+      (comment.replies || []).forEach((reply) => {
+        const replyUserId = reply.user?._id || reply.user;
+        if (replyUserId) {
+          const idStr = replyUserId.toString();
+          profileUserIds.add(replyUserId);
+          userIds.add(idStr);
+        }
+      });
+    });
+  });
 
-          if (commentUserId) {
-            try {
-              commentProfile = await Profile.findOne({ user: commentUserId }).select('avatar');
-              commentUser = typeof comment.user === 'object' && comment.user !== null ? comment.user : null;
-              if (!commentUser) {
-                commentUser = await User.findById(commentUserId).select('name');
-              }
-            } catch (err) {
-              console.error('[POST_CONTROLLER] populateAuthorDetails - error fetching comment user:', err.message);
-            }
-          }
+  if (userIds.size === 0) {
+    // No users to look up — return plain posts
+    return posts.map((post) => formatPost(post, {}, {}));
+  }
 
-          const repliesWithProfiles = await Promise.all(
-            (comment.replies || []).map(async (reply) => {
-              const replyUserId = reply.user?._id || reply.user;
-              let replyProfile = null;
-              let replyUser = null;
+  // --- Step 2: Batch fetch all users in ONE query ---
+  const users = await User.find({ _id: { $in: [...userIds] } })
+    .select('name email avatar')
+    .lean();
+  const userMap = new Map();
+  users.forEach((u) => userMap.set(u._id.toString(), u));
 
-              if (replyUserId) {
-                try {
-                  replyProfile = await Profile.findOne({ user: replyUserId }).select('avatar');
-                  replyUser = typeof reply.user === 'object' && reply.user !== null ? reply.user : null;
-                  if (!replyUser) {
-                    replyUser = await User.findById(replyUserId).select('name');
-                  }
-                } catch (err) {
-                  console.error('[POST_CONTROLLER] populateAuthorDetails - error fetching reply user:', err.message);
-                }
-              }
+  // --- Step 3: Batch fetch all profiles in ONE query ---
+  const profiles = await Profile.find({ user: { $in: [...profileUserIds] } })
+    .select('user avatar headline')
+    .lean();
+  const profileMap = new Map();
+  profiles.forEach((p) => {
+    if (p.user) profileMap.set(p.user.toString(), p);
+  });
 
-              return {
-                _id: reply._id,
-                text: reply.text,
-                createdAt: reply.createdAt,
-                user: {
-                  _id: replyUserId,
-                  name: replyUser?.name || 'User',
-                  avatar: replyProfile?.avatar || ''
-                }
-              };
-            })
-          );
+  // --- Step 4: Map data back into posts in memory ---
+  return posts.map((post) => formatPost(post, userMap, profileMap));
+};
 
-          return {
-            _id: comment._id,
-            text: comment.text,
-            createdAt: comment.createdAt,
-            replies: repliesWithProfiles,
-            user: {
-              _id: commentUserId,
-              name: commentUser?.name || 'User',
-              avatar: commentProfile?.avatar || ''
-            }
-          };
-        })
-      );
+/**
+ * Formats a single post with enriched author, comment, and reply data
+ * from the pre-fetched userMap and profileMap.
+ */
+const formatPost = (post, userMap, profileMap) => {
+  const authorId = post.author?._id || post.author;
+  const authorIdStr = authorId ? authorId.toString() : null;
+
+  // Author enrichment
+  const authorUser = post.author && typeof post.author === 'object' ? post.author : userMap.get(authorIdStr);
+  const authorProfile = profileMap.get(authorIdStr);
+  const authorName = authorUser?.name || 'User';
+  const authorEmail = authorUser?.email || '';
+
+  // Comments enrichment
+  const commentsWithProfiles = (post.comments || []).map((comment) => {
+    const commentUserId = comment.user?._id || comment.user;
+    const commentUserIdStr = commentUserId ? commentUserId.toString() : null;
+    const commentUser = comment.user && typeof comment.user === 'object' ? comment.user : userMap.get(commentUserIdStr);
+    const commentProfile = profileMap.get(commentUserIdStr);
+
+    // Replies enrichment
+    const repliesWithProfiles = (comment.replies || []).map((reply) => {
+      const replyUserId = reply.user?._id || reply.user;
+      const replyUserIdStr = replyUserId ? replyUserId.toString() : null;
+      const replyUser = reply.user && typeof reply.user === 'object' ? reply.user : userMap.get(replyUserIdStr);
+      const replyProfile = profileMap.get(replyUserIdStr);
 
       return {
-        _id: post._id,
-        content: post.content || '',
-        image: post.image || '',
-        backgroundColor: post.backgroundColor || '',
-        likes: post.likes || [],
-        comments: commentsWithProfiles,
-        createdAt: post.createdAt,
-        updatedAt: post.updatedAt,
-        author: {
-          _id: authorId || null,
-          name: authorUser?.name || 'User',
-          email: authorUser?.email || '',
-          avatar: authorProfile?.avatar || '',
-          headline: authorProfile?.headline || ''
+        _id: reply._id,
+        text: reply.text,
+        createdAt: reply.createdAt,
+        user: {
+          _id: replyUserId || null,
+          name: replyUser?.name || 'User',
+          avatar: replyProfile?.avatar || ''
         }
       };
-    })
-  );
+    });
+
+    return {
+      _id: comment._id,
+      text: comment.text,
+      createdAt: comment.createdAt,
+      replies: repliesWithProfiles,
+      user: {
+        _id: commentUserId || null,
+        name: commentUser?.name || 'User',
+        avatar: commentProfile?.avatar || ''
+      }
+    };
+  });
+
+  return {
+    _id: post._id,
+    content: post.content || '',
+    image: post.image || '',
+    backgroundColor: post.backgroundColor || '',
+    likes: post.likes || [],
+    comments: commentsWithProfiles,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+    author: {
+      _id: authorIdStr || null,
+      name: authorName,
+      email: authorEmail,
+      avatar: authorProfile?.avatar || '',
+      headline: authorProfile?.headline || ''
+    }
+  };
 };
 
 // @desc    Create a new post
@@ -145,20 +182,35 @@ export const createPost = async (req, res) => {
 // @route   GET /api/posts
 // @access  Private
 export const getAllPosts = async (req, res) => {
+  const startTime = Date.now();
   try {
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 20);
     const skip = parseInt(req.query.skip) || 0;
 
+    const dbStart = Date.now();
     const posts = await Post.find()
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name')
-      .populate('comments.replies.user', 'name');
+      .lean();
+
+    const dbEnd = Date.now();
+    const populateStart = Date.now();
 
     const formattedPosts = await populateAuthorDetails(posts);
-    res.status(200).json({ success: true, data: formattedPosts });
+
+    const populateEnd = Date.now();
+    const totalTime = Date.now() - startTime;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[POST_CONTROLLER] getAllPosts - Total: ${totalTime}ms | DB: ${dbEnd - dbStart}ms | Populate: ${populateEnd - populateStart}ms | Posts: ${formattedPosts.length}`);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: formattedPosts,
+      pagination: { skip, limit, returned: formattedPosts.length, hasMore: formattedPosts.length === limit }
+    });
   } catch (error) {
     console.error('[POST_CONTROLLER] getAllPosts - error:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -201,9 +253,7 @@ export const likePost = async (req, res) => {
 
     await post.save();
 
-    const updatedPost = await Post.findById(post._id)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name');
+    const updatedPost = await Post.findById(post._id).lean();
 
     const formatted = await populateAuthorDetails([updatedPost]);
     res.status(200).json({ success: true, data: formatted[0] });
@@ -214,7 +264,6 @@ export const likePost = async (req, res) => {
 };
 
 // @desc    Comment on a post
-// @route   POST /api/posts/:postId/comment
 // @access  Private
 export const commentPost = async (req, res) => {
   try {
@@ -253,9 +302,7 @@ export const commentPost = async (req, res) => {
       });
     }
 
-    const updatedPost = await Post.findById(post._id)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name');
+    const updatedPost = await Post.findById(post._id).lean();
 
     const formatted = await populateAuthorDetails([updatedPost]);
     res.status(200).json({ success: true, data: formatted[0] });
@@ -308,10 +355,7 @@ export const replyToComment = async (req, res) => {
     comment.replies.push({ user: req.user._id, text });
     await post.save();
 
-    const updatedPost = await Post.findById(post._id)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name')
-      .populate('comments.replies.user', 'name');
+    const updatedPost = await Post.findById(post._id).lean();
 
     const formatted = await populateAuthorDetails([updatedPost]);
     res.status(200).json({ success: true, data: formatted[0] });
@@ -342,10 +386,7 @@ export const editComment = async (req, res) => {
     comment.text = text;
     await post.save();
 
-    const updatedPost = await Post.findById(post._id)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name')
-      .populate('comments.replies.user', 'name');
+    const updatedPost = await Post.findById(post._id).lean();
 
     const formatted = await populateAuthorDetails([updatedPost]);
     res.status(200).json({ success: true, data: formatted[0] });
@@ -373,10 +414,7 @@ export const deleteComment = async (req, res) => {
     post.comments.pull(req.params.commentId);
     await post.save();
 
-    const updatedPost = await Post.findById(post._id)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name')
-      .populate('comments.replies.user', 'name');
+    const updatedPost = await Post.findById(post._id).lean();
 
     const formatted = await populateAuthorDetails([updatedPost]);
     res.status(200).json({ success: true, data: formatted[0] });
@@ -410,10 +448,7 @@ export const editReply = async (req, res) => {
     reply.text = text;
     await post.save();
 
-    const updatedPost = await Post.findById(post._id)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name')
-      .populate('comments.replies.user', 'name');
+    const updatedPost = await Post.findById(post._id).lean();
 
     const formatted = await populateAuthorDetails([updatedPost]);
     res.status(200).json({ success: true, data: formatted[0] });
@@ -444,10 +479,7 @@ export const deleteReply = async (req, res) => {
     comment.replies.pull(req.params.replyId);
     await post.save();
 
-    const updatedPost = await Post.findById(post._id)
-      .populate('author', 'name email')
-      .populate('comments.user', 'name')
-      .populate('comments.replies.user', 'name');
+    const updatedPost = await Post.findById(post._id).lean();
 
     const formatted = await populateAuthorDetails([updatedPost]);
     res.status(200).json({ success: true, data: formatted[0] });

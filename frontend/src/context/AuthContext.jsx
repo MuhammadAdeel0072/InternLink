@@ -21,9 +21,14 @@ export const AuthProvider = ({ children }) => {
 
       if (storedToken && storedUser) {
         try {
+          // Immediately set user from localStorage so the app can render
+          // without waiting for the API call.
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
+          setLoading(false);
 
+          // Refresh user data from server in the background.
+          // If it fails, the app still works with the cached session.
           try {
             const res = await api.get('/auth/me');
             const freshUser = res.data?.data || res.data || parsedUser;
@@ -35,9 +40,11 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
           console.error('Session validation failed:', error);
           logout();
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initializeAuth();

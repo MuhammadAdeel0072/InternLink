@@ -14,6 +14,8 @@ const api = axios.create({
     'Content-Type': 'application/json'
   },
   withCredentials: true,
+  // Timeout prevents requests from hanging indefinitely
+  timeout: 15000, // 15 seconds
 });
 
 api.interceptors.request.use(

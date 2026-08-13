@@ -19,6 +19,11 @@ export const notificationService = {
     return data;
   },
 
+  async getUnreadCount() {
+    const { data } = await api.get('/notifications/unread/count');
+    return data;
+  },
+
   async getNotificationById(id) {
     const { data } = await api.get(`/notifications/${id}`);
     return data;

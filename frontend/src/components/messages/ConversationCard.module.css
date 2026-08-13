@@ -1,51 +1,52 @@
 .conversationCard {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
   cursor: pointer;
-  border: 1px solid transparent;
-  background-color: var(--bg-secondary);
+  border: none;
+  background-color: transparent;
   transition: all 0.15s ease;
   position: relative;
-  min-height: 68px;
+  min-height: auto;
   outline: none;
 }
 
 .conversationCard:hover {
-  border-color: var(--border-hover);
-  background-color: var(--bg-tertiary);
+  background-color: rgba(139, 92, 246, 0.08);
 }
 
 .conversationCardActive {
-  border: 1px solid var(--primary);
-  background-color: var(--primary-light);
+  border: none;
+  background-color: rgba(139, 92, 246, 0.15);
 }
 
 .conversationCardActive:hover {
-  background-color: var(--primary-light);
-  border-color: var(--primary);
+  background-color: rgba(139, 92, 246, 0.15);
+  border-color: transparent;
 }
 
 .avatarWrapper {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background-color: var(--bg-tertiary);
   overflow: hidden;
   flex-shrink: 0;
-  border: 2px solid var(--border-color);
-  transition: border-color 0.2s;
+  border: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .conversationCard:hover .avatarWrapper {
-  border-color: var(--border-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .conversationCardActive .avatarWrapper {
-  border-color: var(--primary);
+  border: none;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
 .avatarImage {
@@ -68,27 +69,24 @@
 
 .onlineIndicator {
   position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 12px;
-  height: 12px;
+  bottom: 0px;
+  right: 0px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  border: 2px solid var(--bg-secondary);
-  transition: border-color 0.2s;
+  border: 3px solid var(--bg-secondary);
+  transition: all 0.2s;
 }
 
 .onlineIndicator.online {
-  background-color: var(--success);
-  box-shadow: 0 0 0 2px var(--bg-tertiary);
+  background-color: #31a24c;
+  box-shadow: 0 0 0 2px var(--bg-secondary);
 }
 
 .onlineIndicator.offline {
-  background-color: var(--text-muted);
-  box-shadow: 0 0 0 2px var(--bg-tertiary);
-}
-
-.conversationCardActive .onlineIndicator {
-  border-color: var(--primary-light);
+  background-color: #9ca3af;
+  box-shadow: 0 0 0 2px var(--bg-secondary);
+  display: none;
 }
 
 .conversationContent {
@@ -106,38 +104,39 @@
 
 .conversationName {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .conversationNameUnread {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .conversationTime {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   flex-shrink: 0;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .conversationPreview {
   font-size: 0.85rem;
   font-weight: 400;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-top: 2px;
+  line-height: 1.3;
 }
 
 .conversationPreviewUnread {
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 .unreadBadge {

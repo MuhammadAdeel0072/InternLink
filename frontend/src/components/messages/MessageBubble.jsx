@@ -15,6 +15,7 @@ const MessageBubble = ({
   onReact,
   onEdit,
   onDelete,
+  onScrollToMessage,
   currentUserId,
   showAvatar = true,
   isGrouped = false,
@@ -133,9 +134,31 @@ const MessageBubble = ({
         className={`${styles.messageBubble} ${bubbleClass} ${bubbleRadiusClass}`}
         onMouseEnter={() => shouldShowMenu && setShowMenu(true)}
         onMouseLeave={() => shouldShowMenu && setShowMenu(false)}
+        onDoubleClick={() => onReply(message)}
+        role="button"
+        tabIndex={0}
+        aria-label={`Message from ${message.sender?.name || 'Unknown'}. Double-click to reply.`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onReply(message);
+          }
+        }}
       >
         {message.replyTo && (
-          <div className={styles.replyContainer}>
+          <div 
+            className={styles.replyContainer}
+            onClick={() => onScrollToMessage?.(message.replyTo.messageId)}
+            role="button"
+            tabIndex={0}
+            aria-label={`Jump to original message from ${message.replyTo.senderName}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onScrollToMessage?.(message.replyTo.messageId);
+              }
+            }}
+          >
             <div className={styles.replyBar} />
             <div className={styles.replyContent}>
               <span className={styles.replySender}>{message.replyTo.senderName || 'Unknown'}</span>

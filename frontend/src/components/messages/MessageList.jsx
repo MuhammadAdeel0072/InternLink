@@ -57,12 +57,22 @@ const MessageList = ({
   const containerRef = useRef(null);
   const bottomRef = useRef(null);
   const [showNewMessageButton, setShowNewMessageButton] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
   const prevMessageCountRef = useRef(0);
 
   const groupedMessages = groupMessagesByDate(messages);
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  const scrollToMessage = useCallback((messageId) => {
+    const element = document.getElementById(`message-${messageId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(messageId);
+      setTimeout(() => setHighlightedMessageId(null), 2000);
+    }
   }, []);
 
   const handleScroll = useCallback(() => {
@@ -117,21 +127,28 @@ const MessageList = ({
               group.messages[idx - 1]?.sender?.toString() === msg.sender?.toString() &&
               msg.isMine === group.messages[idx - 1]?.isMine;
             const showAvatar = shouldShowAvatar(msg, group.messages, idx);
+            const isHighlighted = highlightedMessageId === msg._id;
 
             return (
-              <MessageBubble
+              <div 
                 key={msg._id}
-                message={msg}
-                isMine={msg.isMine}
-                onReply={onReply}
-                onReact={onReact}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                currentUserId={currentUserId}
-                showAvatar={showAvatar}
-                isGrouped={isConsecutive}
-                showActions
-              />
+                id={`message-${msg._id}`}
+                className={isHighlighted ? styles.highlightedMessage : ''}
+              >
+                <MessageBubble
+                  message={msg}
+                  isMine={msg.isMine}
+                  onReply={onReply}
+                  onReact={onReact}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onScrollToMessage={scrollToMessage}
+                  currentUserId={currentUserId}
+                  showAvatar={showAvatar}
+                  isGrouped={isConsecutive}
+                  showActions
+                />
+              </div>
             );
           })}
         </div>

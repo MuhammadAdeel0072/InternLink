@@ -4,6 +4,7 @@
   gap: 8px;
   position: relative;
   animation: messageIn 0.2s ease;
+  margin: 2px 0;
 }
 
 @keyframes messageIn {
@@ -18,12 +19,14 @@
 }
 
 .messageWrapper.grouped {
-  margin-left: 32px;
+  margin-left: 40px;
+  margin-top: 2px;
 }
 
 .messageWrapperMine.grouped {
   margin-left: 0;
-  margin-right: 32px;
+  margin-right: 40px;
+  margin-top: 2px;
 }
 
 .messageWrapperMine {
@@ -35,28 +38,29 @@
 }
 
 .avatarPlaceholder {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-tertiary) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary);
+  color: #ffffff;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .messageBubble {
-  max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 20px;
-  box-shadow: var(--shadow-sm);
+  max-width: 65%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  box-shadow: none;
   position: relative;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  line-height: 1.5;
+  line-height: 1.4;
   transition: all 0.15s ease;
 }
 
@@ -71,30 +75,30 @@
 .messageBubbleMine {
   background-color: var(--primary);
   color: #ffffff;
-  border-radius: 20px 4px 20px 20px;
+  border-radius: 18px 4px 18px 18px;
 }
 
 .messageBubbleOther {
-  background-color: var(--bg-tertiary);
+  background-color: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
-  border-radius: 4px 20px 20px 20px;
-  border: 1px solid var(--border-color);
+  border-radius: 18px 18px 18px 4px;
+  border: none;
 }
 
 .messageBubbleDeleted {
-  background-color: var(--bg-tertiary);
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--text-muted);
   font-style: italic;
-  border: 1px dashed var(--border-color);
-  border-radius: 20px;
+  border: none;
+  border-radius: 18px;
 }
 
 .messageWrapper.grouped .messageBubble {
-  max-width: calc(70% - 32px);
+  max-width: 65%;
 }
 
 .messageWrapperMine .messageBubble {
-  max-width: 70%;
+  max-width: 65%;
 }
 
 .deletedText {
@@ -105,9 +109,10 @@
 
 .messageText {
   font-size: 0.95rem;
-  line-height: 1.5;
+  line-height: 1.4;
   margin: 0;
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .replyContainer {
@@ -117,6 +122,12 @@
   padding: 8px 10px;
   background-color: rgba(0, 0, 0, 0.15);
   border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.replyContainer:hover {
+  background-color: rgba(0, 0, 0, 0.25);
 }
 
 .replyBar {
@@ -232,22 +243,23 @@
   align-items: center;
   gap: 6px;
   justify-content: flex-end;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .messageTime {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 400;
 }
 
 .messageBubbleOther .messageTime {
   color: var(--text-muted);
+  font-size: 0.75rem;
 }
 
 .editedBadge {
   font-size: 0.65rem;
-  opacity: 0.7;
+  opacity: 0.6;
   font-style: italic;
 }
 

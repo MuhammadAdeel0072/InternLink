@@ -1,20 +1,20 @@
 .inputContainer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--border-color);
+  gap: 12px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   background-color: var(--bg-secondary);
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  border-radius: 0;
 }
 
 .replyPreview {
   display: flex;
   gap: 0;
-  background-color: var(--bg-tertiary);
+  background-color: rgba(139, 92, 246, 0.1);
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
 .replyPreviewBar {
@@ -33,7 +33,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .replyLabel {
@@ -59,13 +59,13 @@
 }
 
 .replyCancel:hover {
-  background-color: var(--bg-secondary);
+  background-color: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 
 .replyText {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 0.8rem;
+  color: var(--text-muted);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -76,10 +76,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 
 .attachmentPreviewContent {
@@ -94,7 +94,7 @@
   width: 40px;
   height: 40px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .attachmentIcon {
@@ -103,8 +103,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
+  background-color: rgba(139, 92, 246, 0.2);
+  border-radius: 6px;
   color: var(--primary);
 }
 
@@ -131,47 +131,46 @@
 
 .attachmentRemove:hover {
   color: var(--danger);
-  background-color: var(--bg-secondary);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 .inputForm {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
 .inputActions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   position: relative;
 }
 
 .actionBtn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: var(--bg-tertiary);
-  color: var(--text-secondary);
+  background-color: transparent;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-color);
+  border: none;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .actionBtn:hover {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  border-color: var(--border-hover);
+  background-color: rgba(139, 92, 246, 0.1);
+  color: var(--primary);
 }
 
 .actionBtnActive {
-  background-color: var(--primary-light);
+  background-color: rgba(139, 92, 246, 0.15);
   color: var(--primary);
-  border-color: var(--primary);
+  border: none;
 }
 
 .hiddenFileInput {
@@ -184,24 +183,25 @@
 
 .textInput {
   flex: 1;
-  padding: 12px 18px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-tertiary);
+  padding: 11px 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
   font-size: 0.95rem;
   outline: none;
   transition: all 0.2s;
-  min-height: 40px;
+  min-height: 36px;
   max-height: 140px;
   width: 0;
   flex-grow: 1;
+  font-family: inherit;
 }
 
 .textInput:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
-  background-color: var(--bg-secondary);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
 .textInput::placeholder {
@@ -209,8 +209,8 @@
 }
 
 .sendButton {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background-color: var(--primary);
   color: #ffffff;
@@ -221,21 +221,23 @@
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
 
 .sendButton:hover:not(:disabled) {
   background-color: var(--primary-hover);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
 }
 
 .sendButtonDisabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
 }
 
 .sendButton:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
 }

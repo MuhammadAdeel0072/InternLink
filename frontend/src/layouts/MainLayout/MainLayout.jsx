@@ -105,13 +105,21 @@ const MainLayout = ({ children }) => {
   useEffect(() => {
     const fetchHeaderData = async () => {
       try {
-         const notifRes = await api.get('/notifications');
-        const notifications = notifRes.data.data || notifRes.data || [];
-        const unread = Array.isArray(notifications) ? notifications.filter((n) => !n.isRead).length : 0;
-        setUnreadNotifications(unread);
+        // Parallel: fetch unread notification count and profile avatar simultaneously
+        // instead of sequentially awaiting each request.
+        const [countRes, profileRes] = await Promise.allSettled([
+          api.get('/notifications/unread/count'),
+          api.get('/profile/me')
+        ]);
 
-        const profileRes = await api.get('/profile/me');
-        setUserAvatar(profileRes.data.avatar || '');
+        if (countRes.status === 'fulfilled') {
+          const countData = countRes.value.data;
+          setUnreadNotifications(countData.count || countData || 0);
+        }
+
+        if (profileRes.status === 'fulfilled') {
+          setUserAvatar(profileRes.value.data.avatar || '');
+        }
       } catch (err) {
         console.error('Failed to load header details:', err);
       }

@@ -7,6 +7,22 @@ import {
   createNotification
 } from '../services/notificationService.js';
 
+// @desc    Get unread notification count (lightweight, for header badge)
+// @route   GET /api/notifications/unread/count
+// @access  Private
+export const getUnreadCount = async (req, res) => {
+  try {
+    const count = await Notification.countDocuments({
+      recipient: req.user._id,
+      isRead: false,
+      isDeleted: false
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get user's notifications with filters
 // @route   GET /api/notifications
 // @access  Private
@@ -35,34 +51,51 @@ export const getNotifications = async (req, res) => {
       .populate('sender', 'name email')
       .sort(sortOption)
       .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit));
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .lean();
 
-    const formatted = await Promise.all(
-      notifications.map(async (notif) => {
-        const senderProfile = await Profile.findOne({ user: notif.sender }).select('avatar');
-        return {
-          _id: notif._id,
-          recipient: notif.recipient,
-          type: notif.type,
-          category: notif.category,
-          priority: notif.priority,
-          title: notif.title,
-          message: notif.message,
-          isRead: notif.isRead,
-          isDeleted: notif.isDeleted,
-          entityId: notif.entityId,
-          entityType: notif.entityType,
-          createdAt: notif.createdAt,
-          updatedAt: notif.updatedAt,
-          sender: {
-            _id: notif.sender._id,
-            name: notif.sender.name,
-            email: notif.sender.email,
-            avatar: senderProfile?.avatar || ''
-          }
-        };
-      })
-    );
+    // Batch-fetch all sender profiles in one query instead of per-notification N+1
+    const senderIds = notifications
+      .map(n => n.sender?._id || n.sender)
+      .filter(Boolean);
+
+    let profileMap = {};
+    if (senderIds.length > 0) {
+      const profiles = await Profile.find({ user: { $in: senderIds } })
+        .select('user avatar')
+        .lean();
+      profileMap = Object.fromEntries(
+        profiles.filter(p => p.user).map(p => [p.user.toString(), p])
+      );
+    }
+
+    const formatted = notifications.map((notif) => {
+      const senderId = notif.sender?._id || notif.sender;
+      const senderIdStr = senderId ? senderId.toString() : null;
+      const senderProfile = profileMap[senderIdStr] || {};
+
+      return {
+        _id: notif._id,
+        recipient: notif.recipient,
+        type: notif.type,
+        category: notif.category,
+        priority: notif.priority,
+        title: notif.title,
+        message: notif.message,
+        isRead: notif.isRead,
+        isDeleted: notif.isDeleted,
+        entityId: notif.entityId,
+        entityType: notif.entityType,
+        createdAt: notif.createdAt,
+        updatedAt: notif.updatedAt,
+        sender: {
+          _id: senderIdStr || null,
+          name: notif.sender?.name || 'User',
+          email: notif.sender?.email || '',
+          avatar: senderProfile?.avatar || ''
+        }
+      };
+    });
 
     const total = await Notification.countDocuments(query);
 
@@ -93,31 +126,48 @@ export const getUnreadNotifications = async (req, res) => {
     })
       .populate('sender', 'name email')
       .sort({ createdAt: -1 })
-      .limit(50);
+      .limit(50)
+      .lean();
 
-    const formatted = await Promise.all(
-      notifications.map(async (notif) => {
-        const senderProfile = await Profile.findOne({ user: notif.sender }).select('avatar');
-        return {
-          _id: notif._id,
-          type: notif.type,
-          category: notif.category,
-          priority: notif.priority,
-          title: notif.title,
-          message: notif.message,
-          isRead: notif.isRead,
-          entityId: notif.entityId,
-          entityType: notif.entityType,
-          createdAt: notif.createdAt,
-          sender: {
-            _id: notif.sender._id,
-            name: notif.sender.name,
-            email: notif.sender.email,
-            avatar: senderProfile?.avatar || ''
-          }
-        };
-      })
-    );
+    // Batch-fetch sender profiles
+    const senderIds = notifications
+      .map(n => n.sender?._id || n.sender)
+      .filter(Boolean);
+
+    let profileMap = {};
+    if (senderIds.length > 0) {
+      const profiles = await Profile.find({ user: { $in: senderIds } })
+        .select('user avatar')
+        .lean();
+      profileMap = Object.fromEntries(
+        profiles.filter(p => p.user).map(p => [p.user.toString(), p])
+      );
+    }
+
+    const formatted = notifications.map((notif) => {
+      const senderId = notif.sender?._id || notif.sender;
+      const senderIdStr = senderId ? senderId.toString() : null;
+      const senderProfile = profileMap[senderIdStr] || {};
+
+      return {
+        _id: notif._id,
+        type: notif.type,
+        category: notif.category,
+        priority: notif.priority,
+        title: notif.title,
+        message: notif.message,
+        isRead: notif.isRead,
+        entityId: notif.entityId,
+        entityType: notif.entityType,
+        createdAt: notif.createdAt,
+        sender: {
+          _id: senderIdStr || null,
+          name: notif.sender?.name || 'User',
+          email: notif.sender?.email || '',
+          avatar: senderProfile?.avatar || ''
+        }
+      };
+    });
 
     res.status(200).json(formatted);
   } catch (error) {
@@ -131,7 +181,8 @@ export const getUnreadNotifications = async (req, res) => {
 export const getNotificationById = async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id)
-      .populate('sender', 'name email');
+      .populate('sender', 'name email')
+      .lean();
 
     if (!notification) {
       return res.status(404).json({ message: 'Notification not found' });
@@ -141,7 +192,10 @@ export const getNotificationById = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    const senderProfile = await Profile.findOne({ user: notification.sender }).select('avatar');
+    const senderId = notification.sender?._id;
+    const senderProfile = senderId
+      ? await Profile.findOne({ user: senderId }).select('avatar').lean()
+      : null;
 
     res.status(200).json({
       _id: notification._id,
@@ -157,9 +211,9 @@ export const getNotificationById = async (req, res) => {
       createdAt: notification.createdAt,
       updatedAt: notification.updatedAt,
       sender: {
-        _id: notification.sender._id,
-        name: notification.sender.name,
-        email: notification.sender.email,
+        _id: senderId?.toString() || null,
+        name: notification.sender?.name || 'User',
+        email: notification.sender?.email || '',
         avatar: senderProfile?.avatar || ''
       }
     });

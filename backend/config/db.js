@@ -11,7 +11,17 @@ const connectDB = async () => {
   while (retries < MAX_RETRIES) {
     try {
       const conn = await mongoose.connect(
-        process.env.MONGO_URI || "mongodb://localhost:27017/internlink"
+        process.env.MONGO_URI || "mongodb://localhost:27017/internlink",
+        {
+          // Connection pooling — reuse connections across requests instead of
+          // opening a new connection per request.
+          maxPoolSize: 50,          // Maximum number of concurrent connections
+          minPoolSize: 5,           // Maintain at least 5 idle connections
+          serverSelectionTimeoutMS: 5000,  // Timeout after 5s instead of 30s default
+          socketTimeoutMS: 45000,         // Close sockets after 45s of inactivity
+          // Buffer commands when connection is not yet established
+          bufferCommands: true,
+        }
       );
 
       console.log(`✅ MongoDB Connected: ${conn.connection.host}`);

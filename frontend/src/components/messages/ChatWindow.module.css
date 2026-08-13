@@ -25,8 +25,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   background-color: var(--bg-secondary);
   flex-shrink: 0;
 }
@@ -34,7 +34,7 @@
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
 }
@@ -48,45 +48,46 @@
   display: none;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   transition: all 0.2s;
 }
 
 .backButton:hover {
-  background-color: var(--bg-tertiary);
+  background-color: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 
 .headerUserInfo {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
   cursor: pointer;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   padding: 4px 8px;
   transition: background-color 0.15s ease;
 }
 
 .headerUserInfo:hover {
-  background-color: var(--bg-tertiary);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .headerAvatar {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   background-color: var(--bg-tertiary);
-  border: 2px solid var(--border-color);
-  transition: border-color 0.2s;
+  border: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .headerAvatarOnline {
-  border-color: var(--success);
+  box-shadow: 0 2px 8px rgba(49, 162, 76, 0.3);
 }
 
 .headerAvatar img {
@@ -111,19 +112,20 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
-  border: 2px solid var(--bg-secondary);
+  border: 3px solid var(--bg-secondary);
   box-sizing: border-box;
 }
 
 .statusOnline {
-  background-color: var(--success);
+  background-color: #31a24c;
 }
 
 .statusOffline {
-  background-color: var(--text-muted);
+  background-color: #9ca3af;
+  display: none;
 }
 
 .headerDetails {
@@ -147,18 +149,18 @@
   font-size: 0.8rem;
   color: var(--text-muted);
   margin: 2px 0 0;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .headerBtn {
   padding: 8px;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   background: none;
   border: none;
   color: var(--text-muted);
@@ -167,17 +169,19 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  width: 36px;
+  height: 36px;
 }
 
 .headerBtn:hover {
-  background-color: var(--bg-tertiary);
+  background-color: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 
 .headerBtnActive {
-  background-color: var(--primary-light);
+  background-color: rgba(139, 92, 246, 0.15);
   color: var(--primary);
-  border: 1px solid var(--primary);
+  border: none;
 }
 
 .searchBox {

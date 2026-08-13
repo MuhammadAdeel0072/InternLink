@@ -381,7 +381,7 @@ const Feed = memo(() => {
                     className={styles.authorAvatar}
                   >
                     {post.author.avatar ? (
-                      <img src={post.author.avatar} alt="" />
+                      <img src={post.author.avatar} alt="" loading="lazy" />
                     ) : (
                       <div className={styles.authorAvatarFallback}>
                         {post.author.name.charAt(0).toUpperCase()}
@@ -420,7 +420,7 @@ const Feed = memo(() => {
               {/* Post Image */}
               {post.image && (
                 <div className={styles.postImage}>
-                  <img src={post.image} alt="" />
+                  <img src={post.image} alt="" loading="lazy" />
                 </div>
               )}
 
