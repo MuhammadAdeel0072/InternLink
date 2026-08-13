@@ -56,13 +56,27 @@ export const buildConversationPayload = async (conversation, currentUserId) => {
   const otherProfile = await Profile.findOne({ user: otherUser._id }).select('avatar headline currentStatus');
   const otherUserFull = await User.findById(otherUser._id).select('name email role');
 
+  const userIdStr = currentUserId.toString();
+  const isPinned = Boolean(
+    (conversation.pinnedBy && conversation.pinnedBy.some((id) => id.toString() === userIdStr)) ||
+    conversation.isPinned
+  );
+  const isArchived = Boolean(
+    (conversation.archivedBy && conversation.archivedBy.some((id) => id.toString() === userIdStr)) ||
+    conversation.isArchived
+  );
+  const isMuted = Boolean(
+    (conversation.mutedBy && conversation.mutedBy.some((id) => id.toString() === userIdStr)) ||
+    conversation.isMuted
+  );
+
   return {
     _id: conversation._id,
     lastMessage: conversation.lastMessage,
     lastMessageAt: conversation.lastMessageAt,
-    isArchived: conversation.isArchived,
-    isPinned: conversation.isPinned,
-    isMuted: conversation.isMuted,
+    isArchived,
+    isPinned,
+    isMuted,
     mutedUntil: conversation.mutedUntil,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
@@ -79,8 +93,10 @@ export const buildConversationPayload = async (conversation, currentUserId) => {
 };
 
 export const buildMessagePayload = async (message, currentUserId) => {
-  const isMine = message.sender.toString() === currentUserId.toString();
-  const isDeletedForMe = message.deletedFor.includes(currentUserId);
+  const isMine = message.sender?._id
+    ? message.sender._id.toString() === currentUserId.toString()
+    : message.sender?.toString() === currentUserId.toString();
+  const isDeletedForMe = message.deletedFor?.some((id) => id.toString() === currentUserId.toString());
 
   if (isDeletedForMe) return null;
 
@@ -143,8 +159,14 @@ export const sendMessageNotification = async ({
   return notification;
 };
 
-export const checkMuteStatus = (conversation) => {
-  if (!conversation.isMuted) return false;
+export const checkMuteStatus = (conversation, userId) => {
+  const userIdStr = userId ? userId.toString() : null;
+  const isMuted = Boolean(
+    (userIdStr && conversation.mutedBy && conversation.mutedBy.some((id) => id.toString() === userIdStr)) ||
+    conversation.isMuted
+  );
+
+  if (!isMuted) return false;
   if (conversation.mutedUntil && new Date() > new Date(conversation.mutedUntil)) {
     return false;
   }

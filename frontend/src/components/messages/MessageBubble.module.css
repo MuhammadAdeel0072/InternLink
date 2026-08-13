@@ -264,16 +264,17 @@
 }
 
 .statusSent {
-  opacity: 0.6;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .statusDelivered {
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .statusRead {
-  color: var(--success);
-  font-weight: 700;
+  color: #38bdf8 !important;
+  font-weight: bold;
+  filter: drop-shadow(0 0 3px rgba(56, 189, 248, 0.6));
 }
 
 .statusDefault {

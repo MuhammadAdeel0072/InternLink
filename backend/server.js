@@ -79,11 +79,14 @@ const userSocketMap = new Map();
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-   socket.on('register', (userId) => {
+  socket.on('register', (userId) => {
     if (userId) {
       userSocketMap.set(userId, socket.id);
       console.log(`Registered user ${userId} to socket ${socket.id}`);
       socket.broadcast.emit('user:online', { userId });
+      // Emit online user IDs to the newly registered socket
+      const onlineUserIds = Array.from(userSocketMap.keys());
+      socket.emit('users:online_list', { onlineUserIds });
     }
   });
 
@@ -96,6 +99,18 @@ io.on('connection', (socket) => {
         message,
         senderId: message.sender?._id || message.sender
       });
+    }
+  });
+
+  socket.on('message:delivered', async ({ conversationId, messageId, senderId }) => {
+    try {
+      await Message.findByIdAndUpdate(messageId, { status: 'delivered', deliveredAt: new Date() });
+      const senderSocketId = userSocketMap.get(senderId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit('message:delivered', { conversationId, messageId, status: 'delivered' });
+      }
+    } catch (error) {
+      console.error('Error marking message delivered:', error);
     }
   });
 
@@ -136,13 +151,29 @@ io.on('connection', (socket) => {
 
   socket.on('message:seen', async ({ conversationId, userId, messageIds }) => {
     try {
+      const updateQuery = {
+        conversation: conversationId,
+        sender: { $ne: userId },
+        status: { $ne: 'read' }
+      };
+      if (Array.isArray(messageIds) && messageIds.length > 0) {
+        updateQuery._id = { $in: messageIds };
+      }
+
       await Message.updateMany(
-        { _id: { $in: messageIds }, sender: { $ne: userId } },
-        { status: 'read' }
+        updateQuery,
+        { status: 'read', readAt: new Date() }
       );
-      const recipientSocketId = userSocketMap.get(userId);
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit('message:seen', { conversationId, messageIds });
+
+      const conversation = await Conversation.findById(conversationId);
+      if (conversation) {
+        const senderId = conversation.participants.find((p) => p.toString() !== userId.toString());
+        if (senderId) {
+          const senderSocketId = userSocketMap.get(senderId.toString());
+          if (senderSocketId) {
+            io.to(senderSocketId).emit('message:seen', { conversationId, messageIds: messageIds || [] });
+          }
+        }
       }
     } catch (error) {
       console.error('Error marking messages as seen:', error);

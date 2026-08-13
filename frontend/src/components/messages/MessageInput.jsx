@@ -140,48 +140,48 @@ const MessageInput = ({
       )}
 
       <form onSubmit={handleSubmit} className={styles.inputForm}>
-        <div className={styles.inputActions}>
-          <label className={styles.actionBtn} title="Attach file" aria-label="Attach file">
-            <input
-              type="file"
-              onChange={handleFileChange}
-              accept="image/*,.pdf,.doc,.docx,.zip"
-              className={styles.hiddenFileInput}
-              aria-hidden="true"
-            />
-            <Paperclip size={18} />
-          </label>
+        <label className={styles.attachmentBtn} title="Attach file" aria-label="Attach file">
+          <input
+            type="file"
+            onChange={handleFileChange}
+            accept="image/*,.pdf,.doc,.docx,.zip"
+            className={styles.hiddenFileInput}
+            aria-hidden="true"
+          />
+          <Paperclip size={20} />
+        </label>
+
+        <div className={styles.inputBox}>
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={handleTextChange}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className={styles.textInput}
+            disabled={sending}
+            rows={1}
+            aria-label="Message input"
+            style={{ resize: 'none' }}
+            onInput={(e) => {
+              e.target.style.height = 'auto';
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }}
+          />
 
           <div className={styles.emojiWrapper} ref={emojiRef}>
             <button
               type="button"
               onClick={() => setShowEmoji(!showEmoji)}
-              className={`${styles.actionBtn} ${showEmoji ? styles.actionBtnActive : ''}`}
+              className={`${styles.emojiBtn} ${showEmoji ? styles.emojiBtnActive : ''}`}
               title="Emoji"
               aria-label="Insert emoji"
             >
-              <Smile size={18} />
+              <Smile size={20} />
             </button>
             {showEmoji && <EmojiPicker onEmojiClick={handleEmoji} onClose={() => setShowEmoji(false)} />}
           </div>
         </div>
-
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={handleTextChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className={styles.textInput}
-          disabled={sending}
-          rows={1}
-          aria-label="Message input"
-          style={{ resize: 'none', overflow: 'hidden' }}
-          onInput={(e) => {
-            e.target.style.height = 'auto';
-            e.target.style.height = `${e.target.scrollHeight}px`;
-          }}
-        />
 
         <button
           type="submit"

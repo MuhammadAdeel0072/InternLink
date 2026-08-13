@@ -2,90 +2,86 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
   cursor: pointer;
   border: none;
   background-color: transparent;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  min-height: auto;
+  margin-bottom: 2px;
   outline: none;
 }
 
 .conversationCard:hover {
-  background-color: rgba(139, 92, 246, 0.08);
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 .conversationCardActive {
-  border: none;
-  background-color: rgba(139, 92, 246, 0.15);
+  background-color: rgba(124, 58, 237, 0.18) !important;
 }
 
-.conversationCardActive:hover {
-  background-color: rgba(139, 92, 246, 0.15);
-  border-color: transparent;
+.conversationCardActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background-color: var(--primary, #7c3aed);
 }
 
 .avatarWrapper {
   position: relative;
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background-color: var(--bg-tertiary);
-  overflow: hidden;
+  overflow: visible;
   flex-shrink: 0;
-  border: none;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.conversationCard:hover .avatarWrapper {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.conversationCardActive .avatarWrapper {
-  border: none;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .avatarImage {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
 }
 
 .avatarFallback {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary);
+  color: #ffffff;
   font-weight: 700;
   font-size: 1.1rem;
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-tertiary) 100%);
+  background: linear-gradient(135deg, var(--primary, #7c3aed) 0%, #4c1d95 100%);
 }
 
 .onlineIndicator {
   position: absolute;
-  bottom: 0px;
-  right: 0px;
-  width: 14px;
-  height: 14px;
+  bottom: 1px;
+  right: 1px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
-  border: 3px solid var(--bg-secondary);
+  border: 2px solid var(--bg-secondary, #0f172a);
   transition: all 0.2s;
+  z-index: 2;
 }
 
 .onlineIndicator.online {
-  background-color: #31a24c;
-  box-shadow: 0 0 0 2px var(--bg-secondary);
+  background-color: #22c55e;
+  box-shadow: 0 0 0 2px var(--bg-secondary, #0f172a);
 }
 
 .onlineIndicator.offline {
-  background-color: #9ca3af;
-  box-shadow: 0 0 0 2px var(--bg-secondary);
+  background-color: #64748b;
   display: none;
 }
 
@@ -99,7 +95,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .conversationName {
@@ -109,47 +105,48 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-primary);
+  margin: 0;
 }
 
 .conversationNameUnread {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 .conversationTime {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   flex-shrink: 0;
   font-weight: 400;
 }
 
 .conversationPreview {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 400;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-top: 2px;
+  margin: 2px 0 0;
   line-height: 1.3;
 }
 
 .conversationPreviewUnread {
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .unreadBadge {
-  background-color: var(--primary);
+  background-color: var(--primary, #7c3aed);
   color: #ffffff;
-  border-radius: 20px;
-  padding: 2px 8px;
-  font-size: 0.75rem;
+  border-radius: 9999px;
+  padding: 2px 7px;
+  font-size: 0.72rem;
   font-weight: 700;
-  min-width: 24px;
+  min-width: 20px;
   text-align: center;
   flex-shrink: 0;
-  box-shadow: 0 0 0 3px var(--primary-light);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.4);
 }
 
 .pinnedBadge {

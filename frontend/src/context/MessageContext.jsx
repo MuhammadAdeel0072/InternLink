@@ -18,6 +18,8 @@ export const MessageProvider = ({ children }) => {
   const { user } = useAuth();
   const pendingMessagesRef = useRef(new Map());
 
+  const [hasMore, setHasMore] = useState(false);
+
   const computeUnreadCounts = useCallback((convs, msgs = []) => {
     const counts = {};
     convs.forEach((conv) => {
@@ -36,8 +38,6 @@ export const MessageProvider = ({ children }) => {
       setLoading(true);
       const data = await messageService.getConversations(filter, search);
       setConversations(data);
-      const counts = {};
-      data.forEach((conv) => { counts[conv._id] = conv.unreadCount || 0; });
       return data;
     } catch (error) {
       console.error('Failed to load conversations:', error);
@@ -51,9 +51,19 @@ export const MessageProvider = ({ children }) => {
     try {
       setMessagesLoading(true);
       const response = await messageService.getMessages(conversationId, limit, before);
-      const data = response.messages || response;
-      setMessages(data);
-      return data;
+      const fetched = response.messages || (Array.isArray(response) ? response : []);
+      setHasMore(Boolean(response.hasMore));
+
+      if (before) {
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m._id));
+          const newMsgs = fetched.filter((m) => !existingIds.has(m._id));
+          return [...newMsgs, ...prev];
+        });
+      } else {
+        setMessages(fetched);
+      }
+      return fetched;
     } catch (error) {
       console.error('Failed to fetch messages:', error);
       return [];
@@ -73,8 +83,8 @@ export const MessageProvider = ({ children }) => {
       _id: tempId,
       conversation: conversationId,
       sender: user._id,
-      message: trimmedText,
-      messageType: attachment ? 'image' : 'text',
+      message: trimmedText || '',
+      messageType: attachment ? (attachment.type.startsWith('image/') ? 'image' : 'document') : 'text',
       attachments: attachment ? [{ url: URL.createObjectURL(attachment), type: attachment.type, name: attachment.name, size: attachment.size }] : [],
       replyTo,
       reactions: [],
@@ -95,13 +105,13 @@ export const MessageProvider = ({ children }) => {
         c._id === conversationId
           ? {
               ...c,
-              lastMessage: trimmedText || '[Attachment]',
+              lastMessage: trimmedText || (attachment ? '[Attachment]' : ''),
               lastMessageAt: new Date().toISOString()
             }
           : c
       );
       return updated.sort((a, b) => {
-        if (a.isPinned !== b.isPinned) return b.isPinned - a.isPinned;
+        if (a.isPinned !== b.isPinned) return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
         return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
       });
     });
@@ -122,15 +132,10 @@ export const MessageProvider = ({ children }) => {
       setMessages((prev) =>
         prev.map((msg) =>
           msg._id === tempId
-            ? { ...msg, status: 'failed', _id: tempId, error: true }
+            ? { ...msg, status: 'failed', error: true }
             : msg
         )
       );
-
-      setTimeout(() => {
-        setMessages((prev) => prev.filter((msg) => msg._id !== tempId));
-        pendingMessagesRef.current.delete(tempId);
-      }, 5000);
 
       throw error;
     }
@@ -141,7 +146,9 @@ export const MessageProvider = ({ children }) => {
       await messageService.markAsRead(conversationId, messageIds);
       setMessages((prev) =>
         prev.map((msg) =>
-          messageIds.includes(msg._id) ? { ...msg, status: 'read' } : msg
+          (!messageIds || messageIds.length === 0 || messageIds.includes(msg._id))
+            ? { ...msg, status: 'read' }
+            : msg
         )
       );
     } catch (error) {
@@ -170,7 +177,7 @@ export const MessageProvider = ({ children }) => {
           msg._id === messageId
             ? deleteForEveryone
               ? { ...msg, deleted: true, message: 'This message was deleted', attachments: [] }
-              : { ...msg, deletedFor: [...msg.deletedFor, user._id] }
+              : { ...msg, deletedFor: [...(msg.deletedFor || []), user._id] }
             : msg
         )
       );
@@ -214,7 +221,7 @@ export const MessageProvider = ({ children }) => {
           c._id === conversationId ? { ...c, isPinned: data.isPinned } : c
         );
         return updated.sort((a, b) => {
-          if (a.isPinned !== b.isPinned) return b.isPinned - a.isPinned;
+          if (a.isPinned !== b.isPinned) return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
           return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
         });
       });
@@ -289,6 +296,8 @@ export const MessageProvider = ({ children }) => {
     const handleNewMessage = ({ conversationId, message }) => {
       setMessages((prev) => {
         if (activeConversation && conversationId === activeConversation._id) {
+          const exists = prev.some((m) => m._id === message._id);
+          if (exists) return prev.map((m) => (m._id === message._id ? message : m));
           return [...prev, message];
         }
         return prev;
@@ -302,25 +311,57 @@ export const MessageProvider = ({ children }) => {
               ? {
                   ...c,
                   lastMessage: message.message || '[Attachment]',
-                  lastMessageAt: message.createdAt,
+                  lastMessageAt: message.createdAt || new Date().toISOString(),
                   unreadCount: activeConversation?._id === conversationId
                     ? c.unreadCount
                     : (c.unreadCount || 0) + 1
                 }
               : c
           ).sort((a, b) => {
-            if (a.isPinned !== b.isPinned) return b.isPinned - a.isPinned;
+            if (a.isPinned !== b.isPinned) return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
             return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
           });
+        } else {
+          fetchConversations();
+          return prev;
         }
-        return prev;
       });
 
       if (activeConversation && conversationId === activeConversation._id) {
         clearUnread(conversationId);
+        const senderId = message.sender?._id || message.sender;
+        if (senderId && senderId.toString() !== user._id.toString()) {
+          markAsRead(conversationId, [message._id]);
+        }
       } else {
         incrementUnread(conversationId);
       }
+    };
+
+    const handleDelivered = ({ conversationId, messageId }) => {
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg._id === messageId || (msg.conversation === conversationId && msg.status === 'sent')) {
+            if (msg.status !== 'read') {
+              return { ...msg, status: 'delivered' };
+            }
+          }
+          return msg;
+        })
+      );
+    };
+
+    const handleSeen = ({ conversationId, messageIds }) => {
+      setMessages((prev) =>
+        prev.map((msg) => {
+          const isTarget = (!messageIds || messageIds.length === 0 || messageIds.includes(msg._id)) &&
+            msg.conversation?.toString() === conversationId?.toString();
+          if (isTarget) {
+            return { ...msg, status: 'read' };
+          }
+          return msg;
+        })
+      );
     };
 
     const handleTyping = ({ conversationId, userId }) => {
@@ -335,16 +376,6 @@ export const MessageProvider = ({ children }) => {
         }
         return updated;
       });
-    };
-
-    const handleSeen = ({ conversationId }) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.conversation?.toString() === conversationId?.toString() && msg.status !== 'read'
-            ? { ...msg, status: 'read' }
-            : msg
-        )
-      );
     };
 
     const handleReaction = ({ messageId, reactions }) => {
@@ -376,6 +407,7 @@ export const MessageProvider = ({ children }) => {
     };
 
     socket.on('message:new', handleNewMessage);
+    socket.on('message:delivered', handleDelivered);
     socket.on('message:typing', handleTyping);
     socket.on('message:stopTyping', handleStopTyping);
     socket.on('message:seen', handleSeen);
@@ -392,6 +424,7 @@ export const MessageProvider = ({ children }) => {
 
     return () => {
       socket.off('message:new', handleNewMessage);
+      socket.off('message:delivered', handleDelivered);
       socket.off('message:typing', handleTyping);
       socket.off('message:stopTyping', handleStopTyping);
       socket.off('message:seen', handleSeen);
@@ -401,7 +434,7 @@ export const MessageProvider = ({ children }) => {
       socket.off('conversation:update', handleConversationUpdate);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [socket, user, activeConversation, incrementUnread, clearUnread]);
+  }, [socket, user, activeConversation, incrementUnread, clearUnread, fetchConversations, markAsRead]);
 
   const value = {
     conversations,
@@ -411,6 +444,7 @@ export const MessageProvider = ({ children }) => {
     setMessages,
     loading,
     messagesLoading,
+    hasMore,
     typingUsers,
     socketConnected,
     sendMessageError,

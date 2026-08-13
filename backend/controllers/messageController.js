@@ -44,19 +44,30 @@ export const getConversations = async (req, res) => {
     if (filter === 'unread') {
       query = {
         participants: userId,
+        archivedBy: { $ne: userId },
         isArchived: { $ne: true }
       };
     } else if (filter === 'archived') {
-      query = { participants: userId, isArchived: true };
+      query = {
+        participants: userId,
+        $or: [{ archivedBy: userId }, { isArchived: true }]
+      };
     } else if (filter === 'pinned') {
-      query = { participants: userId, isPinned: true };
+      query = {
+        participants: userId,
+        $or: [{ pinnedBy: userId }, { isPinned: true }]
+      };
     } else {
-      query = { participants: userId, isArchived: { $ne: true } };
+      query = {
+        participants: userId,
+        archivedBy: { $ne: userId },
+        isArchived: { $ne: true }
+      };
     }
 
     let conversations = await Conversation.find(query)
       .populate('participants', 'name email role')
-      .sort({ isPinned: -1, updatedAt: -1 });
+      .sort({ updatedAt: -1 });
 
     if (search) {
       const searchLower = search.toLowerCase();
@@ -180,9 +191,10 @@ export const sendMessage = async (req, res) => {
       return res.status(403).json({ message: 'This conversation is muted' });
     }
 
-    const receiverId = conversation.participants.find(
-      (p) => p.toString() !== userId.toString()
-    );
+    const recipientSocketId = req.userSocketMap ? req.userSocketMap.get(receiverId.toString()) : null;
+    const isRecipientOnline = Boolean(recipientSocketId);
+    const initialStatus = isRecipientOnline ? 'delivered' : 'sent';
+    const deliveredAt = isRecipientOnline ? new Date() : null;
 
     let attachments = [];
     let messageType = 'text';
@@ -207,7 +219,7 @@ export const sendMessage = async (req, res) => {
     let replyTo = null;
     if (req.body.replyTo) {
       try {
-        replyTo = JSON.parse(req.body.replyTo);
+        replyTo = typeof req.body.replyTo === 'string' ? JSON.parse(req.body.replyTo) : req.body.replyTo;
       } catch (e) {
         replyTo = null;
       }
@@ -221,7 +233,8 @@ export const sendMessage = async (req, res) => {
       messageType,
       attachments,
       replyTo,
-      status: 'sent'
+      status: initialStatus,
+      deliveredAt
     });
 
     conversation.lastMessage = text || (messageType === 'image' ? '[Image]' : messageType === 'resume' ? '[Resume]' : '[Attachment]');
@@ -232,7 +245,7 @@ export const sendMessage = async (req, res) => {
     const payload = await buildMessagePayload(populatedMessage, userId);
 
     if (req.io && req.userSocketMap) {
-      const recipientSocketId = req.userSocketMap.get(receiverId.toString());
+      const senderSocketId = req.userSocketMap.get(userId.toString());
       if (recipientSocketId) {
         const recipientPayload = await buildMessagePayload(populatedMessage, receiverId);
         req.io.to(recipientSocketId).emit('message:new', {
@@ -244,6 +257,14 @@ export const sendMessage = async (req, res) => {
           conversationId,
           lastMessage: conversation.lastMessage,
           lastMessageAt: conversation.lastMessageAt
+        });
+      }
+
+      if (isRecipientOnline && senderSocketId) {
+        req.io.to(senderSocketId).emit('message:delivered', {
+          conversationId,
+          messageId: message._id,
+          status: 'delivered'
         });
       }
     }
@@ -272,17 +293,37 @@ export const markMessagesAsRead = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
+    const filterQuery = {
+      conversation: conversationId,
+      sender: { $ne: userId },
+      status: { $in: ['sent', 'delivered'] }
+    };
+
+    if (Array.isArray(messageIds) && messageIds.length > 0) {
+      filterQuery._id = { $in: messageIds };
+    }
+
     const result = await Message.updateMany(
-      {
-        _id: { $in: messageIds },
-        sender: { $ne: userId },
-        status: { $in: ['sent', 'delivered'] }
-      },
+      filterQuery,
       {
         status: 'read',
         readAt: new Date()
       }
     );
+
+    const otherUser = conversation.participants.find(
+      (p) => p.toString() !== userId.toString()
+    );
+
+    if (otherUser && req.io && req.userSocketMap) {
+      const senderSocketId = req.userSocketMap.get(otherUser.toString());
+      if (senderSocketId) {
+        req.io.to(senderSocketId).emit('message:seen', {
+          conversationId,
+          messageIds: messageIds || []
+        });
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -479,10 +520,18 @@ export const archiveConversation = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    conversation.isArchived = !conversation.isArchived;
-    await conversation.save();
+    if (!conversation.archivedBy) conversation.archivedBy = [];
+    const userIdStr = userId.toString();
+    const isArchived = conversation.archivedBy.some((id) => id.toString() === userIdStr);
 
-    res.status(200).json({ success: true, isArchived: conversation.isArchived });
+    if (isArchived) {
+      conversation.archivedBy = conversation.archivedBy.filter((id) => id.toString() !== userIdStr);
+    } else {
+      conversation.archivedBy.push(userId);
+    }
+
+    await conversation.save();
+    res.status(200).json({ success: true, isArchived: !isArchived });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -505,10 +554,18 @@ export const pinConversation = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    conversation.isPinned = !conversation.isPinned;
-    await conversation.save();
+    if (!conversation.pinnedBy) conversation.pinnedBy = [];
+    const userIdStr = userId.toString();
+    const isPinned = conversation.pinnedBy.some((id) => id.toString() === userIdStr);
 
-    res.status(200).json({ success: true, isPinned: conversation.isPinned });
+    if (isPinned) {
+      conversation.pinnedBy = conversation.pinnedBy.filter((id) => id.toString() !== userIdStr);
+    } else {
+      conversation.pinnedBy.push(userId);
+    }
+
+    await conversation.save();
+    res.status(200).json({ success: true, isPinned: !isPinned });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -532,8 +589,12 @@ export const muteConversation = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
+    if (!conversation.mutedBy) conversation.mutedBy = [];
+    const userIdStr = userId.toString();
+    const isMuted = conversation.mutedBy.some((id) => id.toString() === userIdStr);
+
     let mutedUntil = null;
-    if (duration !== 'forever') {
+    if (!isMuted && duration !== 'forever') {
       const now = new Date();
       const durations = {
         '1h': 60 * 60 * 1000,
@@ -544,13 +605,19 @@ export const muteConversation = async (req, res) => {
       mutedUntil = new Date(now.getTime() + (durations[duration] || 0));
     }
 
-    conversation.isMuted = !conversation.isMuted;
-    conversation.mutedUntil = conversation.isMuted ? mutedUntil : null;
+    if (isMuted) {
+      conversation.mutedBy = conversation.mutedBy.filter((id) => id.toString() !== userIdStr);
+      conversation.mutedUntil = null;
+    } else {
+      conversation.mutedBy.push(userId);
+      conversation.mutedUntil = mutedUntil;
+    }
+
     await conversation.save();
 
     res.status(200).json({
       success: true,
-      isMuted: conversation.isMuted,
+      isMuted: !isMuted,
       mutedUntil: conversation.mutedUntil
     });
   } catch (error) {

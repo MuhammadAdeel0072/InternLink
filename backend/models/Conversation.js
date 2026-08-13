@@ -30,7 +30,19 @@ const conversationSchema = new mongoose.Schema(
     mutedUntil: {
       type: Date,
       default: null
-    }
+    },
+    pinnedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    archivedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    mutedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }]
   },
   { timestamps: true }
 );
