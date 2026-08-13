@@ -6,7 +6,10 @@
 }
 
 .header {
-  padding: 20px 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
 }
 
 .headerTitle {
@@ -18,11 +21,24 @@
   letter-spacing: -0.02em;
 }
 
-.headerSubtitle {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-  font-weight: 500;
+.newMessageBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.newMessageBtn:hover {
+  background-color: var(--primary-hover);
+  transform: scale(1.05);
 }
 
 .searchContainer {
@@ -120,22 +136,20 @@
   background-color: var(--primary);
   color: #ffffff;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .filterButtonActive:hover {
   background-color: var(--primary-hover);
   border-color: var(--primary-hover);
-  color: #ffffff;
 }
 
 .conversationsScroll {
   flex: 1;
   overflow-y: auto;
-  padding: 0 16px 16px;
+  padding: 0 8px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   scrollbar-width: none;
 }
 
@@ -178,10 +192,52 @@
   gap: 8px;
 }
 
+.emptyIcon {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.skeletonCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.skeletonAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.skeletonContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skeletonLine {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .sectionLabel {
@@ -190,13 +246,13 @@
   letter-spacing: 0.08em;
   color: var(--text-muted);
   font-weight: 600;
-  padding: 4px 4px;
+  padding: 4px 4px 0;
   margin-top: 4px;
 }
 
 @media (max-width: 768px) {
   .header {
-    padding: 16px 14px 10px;
+    padding: 16px 14px 12px;
   }
 
   .headerTitle {

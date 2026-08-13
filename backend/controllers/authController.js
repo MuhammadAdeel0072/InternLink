@@ -867,9 +867,32 @@ export const deleteAccount = async (req, res) => {
     });
     res.status(200).json({ success: true, message: 'Account deleted successfully' });
   } catch (error) {
+    console.error('[authController] deleteAccount - error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Check username availability
+// @route   GET /api/auth/check-username
+// @access  Private
+export const checkUsername = async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) {
+      return res.status(400).json({ success: false, message: 'Username is required' });
+    }
+    if (!USERNAME_REGEX.test(username)) {
+      return res.status(400).json({ success: false, message: 'Invalid username format' });
+    }
+    const existing = await User.findOne({ username, _id: { $ne: req.user._id } });
+    res.status(200).json({ success: true, data: { available: !existing } });
+  } catch (error) {
+    console.error('[authController] checkUsername - error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,30}$/;
 
 // @desc    Disconnect OAuth provider
 // @route   PUT /api/auth/disconnect-provider
@@ -889,6 +912,7 @@ export const disconnectProvider = async (req, res) => {
     await user.save();
     res.status(200).json({ success: true, message: `${provider} disconnected` });
   } catch (error) {
+    console.error('[authController] disconnectProvider - error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

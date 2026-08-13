@@ -3,52 +3,73 @@
 /* ============================================ */
 /* MAIN CONTAINER                               */
 /* ============================================ */
+.settingsContainer {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  min-height: calc(100vh - 64px);
+  background-color: var(--bg-primary);
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
 /* ============================================ */
 /* SIDEBAR                                      */
 /* ============================================ */
 .sidebar {
-  width: 220px;
+  width: 260px;
   border-right: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
   padding: 20px 0;
   flex-shrink: 0;
+  height: fit-content;
+  position: sticky;
+  top: 24px;
+}
+
+.sidebarHeader {
+  padding: 0 20px;
+  margin-bottom: 16px;
 }
 
 .sidebarTitle {
-  padding: 0 20px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.sidebarDivider {
-  border-top: 1px solid var(--border-color);
-  margin: 8px 0;
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 8px;
 }
 
 .sidebarLink {
   width: 100%;
   text-align: left;
-  padding: 12px 20px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 0.9rem;
   border: none;
   cursor: pointer;
   background-color: transparent;
   color: var(--text-secondary);
-  font-weight: 400;
+  font-weight: 500;
   transition: all 0.15s;
-  min-height: 44px;
+  border-radius: var(--radius-md);
+  position: relative;
 }
 
 .sidebarLink:hover {
   background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .sidebarLinkActive {
@@ -57,12 +78,22 @@
   font-weight: 600;
 }
 
+.sidebarChevron {
+  margin-left: auto;
+  opacity: 0.5;
+}
+
+.sidebarFooter {
+  padding: 16px 20px 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 16px;
+}
+
 .backLink {
-  padding: 10px 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.9rem;
+  gap: 8px;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s;
@@ -75,195 +106,242 @@
 /* ============================================ */
 /* MAIN CONTENT                                 */
 /* ============================================ */
-.settingsContainer {
-  display: flex;
-  gap: 20px;
-  padding: 20px;
-  min-height: calc(100vh - 64px);
-  background-color: var(--bg-primary);
+.mainContent {
+  flex: 1;
+  min-width: 0;
 }
 
-/* ============================================ */
-/* TAB CONTENT                                  */
-/* ============================================ */
-.tabTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.tabSubtitle {
-  color: var(--text-secondary);
+.contentHeader {
   margin-bottom: 24px;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.pageSubtitle {
+  color: var(--text-secondary);
+  margin: 0;
   font-size: 0.9rem;
 }
 
-.formContainer {
-  max-width: 500px;
+.sectionStack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color 0.2s;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.cardSubtitle {
+  color: var(--text-secondary);
+  margin: 0 0 20px 0;
+  font-size: 0.85rem;
+}
+
+.cardActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
 }
 
 /* ============================================ */
-/* PROFILE PHOTO                                */
+/* FORM ELEMENTS                               */
 /* ============================================ */
-.profilePhotoSection {
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.avatarSection {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.profilePhotoPlaceholder {
-  width: 64px;
-  height: 64px;
+.avatarLarge {
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background-color: var(--primary-light);
-  color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 1.75rem;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-.profilePhotoBtn {
+.avatarBtn {
   font-size: 0.85rem;
 }
 
-/* ============================================ */
-/* PASSWORD STRENGTH                            */
-/* ============================================ */
-.passwordStrength {
-  margin-bottom: 12px;
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.passwordStrengthBar {
-  height: 4px;
+.fieldLabel {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.fieldInput,
+.fieldSelect {
   background-color: var(--bg-tertiary);
-  border-radius: 2px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  width: 100%;
+}
+
+.fieldInput:focus,
+.fieldSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.fieldInput::placeholder {
+  color: var(--text-muted);
+}
+
+.fieldInputError {
+  border-color: var(--danger);
+}
+
+.fieldInputError:focus {
+  box-shadow: 0 0 0 3px var(--danger-light);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fieldHint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.fieldSuccess {
+  font-size: 0.8rem;
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fieldWarning {
+  font-size: 0.8rem;
+  color: var(--warning);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ============================================ */
+/* PASSWORD STRENGTH                           */
+/* ============================================ */
+.strengthBar {
+  height: 6px;
+  background-color: var(--bg-tertiary);
+  border-radius: 3px;
   overflow: hidden;
-}
-
-.passwordStrengthFill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.3s;
-}
-
-.passwordStrengthText {
-  font-size: 0.75rem;
-  color: #ef4444;
-}
-
-.passwordStrengthText strong {
-  color: #22c55e;
-}
-
-/* ============================================ */
-/* DANGER ZONE                                  */
-/* ============================================ */
-.dangerZone {
-  margin-top: 40px;
-  padding: 20px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
-}
-
-.dangerZoneTitle {
-  color: #ef4444;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-
-.dangerZoneText {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  margin: 8px 0;
-}
-
-.dangerZoneBtn {
-  background-color: #ef4444;
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dangerZoneBtn:hover {
-  background-color: #dc2626;
-}
-
-/* ============================================ */
-/* SESSIONS                                     */
-/* ============================================ */
-.sessionsSection {
-  margin-top: 40px;
-}
-
-.sessionsTitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.sessionCard {
-  padding: 16px;
-  background-color: var(--bg-tertiary);
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.sessionDevice {
-  margin: 0;
-}
-
-.sessionMeta {
-  font-size: 0.75rem;
   margin-top: 4px;
 }
 
-.logoutAllBtn {
-  margin-top: 12px;
-  font-size: 0.85rem;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.strengthFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s, background-color 0.3s;
+}
+
+.strengthLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 4px;
+  display: block;
 }
 
 /* ============================================ */
-/* PRIVACY TOGGLES                              */
+/* TOGGLE SWITCH                               */
 /* ============================================ */
-.privacyContainer {
-  max-width: 400px;
+.toggleList {
+  display: flex;
+  flex-direction: column;
 }
 
 .toggleRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--border-color);
+  gap: 16px;
+}
+
+.toggleRow:last-child {
+  border-bottom: none;
+}
+
+.toggleInfo {
+  flex: 1;
+  min-width: 0;
 }
 
 .toggleLabel {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: block;
 }
 
-/* Toggle Switch */
+.toggleDescription {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  display: block;
+}
+
 .toggleSwitch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
 .toggleSwitch input {
@@ -279,132 +357,333 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--border-color);
-  border-radius: 24px;
-  transition: 0.3s;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 28px;
+  transition: all 0.3s;
 }
 
 .toggleSwitch input:checked + .toggleSlider {
   background-color: var(--primary);
+  border-color: var(--primary);
 }
 
 .toggleKnob {
   position: absolute;
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  bottom: 2px;
   background-color: white;
   border-radius: 50%;
   transition: 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .toggleSwitch input:checked + .toggleSlider .toggleKnob {
-  left: 23px;
+  left: 22px;
 }
 
 /* ============================================ */
-/* THEME SELECTOR                               */
+/* DANGER ZONE                                 */
 /* ============================================ */
-.themeSection {
-  margin-bottom: 24px;
+.dangerZone {
+  border-color: rgba(239, 68, 68, 0.2);
+  background-color: rgba(239, 68, 68, 0.03);
 }
 
-.themeSection .form-label {
-  margin-bottom: 12px;
-  display: block;
+.dangerZoneTitle {
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+}
+
+.dangerZoneText {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 0 0 16px 0;
+}
+
+.dangerZoneBtn {
+  background-color: var(--danger);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dangerZoneBtn:hover {
+  background-color: #dc2626;
+}
+
+.dangerZoneBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ============================================ */
-/* CONNECTED ACCOUNTS                           */
+/* SESSIONS                                    */
 /* ============================================ */
-.connectedContainer {
-  max-width: 400px;
+.sessionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sessionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.sessionIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.sessionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.sessionDevice {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.sessionMeta {
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ============================================ */
+/* LOGIN HISTORY                               */
+/* ============================================ */
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.historyItem:last-child {
+  border-bottom: none;
+}
+
+.historyIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.historyInfo {
+  flex: 1;
+}
+
+.historyBrowser {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.historyTime {
+  margin: 2px 0 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ============================================ */
+/* COMING SOON                                 */
+/* ============================================ */
+.comingSoon {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+}
+
+.comingSoonTitle {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.comingSoonText {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* ============================================ */
+/* CONNECTED ACCOUNTS                          */
+/* ============================================ */
+.connectedList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .connectedItem {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 16px;
   padding: 16px;
   background-color: var(--bg-tertiary);
-  border-radius: 8px;
-  margin-bottom: 12px;
+  border-radius: var(--radius-md);
+}
+
+.connectedIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .connectedInfo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.connectedDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.connectedDotActive {
-  background-color: #22c55e;
-}
-
-.connectedDotInactive {
-  background-color: #9ca3af;
+  flex: 1;
+  min-width: 0;
 }
 
 .connectedName {
-  font-weight: 600;
-  font-size: 0.9rem;
   margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .connectedStatus {
-  font-size: 0.75rem;
+  margin: 2px 0 0 0;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  margin: 0;
 }
 
 /* ============================================ */
-/* TOAST NOTIFICATION                           */
+/* MODAL                                       */
+/* ============================================ */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 24px;
+}
+
+.modal {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+}
+
+.modalIcon {
+  color: var(--danger);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.modalTitle {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+}
+
+.modalText {
+  margin: 0 0 24px 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ============================================ */
+/* TOAST NOTIFICATION                          */
 /* ============================================ */
 .toast {
   position: fixed;
   bottom: 24px;
   right: 24px;
   padding: 14px 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   z-index: 9999;
   font-size: 0.9rem;
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   animation: slideIn 0.3s ease;
-  max-width: 380px;
+  max-width: 400px;
 }
 
 .toastSuccess {
-  background-color: var(--success-light);
+  background-color: var(--bg-secondary);
   color: var(--success);
   border: 1px solid var(--success);
 }
 
 .toastError {
-  background-color: var(--danger-light);
+  background-color: var(--bg-secondary);
   color: var(--danger);
   border: 1px solid var(--danger);
 }
 
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.emptyText {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 20px;
 }
 
 /* ============================================ */
@@ -413,12 +692,13 @@
 
 /* Tablet */
 @media (max-width: 1024px) {
-  .sidebar {
-    width: 180px;
+  .settingsContainer {
+    padding: 20px;
+    gap: 16px;
   }
 
-  .mainContent {
-    padding: 24px;
+  .sidebar {
+    width: 220px;
   }
 }
 
@@ -426,208 +706,147 @@
 @media (max-width: 768px) {
   .settingsContainer {
     flex-direction: column;
-    min-height: calc(100vh - 56px);
+    padding: 16px;
+    gap: 16px;
   }
 
   .sidebar {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--border-color);
-    padding: 12px 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+    padding: 12px;
+    position: static;
+    border-radius: var(--radius-md);
+  }
+
+  .sidebarNav {
+    flex-direction: row;
+    flex-wrap: nowrap;
     overflow-x: auto;
-  }
-
-  .sidebarTitle {
-    display: none;
-  }
-
-  .sidebarDivider {
-    display: none;
+    gap: 6px;
+    padding: 0;
+    -webkit-overflow-scrolling: touch;
   }
 
   .sidebarLink {
-    padding: 8px 14px;
-    font-size: 0.8rem;
     width: auto;
-    border-radius: 8px;
     white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
   }
 
-  .backLink {
-    padding: 8px 14px;
-    font-size: 0.8rem;
-    width: auto;
-    border-radius: 8px;
+  .sidebarLink span {
+    font-size: 0.85rem;
+  }
+
+  .sidebarChevron {
+    display: none;
+  }
+
+  .sidebarHeader {
+    padding: 0 8px;
+  }
+
+  .sidebarFooter {
+    display: none;
   }
 
   .mainContent {
-    padding: 20px 16px;
+    min-width: 0;
   }
 
-  .tabTitle {
-    font-size: 1.25rem;
+  .pageTitle {
+    font-size: 1.4rem;
   }
 
-  .formContainer {
-    max-width: 100%;
+  .formGrid {
+    grid-template-columns: 1fr;
   }
 
-  .themeGrid {
-    gap: 8px;
+  .avatarSection {
+    grid-column: 1;
   }
 
-  .themeOption {
-    padding: 14px;
-    min-width: 60px;
+  .card {
+    padding: 20px;
   }
 
-  .themeOption svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .connectedItem {
+  .toggleRow {
     flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
-    align-items: stretch;
   }
 
-  .connectedInfo {
-    justify-content: center;
+  .toggleSwitch {
+    align-self: flex-end;
   }
 
-  .toast {
-    bottom: 16px;
-    right: 16px;
-    left: 16px;
-    max-width: none;
-    font-size: 0.8rem;
-    padding: 12px 16px;
+  .modal {
+    padding: 24px;
+    margin: 16px;
   }
 }
 
 /* Small Mobile */
 @media (max-width: 480px) {
-  .mainContent {
-    padding: 16px 12px;
+  .settingsContainer {
+    padding: 12px;
   }
 
-  .tabTitle {
-    font-size: 1.1rem;
-  }
-
-  .tabSubtitle {
-    font-size: 0.8rem;
-    margin-bottom: 16px;
-  }
-
-  .profilePhotoSection {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .profilePhotoPlaceholder {
-    width: 56px;
-    height: 56px;
-    font-size: 1.2rem;
-  }
-
-  .profilePhotoBtn {
-    font-size: 0.75rem;
+  .sidebar {
+    padding: 10px;
   }
 
   .sidebarLink {
-    font-size: 0.7rem;
-    padding: 6px 10px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
   }
 
-  .backLink {
-    font-size: 0.7rem;
-    padding: 6px 10px;
+  .pageTitle {
+    font-size: 1.2rem;
   }
 
-  .dangerZone {
+  .card {
     padding: 16px;
   }
 
-  .dangerZoneTitle {
-    font-size: 0.95rem;
+  .cardTitle {
+    font-size: 1rem;
   }
 
-  .dangerZoneText {
-    font-size: 0.75rem;
-  }
-
-  .dangerZoneBtn {
-    font-size: 0.75rem;
-    padding: 6px 16px;
-  }
-
-  .toggleRow {
-    padding: 10px 0;
-  }
-
-  .toggleLabel {
-    font-size: 0.8rem;
-  }
-
-  .toggleSwitch {
-    width: 38px;
-    height: 20px;
-  }
-
-  .toggleKnob {
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 3px;
-  }
-
-  .toggleSwitch input:checked + .toggleSlider .toggleKnob {
-    left: 19px;
-  }
-
-  .sessionsTitle {
-    font-size: 0.95rem;
-  }
-
-  .sessionCard {
-    padding: 12px;
-    font-size: 0.75rem;
-  }
-
-  .logoutAllBtn {
-    font-size: 0.75rem;
-    padding: 8px 16px;
-  }
-
-  .themeOption {
-    padding: 10px;
-    min-width: 50px;
-  }
-
-  .themeOption svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .themeLabel {
-    font-size: 0.65rem;
+  .fieldInput,
+  .fieldSelect {
+    padding: 10px 14px;
+    font-size: 0.9rem;
   }
 
   .connectedItem {
-    padding: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
   }
 
-  .connectedName {
-    font-size: 0.8rem;
+  .connectedItem .btn {
+    width: 100%;
+    justify-content: center;
   }
 
-  .connectedStatus {
-    font-size: 0.65rem;
+  .cardActions {
+    flex-direction: column;
+  }
+
+  .cardActions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
+
+  .modalActions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }

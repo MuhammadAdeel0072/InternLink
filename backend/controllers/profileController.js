@@ -7,8 +7,10 @@ import { uploadToCloudinary } from '../utils/cloudinary.js';
 // @access  Private
 export const getCurrentProfile = async (req, res) => {
   try {
+    console.log('[getCurrentProfile] Fetching profile for user:', req.user?._id);
     let profile = await Profile.findOne({ user: req.user._id })
-      .populate('user', 'name email role');
+      .populate('user', 'name email role avatar');
+    console.log('[getCurrentProfile] Found profile:', profile?._id, 'avatar:', profile?.avatar ? 'present' : 'missing');
 
     // Auto-create profile if it doesn't exist
     if (!profile) {
@@ -23,7 +25,7 @@ export const getCurrentProfile = async (req, res) => {
         portfolioLinks: [],
       });
       profile = await Profile.findById(profile._id)
-        .populate('user', 'name email role');
+        .populate('user', 'name email role avatar');
       return res.status(201).json(profile);
     }
 
@@ -116,14 +118,14 @@ if (yearsOfExperience !== undefined) profileFields.yearsOfExperience = yearsOfEx
         { user: req.user._id },
         { $set: profileFields },
         { new: true, runValidators: true }
-      ).populate('user', 'name email role');
+      ).populate('user', 'name email role avatar');
       return res.status(200).json(profile);
     } else {
       profileFields.user = req.user._id;
       profile = new Profile(profileFields);
       await profile.save();
       const populatedProfile = await Profile.findById(profile._id)
-        .populate('user', 'name email role');
+        .populate('user', 'name email role avatar');
       return res.status(201).json(populatedProfile);
     }
   } catch (error) {
@@ -144,7 +146,11 @@ export const uploadAvatar = async (req, res) => {
       { user: req.user._id },
       { $set: { avatar: fileUrl } },
       { new: true }
-    ).populate('user', 'name email role');
+    ).populate('user', 'name email role avatar');
+    
+    // Synchronize the avatar field in the User model so it persists on login/refresh
+    await User.findByIdAndUpdate(req.user._id, { $set: { avatar: fileUrl } });
+    
     res.status(200).json(profile);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -164,7 +170,7 @@ export const uploadCover = async (req, res) => {
       { user: req.user._id },
       { $set: { cover: fileUrl } },
       { new: true }
-    ).populate('user', 'name email role');
+    ).populate('user', 'name email role avatar');
     res.status(200).json(profile);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -184,7 +190,7 @@ export const uploadResume = async (req, res) => {
       { user: req.user._id },
       { $set: { resume: fileUrl } },
       { new: true }
-    ).populate('user', 'name email role');
+    ).populate('user', 'name email role avatar');
     res.status(200).json(profile);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -545,7 +551,7 @@ export const updateSkillsEnhanced = async (req, res) => {
 
     await profile.save();
     
-    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role avatar');
     res.status(200).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -566,7 +572,7 @@ export const togglePinSkill = async (req, res) => {
     skill.pinned = !skill.pinned;
     await profile.save();
     
-    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role avatar');
     res.status(200).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -590,7 +596,7 @@ export const reorderSkills = async (req, res) => {
 
     await profile.save();
     
-    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role avatar');
     res.status(200).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -608,7 +614,7 @@ export const deleteSkill = async (req, res) => {
     profile.skills = profile.skills.filter(s => s._id.toString() !== req.params.skillId);
     await profile.save();
     
-    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role avatar');
     res.status(200).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -633,7 +639,7 @@ export const addLanguage = async (req, res) => {
     profile.languages.push({ name, proficiency: proficiency || 'conversational' });
     await profile.save();
     
-    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role avatar');
     res.status(200).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -656,7 +662,7 @@ export const updateLanguage = async (req, res) => {
     if (proficiency) lang.proficiency = proficiency;
     await profile.save();
     
-    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role avatar');
     res.status(200).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -674,7 +680,7 @@ export const deleteLanguage = async (req, res) => {
     profile.languages = profile.languages.filter(l => l._id.toString() !== req.params.langId);
     await profile.save();
     
-    const populated = await Profile.findById(profile._id).populate('user', 'name email role');
+    const populated = await Profile.findById(profile._id).populate('user', 'name email role avatar');
     res.status(200).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -18,13 +18,15 @@ export const getRecruiterDashboardStats = async (req, res) => {
     ] = await Promise.all([
       Job.countDocuments({ recruiter: recruiterId, isActive: true }),
       Job.countDocuments({ recruiter: recruiterId, isActive: false }),
-      Application.countDocuments({}),
-      Application.countDocuments({ status: 'interview' }),
+      // Applicants and interviews are scoped to this recruiter's jobs (computed below)
+      // to avoid redundant global queries.
+      0,
+      0,
       Conversation.countDocuments({ participants: recruiterId }),
       Notification.countDocuments({ recipient: recruiterId, isRead: false }),
     ]);
 
-    const recruiterJobIds = await Job.find({ recruiter: recruiterId }).distinct('_id');
+    const recruiterJobIds = await Job.find({ recruiter: recruiterId, isDeleted: false }).distinct('_id');
     const applicantsForRecruiter = recruiterJobIds.length > 0
       ? await Application.countDocuments({ job: { $in: recruiterJobIds } })
       : 0;

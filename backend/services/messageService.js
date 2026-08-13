@@ -43,7 +43,7 @@ export const getOrCreateConversation = async (userId, recipientId) => {
     });
   }
 
-  return conversation;
+  return await conversation.populate('participants', 'name email role');
 };
 
 export const buildConversationPayload = async (conversation, currentUserId) => {

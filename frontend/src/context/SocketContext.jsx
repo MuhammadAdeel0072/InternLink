@@ -17,7 +17,6 @@ export const SocketProvider = ({ children }) => {
       });
 
       newSocket.on('connect', () => {
-        console.log('Socket client connected:', newSocket.id);
         newSocket.emit('register', user._id);
       });
 
@@ -31,7 +30,6 @@ export const SocketProvider = ({ children }) => {
 
       return () => {
         newSocket.disconnect();
-        console.log('Socket client disconnected');
       };
     } else {
       if (socket) {

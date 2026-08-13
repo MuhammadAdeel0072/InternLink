@@ -5,6 +5,7 @@ import { SocketProvider } from './context/SocketContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { MessageProvider } from './context/MessageContext';
+import { OnlineStatusProvider } from './context/OnlineStatusContext';
 import { AIContextProvider } from './contexts/AIContext';
 
 // Layout wrappers
@@ -44,6 +45,7 @@ const ApplicantManagement = lazy(() => import('./pages/recruiter/Applicants/Appl
 const InterviewManagement = lazy(() => import('./pages/recruiter/InterviewManagement/InterviewManagement'));
 const OfferManagement = lazy(() => import('./pages/recruiter/OfferManagement/OfferManagement'));
 const HiringOnboarding = lazy(() => import('./pages/recruiter/HiringOnboarding/HiringOnboarding'));
+const RecruiterMessages = lazy(() => import('./pages/recruiter/Messages/Messages'));
 const StudentInterviews = lazy(() => import('./pages/Student/Interviews/StudentInterviews'));
 const StudentOffers = lazy(() => import('./pages/Student/Offers/StudentOffers'));
 const StudentOnboarding = lazy(() => import('./pages/Student/Onboarding/Onboarding'));
@@ -64,12 +66,13 @@ const PageLoader = () => (
 
 function App() {
   return (
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <ThemeProvider>
             <SocketProvider>
               <NotificationProvider>
                 <AIContextProvider>
+                <OnlineStatusProvider>
                 <Routes>
               {/* ── Public / Guest Routes ── */}
               <Route
@@ -402,7 +405,18 @@ function App() {
        </Suspense>
      </MainLayout>
    </RecruiterProtectedRoute>
- } />
+} />
+             <Route path="/recruiter/messages" element={
+  <RecruiterProtectedRoute>
+    <MessageProvider>
+    <MainLayout>
+      <Suspense fallback={<PageLoader />}>
+        <RecruiterMessages />
+      </Suspense>
+    </MainLayout>
+    </MessageProvider>
+  </RecruiterProtectedRoute>
+} />
              <Route path="/recruiter/talent-pool" element={
    <RecruiterProtectedRoute>
      <MainLayout>
@@ -525,14 +539,15 @@ function App() {
                        </a>
                      </div>
                    </AuthLayout>
-                 }
-               />
+                  }
+                />
               </Routes>
-                </AIContextProvider>
-              </NotificationProvider>
-            </SocketProvider>
-          </ThemeProvider>
-        </AuthProvider>
+            </OnlineStatusProvider>
+          </AIContextProvider>
+        </NotificationProvider>
+     </SocketProvider>
+   </ThemeProvider>
+ </AuthProvider>
       </Router>
    );
  }

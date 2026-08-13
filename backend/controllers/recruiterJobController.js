@@ -1,38 +1,8 @@
 import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import Company from '../models/Company.js';
-import Notification from '../models/Notification.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { escapeRegExp } from '../utils/regex.js';
-
-const createNotification = async (req, recipientId, senderId, type, content, link = '') => {
-  try {
-    const notification = await Notification.create({
-      recipient: recipientId,
-      sender: senderId,
-      type,
-      content,
-      link
-    });
-
-    if (req.io) {
-      const recipientSocketId = req.userSocketMap.get(recipientId.toString());
-      if (recipientSocketId) {
-        req.io.to(recipientSocketId).emit('receive_notification', {
-          _id: notification._id,
-          type,
-          content,
-          link,
-          isRead: false,
-          createdAt: notification.createdAt,
-          sender: { _id: senderId, name: req.user?.name || '' }
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Notification creation error:', error);
-  }
-};
 
 const generateSlug = (title) => {
   return title

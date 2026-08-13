@@ -18,8 +18,7 @@ const Messages = () => {
     archiveConversation,
     pinConversation,
     muteConversation,
-    deleteConversation,
-    sendMessageError
+    deleteConversation
   } = useMessages();
   const navigate = useNavigate();
 

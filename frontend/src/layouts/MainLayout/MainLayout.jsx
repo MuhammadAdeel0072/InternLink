@@ -105,8 +105,9 @@ const MainLayout = ({ children }) => {
   useEffect(() => {
     const fetchHeaderData = async () => {
       try {
-        const notifRes = await api.get('/notifications');
-        const unread = notifRes.data.filter((n) => !n.isRead).length;
+         const notifRes = await api.get('/notifications');
+        const notifications = notifRes.data.data || notifRes.data || [];
+        const unread = Array.isArray(notifications) ? notifications.filter((n) => !n.isRead).length : 0;
         setUnreadNotifications(unread);
 
         const profileRes = await api.get('/profile/me');
@@ -182,7 +183,7 @@ const MainLayout = ({ children }) => {
     { to: '/recruiter/company-association', label: 'Company', icon: Building2 },
     { to: '/recruiter/jobs', label: 'Jobs', icon: Briefcase },
     { to: '/recruiter/applicants', label: 'Talent', icon: UserSearch },
-    { to: '/network', label: 'Messages', icon: MessageSquare },
+    { to: '/recruiter/messages', label: 'Messages', icon: MessageSquare },
     { to: '/notifications', label: 'Alerts', icon: Bell, badgeCount: unreadNotifications },
   ];
 

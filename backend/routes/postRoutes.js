@@ -6,7 +6,11 @@ import {
   likePost,
   commentPost,
   deletePost,
-  replyToComment
+  replyToComment,
+  editComment,
+  deleteComment,
+  editReply,
+  deleteReply
 } from '../controllers/postController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import upload from '../middlewares/uploadMiddleware.js';
@@ -19,15 +23,23 @@ router.route('/')
   .post(protect, upload.single('postImage'), validatePost, createPost);
 
 router.route('/:postId')
-  .delete(protect, validateObjectId, deletePost);
+  .delete(protect, validateObjectId('postId'), deletePost);
 
 router.route('/:postId/like')
-  .put(protect, validateObjectId, likePost);
+  .put(protect, validateObjectId('postId'), likePost);
 
 router.route('/:postId/comment')
-  .post(protect, validateObjectId, validateComment, commentPost);
+  .post(protect, validateObjectId('postId'), validateComment, commentPost);
+
+router.route('/:postId/comments/:commentId')
+  .put(protect, validateObjectId('postId'), validateObjectId('commentId'), validateComment, editComment)
+  .delete(protect, validateObjectId('postId'), validateObjectId('commentId'), deleteComment);
 
 router.route('/:postId/comments/:commentId/reply')
-  .post(protect, validateObjectId, validateComment, replyToComment);
+  .post(protect, validateObjectId('postId'), validateObjectId('commentId'), validateComment, replyToComment);
+
+router.route('/:postId/comments/:commentId/replies/:replyId')
+  .put(protect, validateObjectId('postId'), validateObjectId('commentId'), validateObjectId('replyId'), validateComment, editReply)
+  .delete(protect, validateObjectId('postId'), validateObjectId('commentId'), validateObjectId('replyId'), deleteReply);
 
 export default router;

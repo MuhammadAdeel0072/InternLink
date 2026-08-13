@@ -1,7 +1,7 @@
 import Interview from '../models/Interview.js';
 import User from '../models/User.js';
 import Profile from '../models/Profile.js';
-import Notification from '../models/Notification.js';
+import { createNotification } from '../services/notificationService.js';
 import { sendInterviewScheduledEmail } from './sendEmail.js';
 
 const REMINDER_SCHEDULE = [
@@ -65,12 +65,17 @@ export const startReminderScheduler = (io, userSocketMap) => {
             const candidate = interview.candidateId;
             const jobTitle = interview.jobId?.title || 'an interview';
 
-            await Notification.create({
-              recipient: candidate._id,
-              sender: interview.recruiterId,
+            await createNotification({
+              recipientId: candidate._id,
+              senderId: interview.recruiterId,
+              title: 'Interview Reminder',
+              message: `Reminder: Your interview for ${jobTitle} is scheduled for ${interview.date.toLocaleDateString()} at ${interview.time}`,
               type: 'interview-reminder',
-              content: `Reminder: Your interview for ${jobTitle} is scheduled for ${interview.date.toLocaleDateString()} at ${interview.time}`,
-              link: `/interviews/${interview._id}`
+              category: 'interview',
+              entityId: interview._id,
+              entityType: 'interview',
+              io,
+              userSocketMap
             });
 
             const recipientSocketId = userSocketMap.get(candidate._id.toString());

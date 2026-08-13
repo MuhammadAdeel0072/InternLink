@@ -10,23 +10,22 @@ const Network = () => {
   const [connections, setConnections] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('connections');
-  const [sentRequests, setSentRequests] = useState([]);
-const [searchTerm, setSearchTerm] = useState('');
-const [searchResults, setSearchResults] = useState([]);
-const [searchType, setSearchType] = useState('all');
   const fetchData = async () => {
     try {
       setLoading(true);
       const connRes = await api.get('/connections');
-      console.log('Connections:', connRes.data);
+      const connections = connRes.data.data || connRes.data || [];
       const pendRes = await api.get('/connections/pending');
       const suggRes = await api.get('/connections/suggestions');
+      const sentRes = await api.get('/connections/sent');
 
-      setConnections(connRes.data);
-      setPendingRequests(pendRes.data);
-      setSuggestions(suggRes.data);
+      setConnections(connRes.data.data || connRes.data || []);
+      setPendingRequests(pendRes.data.data || pendRes.data || []);
+      setSuggestions(suggRes.data.data || suggRes.data || []);
+      setSentRequests(sentRes.data.data || sentRes.data || []);
     } catch (err) {
       console.error('Failed to load network data:', err);
     } finally {
@@ -41,7 +40,7 @@ const [searchType, setSearchType] = useState('all');
   const handleConnect = async (userId) => {
     try {
       setSuggestions((prev) => prev.filter((u) => u._id !== userId));
-      const res = await api.post(`/connections/request/${userId}`);
+      await api.post(`/connections/request/${userId}`);
       emitNotificationAlert(userId, {
         type: 'connection-request',
         content: 'You received a new connection request.'
@@ -78,7 +77,7 @@ const [searchType, setSearchType] = useState('all');
     }
   };
 
-  const handleRemoveConnection = async (connectionId, targetUserId) => {
+  const handleRemoveConnection = async (connectionId) => {
     if (!window.confirm('Are you sure you want to remove this connection?')) return;
     try {
       setConnections((prev) => prev.filter((c) => c.connectionId !== connectionId));
@@ -230,6 +229,55 @@ const [searchType, setSearchType] = useState('all');
           ) : (
             <div className={styles.emptyState}>
               <p>No pending connection requests received.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'sent' && (
+        <div className={styles.requestsList}>
+          {sentRequests.length > 0 ? (
+            sentRequests.map((req) => (
+              <div key={req._id} className={`card ${styles.requestCard}`}>
+                <div className={styles.requestUserInfo}>
+                  <div className={styles.avatarMedium}>
+                    {req.recipient.avatar ? (
+                      <img src={req.recipient.avatar} alt={req.recipient.name} className={styles.avatarImage} />
+                    ) : (
+                      <div className={styles.avatarFallbackMedium}>
+                        {req.recipient.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className={styles.requestName}>{req.recipient.name}</h4>
+                    <p className={styles.requestHeadline}>
+                      {req.recipient.headline || 'Student / Job Seeker'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className={styles.requestActions}>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.delete(`/connections/cancel/${req._id}`);
+                        setSentRequests((prev) => prev.filter((r) => r._id !== req._id));
+                      } catch (err) {
+                        alert(err.message);
+                        fetchData();
+                      }
+                    }}
+                    className={`btn btn-secondary ${styles.ignoreBtn}`}
+                  >
+                    <X size={14} /> Cancel Request
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className={styles.emptyState}>
+              <p>No pending sent requests.</p>
             </div>
           )}
         </div>

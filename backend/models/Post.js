@@ -11,15 +11,6 @@ const replySchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  // ✅ Add nested replies
-  nestedReplies: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    text: String,
-    createdAt: { type: Date, default: Date.now }
-  }],
   createdAt: {
     type: Date,
     default: Date.now
@@ -54,8 +45,8 @@ const postSchema = new mongoose.Schema(
     },
     content: {
       type: String,
-      required: true,
-      trim: true
+      trim: true,
+      default: ''
     },
     image: {
       type: String,

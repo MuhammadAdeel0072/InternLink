@@ -5,7 +5,7 @@ import Job from '../models/Job.js';
 import Profile from '../models/Profile.js';
 import User from '../models/User.js';
 import Company from '../models/Company.js';
-import Notification from '../models/Notification.js';
+import { createNotification } from '../services/notificationService.js';
 import { sendWelcomeEmail } from '../utils/sendEmail.js';
 import { escapeRegExp } from '../utils/regex.js';
 
@@ -20,35 +20,6 @@ const addTimelineEntry = async (hiringId, action, performedBy, note = '') => {
       }
     }
   });
-};
-
-const createNotification = async (req, recipientId, senderId, type, content, link = '') => {
-  try {
-    const notification = await Notification.create({
-      recipient: recipientId,
-      sender: senderId,
-      type,
-      content,
-      link
-    });
-
-    if (req.io) {
-      const recipientSocketId = req.userSocketMap.get(recipientId.toString());
-      if (recipientSocketId) {
-        req.io.to(recipientSocketId).emit('receive_notification', {
-          _id: notification._id,
-          type,
-          content,
-          link,
-          isRead: false,
-          createdAt: notification.createdAt,
-          sender: { _id: senderId, name: req.user?.name || '' }
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Notification creation error:', error);
-  }
 };
 
 const generateEmployeeId = async (companyId) => {
@@ -368,14 +339,18 @@ export const createHiring = async (req, res) => {
       .populate('recruiterId', 'name email')
       .populate('manager', 'name email');
 
-    await createNotification(
-      req,
-      offer.candidateId,
-      req.user._id,
-      'hiring-created',
-      `Your hiring record has been created for ${job.title} at ${offer.companyId?.companyName || 'the company'}.`,
-      `/student/onboarding`
-    );
+    await createNotification({
+      recipientId: offer.candidateId,
+      senderId: req.user._id,
+      title: 'Hiring Record Created',
+      message: `Your hiring record has been created for ${job.title} at ${offer.companyId?.companyName || 'the company'}.`,
+      type: 'hiring-created',
+      category: 'hiring',
+      entityId: offer._id,
+      entityType: 'offer',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(201).json({ success: true, data: populated });
   } catch (error) {
@@ -458,14 +433,18 @@ export const generateEmployeeIdAction = async (req, res) => {
 
     await addTimelineEntry(hiring._id, 'Employee ID Generated', req.user._id, `Employee ID: ${hiring.employeeId}`);
 
-    await createNotification(
-      req,
-      hiring.candidateId,
-      req.user._id,
-      'employee-id-generated',
-      `Your Employee ID has been generated: ${hiring.employeeId}`,
-      `/student/onboarding`
-    );
+    await createNotification({
+      recipientId: hiring.candidateId,
+      senderId: req.user._id,
+      title: 'Employee ID Generated',
+      message: `Your Employee ID has been generated: ${hiring.employeeId}`,
+      type: 'hiring-created',
+      category: 'hiring',
+      entityId: hiring._id,
+      entityType: 'hiring',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({ success: true, data: hiring });
   } catch (error) {
@@ -561,14 +540,18 @@ export const verifyDocument = async (req, res) => {
     await addTimelineEntry(hiring._id, actionLabel, req.user._id, `${hiring.documents[docIndex].documentName}: ${note || ''}`);
 
     if (action === 'reject' || action === 'request-reupload') {
-      await createNotification(
-        req,
-        hiring.candidateId,
-        req.user._id,
-        'document-action',
-        `Document "${hiring.documents[docIndex].documentName}" requires your attention`,
-        `/student/onboarding`
-      );
+      await createNotification({
+        recipientId: hiring.candidateId,
+        senderId: req.user._id,
+        title: 'Document Action Required',
+        message: `Document "${hiring.documents[docIndex].documentName}" requires your attention`,
+        type: action === 'reject' ? 'document-rejected' : 'document-requested',
+        category: 'hiring',
+        entityId: hiring._id,
+        entityType: 'hiring',
+        io: req.io,
+        userSocketMap: req.userSocketMap
+      });
     }
 
     const allVerified = hiring.documents.every(d => d.status === 'verified');
@@ -675,14 +658,18 @@ export const sendWelcomeEmailAction = async (req, res) => {
 
     await addTimelineEntry(hiring._id, 'Welcome Email Sent', req.user._id, 'Welcome email sent to candidate');
 
-    await createNotification(
-      req,
-      hiring.candidateId,
-      req.user._id,
-      'welcome-email-sent',
-      'A welcome email has been sent to you with onboarding details.',
-      '/student/onboarding'
-    );
+    await createNotification({
+      recipientId: hiring.candidateId,
+      senderId: req.user._id,
+      title: 'Welcome Email Sent',
+      message: 'A welcome email has been sent to you with onboarding details.',
+      type: 'welcome-email-sent',
+      category: 'hiring',
+      entityId: hiring._id,
+      entityType: 'hiring',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({ success: true, message: 'Welcome email sent successfully', data: hiring });
   } catch (error) {
@@ -717,14 +704,18 @@ export const assignManager = async (req, res) => {
 
     await addTimelineEntry(hiring._id, 'Manager Assigned', req.user._id, `Manager: ${managerUser?.name || manager}`);
 
-    await createNotification(
-      req,
-      hiring.candidateId,
-      req.user._id,
-      'manager-assigned',
-      `Your reporting manager has been assigned: ${managerUser?.name || manager}`,
-      '/student/onboarding'
-    );
+    await createNotification({
+      recipientId: hiring.candidateId,
+      senderId: req.user._id,
+      title: 'Manager Assigned',
+      message: `Your reporting manager has been assigned: ${managerUser?.name || manager}`,
+      type: 'manager-assigned',
+      category: 'hiring',
+      entityId: hiring._id,
+      entityType: 'hiring',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({ success: true, data: hiring });
   } catch (error) {
@@ -812,25 +803,33 @@ export const updateStatus = async (req, res) => {
     await addTimelineEntry(hiring._id, 'Status Updated', req.user._id, `Status changed from ${previousStatus} to ${status}`);
 
     if (status === 'joined') {
-      await createNotification(
-        req,
-        hiring.candidateId,
-        req.user._id,
-        'employee-joined',
-        'Welcome to the team! Your onboarding is now in progress.',
-        '/student/onboarding'
-      );
+      await createNotification({
+        recipientId: hiring.candidateId,
+        senderId: req.user._id,
+        title: 'Welcome to the Team',
+        message: 'Welcome to the team! Your onboarding is now in progress.',
+        type: 'employee-joined',
+        category: 'hiring',
+        entityId: hiring._id,
+        entityType: 'hiring',
+        io: req.io,
+        userSocketMap: req.userSocketMap
+      });
     }
 
     if (status === 'completed') {
-      await createNotification(
-        req,
-        hiring.candidateId,
-        req.user._id,
-        'onboarding-completed',
-        'Your onboarding has been completed. Welcome aboard!',
-        '/student/onboarding'
-      );
+      await createNotification({
+        recipientId: hiring.candidateId,
+        senderId: req.user._id,
+        title: 'Onboarding Completed',
+        message: 'Your onboarding has been completed. Welcome aboard!',
+        type: 'onboarding-completed',
+        category: 'hiring',
+        entityId: hiring._id,
+        entityType: 'hiring',
+        io: req.io,
+        userSocketMap: req.userSocketMap
+      });
     }
 
     res.status(200).json({ success: true, data: hiring });

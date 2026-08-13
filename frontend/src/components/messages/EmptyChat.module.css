@@ -40,7 +40,24 @@
 .emptyChatText {
   font-size: 0.95rem;
   color: var(--text-secondary);
-  margin: 0;
+  margin: 0 0 16px;
   line-height: 1.6;
   max-width: 280px;
+}
+
+.startButton {
+  padding: 10px 24px;
+  border-radius: var(--radius-full);
+  background-color: var(--primary);
+  color: #ffffff;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.startButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
 }

@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Mail, Briefcase, MoreVertical, Archive, Pin,
-  Volume2, VolumeX, Trash2
+  Volume2, VolumeX, Trash2, X
 } from 'lucide-react';
 import styles from './ConversationInfo.module.css';
 
-const ConversationInfo = ({ conversation, onAction }) => {
+const ConversationInfo = ({ conversation, onAction, onClose }) => {
   const [showMenu, setShowMenu] = useState(false);
   const { otherUser } = conversation;
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
 
   const actions = [
     { label: conversation.isPinned ? 'Unpin Chat' : 'Pin Chat', icon: Pin, action: 'pin' },
@@ -22,12 +35,26 @@ const ConversationInfo = ({ conversation, onAction }) => {
   };
 
   return (
-    <div className={styles.conversationInfo}>
+    <div className={styles.infoPanel} role=" complementary" aria-label="Conversation info">
+      <div className={styles.infoPanelHeader}>
+        <h3 className={styles.infoPanelTitle}>Conversation Info</h3>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className={styles.infoPanelClose}
+            aria-label="Close info panel"
+            title="Close"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
       <div className={styles.infoHeader}>
         <div className={styles.userHeader}>
           <div className={styles.avatarSection}>
             {otherUser.avatar ? (
-              <img src={otherUser.avatar} alt="" className={styles.avatarImage} />
+              <img src={otherUser.avatar} alt={otherUser.name} className={styles.avatarImage} loading="lazy" />
             ) : (
               <div className={styles.avatarFallback}>
                 {otherUser.name?.charAt(0).toUpperCase()}
@@ -43,6 +70,9 @@ const ConversationInfo = ({ conversation, onAction }) => {
           <button
             onClick={() => setShowMenu(!showMenu)}
             className={styles.menuButton}
+            ref={menuRef}
+            aria-label="More options"
+            title="More options"
           >
             <MoreVertical size={18} />
           </button>
@@ -77,21 +107,6 @@ const ConversationInfo = ({ conversation, onAction }) => {
         <div className={styles.infoRow}>
           <Briefcase size={14} className={styles.infoIcon} />
           <span className={styles.infoText}>{otherUser.role}</span>
-        </div>
-      </div>
-
-      <div className={styles.infoSections}>
-        <div className={styles.infoSection}>
-          <h4 className={styles.sectionTitle}>Shared Files</h4>
-          <p className={styles.sectionPlaceholder}>View all files exchanged in this conversation</p>
-        </div>
-        <div className={styles.infoSection}>
-          <h4 className={styles.sectionTitle}>Shared Images</h4>
-          <p className={styles.sectionPlaceholder}>View all images exchanged in this conversation</p>
-        </div>
-        <div className={styles.infoSection}>
-          <h4 className={styles.sectionTitle}>Shared Links</h4>
-          <p className={styles.sectionPlaceholder}>View all links shared in this conversation</p>
         </div>
       </div>
     </div>

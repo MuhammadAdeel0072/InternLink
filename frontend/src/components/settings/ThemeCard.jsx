@@ -31,16 +31,17 @@ const themeStyles = {
   },
 };
 
-const ThemeCard = React.memo(({ theme, isSelected, onClick, description }) => {
+const ThemeCard = React.memo(({ theme, isSelected, onClick, description, disabled }) => {
   const colors = themeStyles[theme] || themeStyles.dark;
 
   return (
     <button
       onClick={onClick}
-      className={`${styles.themeCard} ${isSelected ? styles.themeCardSelected : ''}`}
+      className={`${styles.themeCard} ${isSelected ? styles.themeCardSelected : ''} ${disabled ? styles.themeCardDisabled : ''}`}
       aria-pressed={isSelected}
       aria-label={`${theme} theme`}
       type="button"
+      disabled={disabled}
     >
       <div className={styles.preview} style={{ backgroundColor: colors.bg }}>
         <div className={styles.previewNavbar} style={{ backgroundColor: colors.primary }} />

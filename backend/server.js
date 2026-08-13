@@ -11,6 +11,7 @@ import compression from 'compression';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 
 import passport from 'passport';
 import connectDB from './config/db.js';
@@ -78,10 +79,11 @@ const userSocketMap = new Map();
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  socket.on('register', (userId) => {
+   socket.on('register', (userId) => {
     if (userId) {
       userSocketMap.set(userId, socket.id);
       console.log(`Registered user ${userId} to socket ${socket.id}`);
+      socket.broadcast.emit('user:online', { userId });
     }
   });
 
@@ -258,11 +260,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
+   socket.on('disconnect', () => {
     for (const [userId, socketId] of userSocketMap.entries()) {
       if (socketId === socket.id) {
         userSocketMap.delete(userId);
         console.log(`Unregistered user ${userId}`);
+        socket.broadcast.emit('user:offline', { userId });
         break;
       }
     }
@@ -321,6 +324,9 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Initialize Passport
 app.use(passport.initialize());

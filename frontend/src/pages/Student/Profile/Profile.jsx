@@ -135,8 +135,7 @@ const ProfilePage = () => {
         const ownProfile = !userId || 
                        userId === 'me' || 
                        String(userId) === String(storedUser?._id);
-      const url = ownProfile ? '/profile/me' : `/profile/user/${userId}`;
-      console.log('🔍 FETCHING:', { userId, ownProfile, url });
+       const url = ownProfile ? '/profile/me' : `/profile/user/${userId}`;
       const res = await api.get(url);
       setProfile(res.data);
 
@@ -216,16 +215,9 @@ const ProfilePage = () => {
 
   useEffect(() => {
   const ownProfile = !userId || 
-                     userId === 'me' || 
-                     String(userId) === String(storedUser?._id);
-  setIsOwnProfile(ownProfile);
-  console.log('🔍 DEBUG:', { 
-    userId, 
-    storedUserId: storedUser?._id, 
-    ownProfile,
-    userIdType: typeof userId,
-    storedUserIdType: typeof storedUser?._id
-  });
+                      userId === 'me' || 
+                      String(userId) === String(storedUser?._id);
+      setIsOwnProfile(ownProfile);
   fetchProfile();
 }, [userId]);
 

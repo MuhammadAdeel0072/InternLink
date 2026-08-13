@@ -2,13 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useMessages } from '../../context/MessageContext';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
-import MessageBubble from './MessageBubble';
+import { useOnlineStatus } from '../../context/OnlineStatusContext';
+import { useNavigate } from 'react-router-dom';
+import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import MessageSkeleton from './MessageSkeleton';
-import TypingIndicator from './TypingIndicator';
-import EmptyChat from './EmptyChat';
 import ConversationInfo from './ConversationInfo';
-import { MoreVertical, Info, Search, ArrowLeft } from 'lucide-react';
+import { Phone, Video, MoreVertical, Search, ArrowLeft } from 'lucide-react';
 import styles from './ChatWindow.module.css';
 
 const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
@@ -23,16 +22,40 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
     reactToMessage,
     pinConversation,
     muteConversation,
-    archiveConversation,
-    deleteConversation
-  } = useMessages();
+     archiveConversation,
+     deleteConversation,
+     sendMessageError
+   } = useMessages();
   const { socket } = useSocket();
   const { user } = useAuth();
+  const { isOnline } = useOnlineStatus();
+  const navigate = useNavigate();
   const [replyingTo, setReplyingTo] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const messagesEndRef = useRef();
-  const containerRef = useRef();
+  const [showSearch, setShowSearch] = useState(false);
   const typingTimeoutRef = useRef();
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!conversation || !messages.length) return;
+
+    const otherUserId = conversation.otherUser?._id;
+    const unreadMessageIds = messages
+      .filter((msg) => {
+        const senderId = msg.sender?._id?.toString() || msg.sender?.toString();
+        return senderId !== user?._id?.toString() && msg.status !== 'read';
+      })
+      .map((msg) => msg._id);
+
+    if (unreadMessageIds.length > 0) {
+      markAsRead(conversation._id, unreadMessageIds);
+    }
+  }, [conversation, messages, user, markAsRead]);
 
   const emitTyping = useCallback(() => {
     if (!socket || !conversation || !user) return;
@@ -50,51 +73,6 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
       });
     }, 2000);
   }, [socket, conversation, user]);
-
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  useEffect(() => {
-    if (!socket || !conversation || !user) return;
-
-    const handleTyping = () => {
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      socket.emit('message:typing', {
-        conversationId: conversation._id,
-        userId: user._id,
-        recipientId: conversation.otherUser._id
-      });
-      typingTimeoutRef.current = setTimeout(() => {
-        socket.emit('message:stopTyping', {
-          conversationId: conversation._id,
-          userId: user._id,
-          recipientId: conversation.otherUser._id
-        });
-      }, 2000);
-    };
-
-    return () => {
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    };
-  }, [socket, conversation, user]);
-
-  useEffect(() => {
-    if (!conversation || !messages.length) return;
-    const unreadMessageIds = messages
-      .filter((msg) => msg.sender?._id?.toString() !== user?._id?.toString() && msg.sender?.toString() !== user?._id?.toString() && msg.status !== 'read')
-      .map((msg) => msg._id);
-
-    if (unreadMessageIds.length > 0) {
-      markAsRead(conversation._id, unreadMessageIds);
-    }
-  }, [conversation, messages, user, markAsRead]);
 
   const handleSend = async (text, attachment, replyTo) => {
     if (!conversation) return;
@@ -135,81 +113,109 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
     }
   };
 
-  const filteredMessages = searchQuery
-    ? messages.filter((msg) => msg.message?.toLowerCase().includes(searchQuery.toLowerCase()))
-    : messages;
+  const handleProfileClick = () => {
+    const otherUserId = conversation.otherUser?._id;
+    if (otherUserId) {
+      navigate(`/profile/${otherUserId}`);
+    }
+  };
 
+  const online = isOnline(conversation?.otherUser?._id);
   const isTyping = conversation && typingUsers[conversation._id];
 
   if (!conversation) {
-    return <EmptyChat />;
+    return null;
   }
 
   return (
-    <div className={styles.chatWindow}>
+    <div className={`${styles.chatWindow} ${showInfo ? styles.showInfo : ''}`}>
       <div className={styles.chatHeader}>
         <div className={styles.headerLeft}>
           {onBack && (
-            <button onClick={onBack} className={styles.backButton}>
+            <button
+              onClick={onBack}
+              className={styles.backButton}
+              aria-label="Back to conversations"
+              title="Back"
+            >
               <ArrowLeft size={20} />
             </button>
           )}
-          <div className={styles.headerUserInfo}>
-            <div className={styles.headerAvatar}>
+          <div
+            className={styles.headerUserInfo}
+            onClick={handleProfileClick}
+            role="button"
+            tabIndex={0}
+            aria-label={`View profile of ${conversation.otherUser?.name}`}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleProfileClick(); }}
+          >
+            <div className={`${styles.headerAvatar} ${online ? styles.headerAvatarOnline : ''}`}>
               {conversation.otherUser.avatar ? (
-                <img src={conversation.otherUser.avatar} alt="" />
+                <img src={conversation.otherUser.avatar} alt={conversation.otherUser.name} loading="lazy" />
               ) : (
                 <div className={styles.headerAvatarFallback}>
                   {conversation.otherUser.name?.charAt(0).toUpperCase()}
                 </div>
               )}
+              <span
+                className={`${styles.statusDot} ${online ? styles.statusOnline : styles.statusOffline}`}
+                aria-label={online ? 'Online' : 'Offline'}
+              />
             </div>
             <div className={styles.headerDetails}>
               <h3 className={styles.headerName}>{conversation.otherUser.name}</h3>
               <p className={styles.headerStatus}>
-                {isTyping ? 'typing...' : (conversation.otherUser.currentStatus || conversation.otherUser.role)}
+                {isTyping ? 'typing...' : (online ? 'Online' : (conversation.otherUser.currentStatus || conversation.otherUser.role))}
               </p>
             </div>
           </div>
         </div>
+
         <div className={styles.headerRight}>
-          <button onClick={onToggleInfo} className={`${styles.headerBtn} ${showInfo ? styles.headerBtnActive : ''}`} title="Conversation info">
-            <Info size={18} />
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className={`${styles.headerBtn} ${showSearch ? styles.headerBtnActive : ''}`}
+            aria-label="Search messages"
+            title="Search"
+          >
+            <Search size={18} />
+          </button>
+          <button className={styles.headerBtn} aria-label="Voice call" title="Voice call">
+            <Phone size={18} />
+          </button>
+          <button className={styles.headerBtn} aria-label="Video call" title="Video call">
+            <Video size={18} />
+          </button>
+          <button
+            onClick={onToggleInfo}
+            className={`${styles.headerBtn} ${showInfo ? styles.headerBtnActive : ''}`}
+            aria-label="Conversation info"
+            title="Conversation info"
+          >
+            <MoreVertical size={18} />
           </button>
         </div>
       </div>
 
-      <div className={styles.messagesArea} ref={containerRef}>
-        {messagesLoading ? (
-          <MessageSkeleton />
-        ) : (
-          <>
-            {searchQuery && (
-              <div className={styles.searchHeader}>
-                <Search size={14} />
-                <span>Search results for "{searchQuery}"</span>
-              </div>
-            )}
-            <div className={styles.messagesList}>
-              {filteredMessages.map((msg) => (
-                <MessageBubble
-                  key={msg._id}
-                  message={msg}
-                  isMine={msg.isMine}
-                  onReply={handleReply}
-                  onReact={reactToMessage}
-                  onEdit={editMessage}
-                  onDelete={deleteMessage}
-                  currentUserId={user._id}
-                  showActions
-                />
-              ))}
-            </div>
-            {isTyping && <TypingIndicator name={conversation.otherUser.name} />}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-      </div>
+      <MessageList
+        messages={messages}
+        loading={messagesLoading}
+        currentUserId={user._id}
+        typingUsers={typingUsers}
+        activeConversation={conversation}
+        onReply={handleReply}
+        onReact={reactToMessage}
+        onEdit={editMessage}
+        onDelete={deleteMessage}
+      />
+
+      {showInfo && (
+        <ConversationInfo
+          conversation={conversation}
+          onAction={handleConversationAction}
+          onClose={() => onToggleInfo()}
+        />
+      )}
 
       <MessageInput
         onSend={handleSend}
@@ -217,7 +223,13 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
         onTyping={emitTyping}
+        placeholder={`Message ${conversation.otherUser.name}...`}
       />
+      {sendMessageError && (
+        <div className={styles.sendMessageError} role="alert" aria-live="polite">
+          {sendMessageError}
+        </div>
+      )}
     </div>
   );
 };

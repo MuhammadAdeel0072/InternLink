@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 import Modal from '../../../components/Modal/Modal';
 import StatusBadge from '../../../components/StatusBadge/StatusBadge';
-import InterviewCard from '../../../components/InterviewCard/InterviewCard';
 import CalendarView from '../../../components/CalendarView/CalendarView';
 import PrimaryButton from '../../../components/primaryButton/primaryButton';
 import Toast from '../../../components/Toast/Toast';
@@ -21,7 +18,6 @@ import {
   RefreshCw,
   MapPin,
   Link as LinkIcon,
-  MessageSquare,
   Video,
   Phone,
   Play,
@@ -57,8 +53,6 @@ const SORT_OPTIONS = [
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 const StudentInterviews = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [interviews, setInterviews] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0, limit: 10 });
@@ -126,6 +120,7 @@ const StudentInterviews = () => {
 
   useEffect(() => {
     fetchInterviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, pagination.page, pagination.limit]);
 
   const fetchInterviews = async () => {
@@ -346,7 +341,7 @@ const StudentInterviews = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1 }}>
                   <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 600 }}>
-                    {interview.recruiterData?.name?.charAt(0).toUpperCase() || 'R'}
+                    {(interview.recruiterData?.name?.charAt(0) || 'R').toUpperCase()}
                   </div>
                   <div>
                     <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
@@ -711,8 +706,8 @@ const StudentInterviews = () => {
                 justifyContent: 'center',
                 fontSize: '1.5rem',
                 fontWeight: 600
-              }}>
-                {selectedInterview.recruiterData?.name?.charAt(0).toUpperCase() || 'R'}
+               }}>
+                {(selectedInterview.recruiterData?.name?.charAt(0) || 'R').toUpperCase()}
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>

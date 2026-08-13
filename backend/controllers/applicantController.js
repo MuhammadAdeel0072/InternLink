@@ -2,7 +2,7 @@ import Application from '../models/Application.js';
 import Job from '../models/Job.js';
 import Profile from '../models/Profile.js';
 import User from '../models/User.js';
-import Notification from '../models/Notification.js';
+import { createNotification } from '../services/notificationService.js';
 import { escapeRegExp } from '../utils/regex.js';
 
 // Helper to push timeline entry
@@ -17,21 +17,6 @@ const addTimelineEntry = async (applicationId, status, changedBy, reason = '') =
       }
     }
   });
-};
-
-// Helper to create notification
-const createNotification = async (recipientId, senderId, type, content, link = '') => {
-  try {
-    await Notification.create({
-      recipient: recipientId,
-      sender: senderId,
-      type,
-      content,
-      link
-    });
-  } catch (error) {
-    console.error('Notification creation error:', error);
-  }
 };
 
 // @desc    Get all applicants for recruiter's jobs with search, filters, sorting
@@ -309,24 +294,30 @@ export const updateApplicantStatus = async (req, res) => {
 
     await application.save();
 
-    // Notify student
-    const statusMessages = {
-      'under-review': 'Your application is now under review',
-      'shortlisted': 'Congratulations! You have been shortlisted',
-      'interview': 'An interview has been scheduled for your application',
-      'offer': 'An offer has been sent for your application',
-      'hired': 'Congratulations! You have been hired',
-      'rejected': 'Your application has been reviewed'
+     // Notify student
+    const statusNotifications = {
+      'under-review': { type: 'application-submitted', title: 'Application Under Review', message: statusMessages[status] },
+      'shortlisted': { type: 'application-shortlisted', title: 'Application Shortlisted', message: statusMessages[status] },
+      'interview': { type: 'application-submitted', title: 'Interview Scheduled', message: statusMessages[status] },
+      'offer': { type: 'application-submitted', title: 'Offer Sent', message: statusMessages[status] },
+      'hired': { type: 'application-accepted', title: 'Application Accepted', message: statusMessages[status] },
+      'rejected': { type: 'application-rejected', title: 'Application Status Updated', message: statusMessages[status] }
     };
 
-    if (statusMessages[status]) {
-      await createNotification(
-        application.student._id,
-        req.user._id,
-        status === 'rejected' ? 'job-application' : 'job-application',
-        statusMessages[status],
-        `/profile/${application.student._id}`
-      );
+    if (statusNotifications[status]) {
+      const notif = statusNotifications[status];
+      await createNotification({
+        recipientId: application.student._id,
+        senderId: req.user._id,
+        title: notif.title,
+        message: notif.message,
+        type: notif.type,
+        category: 'application',
+        entityId: application._id,
+        entityType: 'application',
+        io: req.io,
+        userSocketMap: req.userSocketMap
+      });
     }
 
     res.status(200).json({
@@ -420,13 +411,18 @@ export const scheduleInterview = async (req, res) => {
     await application.save();
 
     // Notify student
-    await createNotification(
-      application.student._id,
-      req.user._id,
-      'job-application',
-      `An interview has been scheduled for your application to ${application.job.title}`,
-      `/profile/${application.student._id}`
-    );
+    await createNotification({
+      recipientId: application.student._id,
+      senderId: req.user._id,
+      title: 'Interview Scheduled',
+      message: `An interview has been scheduled for your application to ${application.job.title}`,
+      type: 'interview-scheduled',
+      category: 'interview',
+      entityId: application._id,
+      entityType: 'application',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,
@@ -469,13 +465,18 @@ export const messageApplicant = async (req, res) => {
       });
     }
 
-    await createNotification(
-      application.student._id,
-      req.user._id,
-      'message',
-      `You have a new message from a recruiter regarding ${application.job.title}`,
-      `/messages/${conversation._id}`
-    );
+    await createNotification({
+      recipientId: application.student._id,
+      senderId: req.user._id,
+      title: 'New Message from Recruiter',
+      message: `You have a new message from a recruiter regarding ${application.job.title}`,
+      type: 'message',
+      category: 'message',
+      entityId: conversation._id,
+      entityType: 'message',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,
@@ -610,13 +611,18 @@ export const bulkApplicantActions = async (req, res) => {
           timestamp: new Date(),
           reason: reason || ''
         });
-        await createNotification(
-          app.student._id,
-          req.user._id,
-          'job-application',
-          'You have been shortlisted for a position',
-          `/profile/${app.student._id}`
-        );
+        await createNotification({
+          recipientId: app.student._id,
+          senderId: req.user._id,
+          title: 'Application Shortlisted',
+          message: 'You have been shortlisted for a position',
+          type: 'application-shortlisted',
+          category: 'application',
+          entityId: app._id,
+          entityType: 'application',
+          io: req.io,
+          userSocketMap: req.userSocketMap
+        });
       } else if (action === 'reject') {
         app.status = 'rejected';
         app.rejectedAt = new Date();
@@ -627,13 +633,18 @@ export const bulkApplicantActions = async (req, res) => {
           timestamp: new Date(),
           reason: reason || ''
         });
-        await createNotification(
-          app.student._id,
-          req.user._id,
-          'job-application',
-          'Your application has been reviewed',
-          `/profile/${app.student._id}`
-        );
+        await createNotification({
+          recipientId: app.student._id,
+          senderId: req.user._id,
+          title: 'Application Status Updated',
+          message: 'Your application has been reviewed',
+          type: 'application-rejected',
+          category: 'application',
+          entityId: app._id,
+          entityType: 'application',
+          io: req.io,
+          userSocketMap: req.userSocketMap
+        });
       }
 
       await app.save();

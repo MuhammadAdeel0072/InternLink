@@ -3,7 +3,8 @@ import Profile from '../models/Profile.js';
 import {
   getNotificationStats,
   getUserPreferences,
-  updateUserPreferences
+  updateUserPreferences,
+  createNotification
 } from '../services/notificationService.js';
 
 // @desc    Get user's notifications with filters

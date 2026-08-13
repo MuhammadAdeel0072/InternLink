@@ -30,7 +30,7 @@ const RecruiterSidebar = ({ unreadNotifications }) => {
     { to: '/recruiter/dashboard', label: 'Dashboard', icon: Home },
     { to: '/recruiter/jobs', label: 'Jobs', icon: Briefcase },
     { to: '/recruiter/applicants', label: 'Talent', icon: UserSearch },
-    { to: '/messages', label: 'Messages', icon: MessageSquare },
+    { to: '/recruiter/messages', label: 'Messages', icon: MessageSquare },
     { to: '/notifications', label: 'Alerts', icon: Bell, badgeCount: unreadNotifications },
   ];
 

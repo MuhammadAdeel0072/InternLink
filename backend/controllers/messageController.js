@@ -67,14 +67,23 @@ export const getConversations = async (req, res) => {
         if (!otherUser) return false;
         return (
           otherUser.name?.toLowerCase().includes(searchLower) ||
-          otherUser.email?.toLowerCase().includes(searchLower)
+          otherUser.email?.toLowerCase().includes(searchLower) ||
+          conv.lastMessage?.toLowerCase().includes(searchLower)
         );
       });
     }
 
     const formatted = await Promise.all(
       conversations.map(async (conv) => {
-        return buildConversationPayload(conv, userId);
+        const payload = await buildConversationPayload(conv, userId);
+        if (!payload) return null;
+        const unreadCount = await Message.countDocuments({
+          conversation: conv._id,
+          sender: { $ne: userId },
+          status: { $in: ['sent', 'delivered'] }
+        });
+        payload.unreadCount = unreadCount;
+        return payload;
       })
     );
 
@@ -89,6 +98,7 @@ export const getConversations = async (req, res) => {
 // @access  Private
 export const getMessages = async (req, res) => {
   try {
+    const { limit = 50, before } = req.query;
     const conversation = await Conversation.findById(req.params.conversationId);
     if (!conversation) {
       return res.status(404).json({ message: 'Conversation not found' });
@@ -98,15 +108,26 @@ export const getMessages = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized to view these messages' });
     }
 
-    const messages = await Message.find({
+    let query = {
       conversation: req.params.conversationId,
       $nor: [{ deletedFor: req.user._id }]
-    })
+    };
+
+    if (before) {
+      query.createdAt = { $lt: new Date(before) };
+    }
+
+    const messages = await Message.find(query)
       .populate('sender', 'name email')
       .sort({ createdAt: 1 });
 
+    let allMessages = messages;
+    if (limit) {
+      allMessages = messages.slice(messages.length - parseInt(limit));
+    }
+
     const formatted = await Promise.all(
-      messages.map((msg) => buildMessagePayload(msg, req.user._id))
+      allMessages.map((msg) => buildMessagePayload(msg, req.user._id))
     );
 
     await Message.updateMany(
@@ -121,7 +142,17 @@ export const getMessages = async (req, res) => {
       }
     );
 
-    res.status(200).json(formatted.filter(Boolean));
+    const unreadCount = await Message.countDocuments({
+      conversation: req.params.conversationId,
+      sender: { $ne: req.user._id },
+      status: { $in: ['sent', 'delivered'] }
+    });
+
+    res.status(200).json({
+      messages: formatted.filter(Boolean),
+      hasMore: messages.length >= parseInt(limit) && messages.length > 0,
+      unreadCount
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

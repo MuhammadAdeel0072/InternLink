@@ -1,37 +1,76 @@
-.conversationInfo {
+.infoPanel {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  padding: 0;
+  border-left: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  padding: 20px;
+  scrollbar-width: none;
+}
+
+.infoPanel::-webkit-scrollbar {
+  display: none;
+}
+
+.infoPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.infoPanelTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.infoPanelClose {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.infoPanelClose:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .infoHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .userHeader {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
-  flex: 1;
-  min-width: 0;
+  gap: 12px;
 }
 
 .avatarSection {
-  width: 56px;
-  height: 56px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   overflow: hidden;
-  flex-shrink: 0;
   background-color: var(--bg-tertiary);
   border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .avatarImage {
@@ -48,45 +87,42 @@
   justify-content: center;
   color: var(--primary);
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-tertiary) 100%);
 }
 
 .userDetails {
-  min-width: 0;
-  flex: 1;
+  text-align: center;
 }
 
 .userName {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  margin: 0;
   color: var(--text-primary);
+  margin: 0;
   font-family: var(--font-display);
 }
 
 .userHeadline {
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin: 4px 0 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 2px 0 0;
 }
 
 .menuWrapper {
   position: relative;
-  flex-shrink: 0;
 }
 
 .menuButton {
+  padding: 8px;
+  border-radius: var(--radius-sm);
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 6px;
   display: flex;
-  border-radius: var(--radius-sm);
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
@@ -97,20 +133,25 @@
 
 .menuOverlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 999;
 }
 
 .dropdownMenu {
   position: absolute;
-  right: 0;
   top: 100%;
+  right: 0;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  min-width: 190px;
   overflow: hidden;
   margin-top: 4px;
 }
@@ -119,15 +160,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
   padding: 10px 14px;
   background: none;
   border: none;
   color: var(--text-primary);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.15s;
   text-align: left;
+  transition: all 0.15s ease;
 }
 
 .menuItem:hover {
@@ -145,82 +185,66 @@
 .infoBody {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 12px;
 }
 
 .infoRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-tertiary);
 }
 
 .infoIcon {
+  width: 16px;
+  height: 16px;
   color: var(--text-muted);
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
 }
 
 .infoText {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.infoSections {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.sectionPlaceholder {
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
 
-.infoSections {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.infoSection {
-  padding: 14px;
-  background-color: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  transition: all 0.2s;
-}
-
-.infoSection:hover {
-  border-color: var(--border-hover);
-}
-
-.sectionTitle {
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin: 0 0 6px;
-  color: var(--text-primary);
-  font-family: var(--font-display);
-}
-
-.sectionPlaceholder {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.5;
-}
-
 @media (max-width: 768px) {
-  .conversationInfo {
-    padding: 0;
-  }
-
-  .infoHeader {
-    padding-bottom: 14px;
-    margin-bottom: 16px;
+  .infoPanel {
+    padding: 16px;
   }
 
   .avatarSection {
-    width: 48px;
-    height: 48px;
-  }
-
-  .userName {
-    font-size: 0.95rem;
-  }
-
-  .userHeadline {
-    font-size: 0.8rem;
+    width: 64px;
+    height: 64px;
   }
 }

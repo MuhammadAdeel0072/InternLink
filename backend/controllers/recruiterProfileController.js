@@ -253,6 +253,10 @@ export const uploadRecruiterAvatar = async (req, res) => {
       { $set: { avatar: fileUrl } },
       { new: true }
     ).populate('user', 'name email role isVerified preferences');
+    
+    // Synchronize the avatar field in the User model
+    await User.findByIdAndUpdate(req.user._id, { $set: { avatar: fileUrl } });
+    
     const profileObj = profile.toObject();
     res.status(200).json({
       ...profileObj,
@@ -297,6 +301,10 @@ export const removeRecruiterAvatar = async (req, res) => {
       { $set: { avatar: '' } },
       { new: true }
     ).populate('user', 'name email role isVerified preferences');
+    
+    // Synchronize the avatar field in the User model
+    await User.findByIdAndUpdate(req.user._id, { $set: { avatar: '' } });
+    
     const profileObj = profile.toObject();
     res.status(200).json({
       ...profileObj,

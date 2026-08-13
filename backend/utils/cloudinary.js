@@ -1,5 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -16,22 +18,36 @@ if (isConfigured) {
     api_secret: process.env.CLOUDINARY_API_SECRET
   });
 } else {
-  console.log('Cloudinary credentials not set. Falling back to base64 Data URLs for file storage.');
+  console.log('Cloudinary credentials not set. Falling back to local file storage.');
 }
 
 /**
- * Uploads a file buffer to Cloudinary, or falls back to a base64 Data URI
+ * Uploads a file buffer to Cloudinary, or falls back to local file storage
  * @param {Object} file - The file object from Multer (with buffer, originalname, mimetype)
- * @returns {Promise<string>} The uploaded URL or the base64 fallback URI
+ * @returns {Promise<string>} The uploaded URL
  */
 export const uploadToCloudinary = async (file) => {
   if (!file) return '';
 
   if (!isConfigured) {
-    // Fallback: Convert to base64 data URL
-    const b64 = Buffer.from(file.buffer).toString('base64');
-    const dataURI = `data:${file.mimetype};base64,${b64}`;
-    return dataURI;
+    // Fallback: Save to local filesystem
+    const uploadDir = path.join(process.cwd(), 'uploads');
+    
+    // Ensure the uploads directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    // Generate unique filename to prevent caching issues
+    const ext = path.extname(file.originalname || '') || (file.mimetype === 'application/pdf' ? '.pdf' : '.jpg');
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    const filePath = path.join(uploadDir, filename);
+    
+    fs.writeFileSync(filePath, file.buffer);
+    
+    // Construct the absolute URL using BACKEND_URL or fallback
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    return `${baseUrl}/uploads/${filename}`;
   }
 
   return new Promise((resolve, reject) => {

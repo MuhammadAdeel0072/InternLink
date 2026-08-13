@@ -9,6 +9,7 @@ const THEME_OPTIONS = [
   { id: 'light', label: 'Light Theme', description: 'Clean bright interface', icon: '☀️' },
   { id: 'dark', label: 'Dark Theme', description: 'Comfortable for low-light environments', icon: '🌙' },
   { id: 'ocean', label: 'Ocean Theme', description: 'Blue inspired modern interface', icon: '🌊' },
+  { id: 'system', label: 'System Theme', description: 'Match your system preference', icon: '💻' },
 ];
 
 export const ThemeProvider = ({ children }) => {

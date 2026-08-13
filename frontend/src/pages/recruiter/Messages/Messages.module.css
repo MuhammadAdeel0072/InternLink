@@ -52,6 +52,14 @@
     padding: 8px;
   }
 
+  .conversationsPanel {
+    border-radius: var(--radius-lg);
+  }
+
+  .chatPanel {
+    display: none;
+  }
+
   .messagesLayout.hasActiveConversation {
     grid-template-columns: 1fr;
   }

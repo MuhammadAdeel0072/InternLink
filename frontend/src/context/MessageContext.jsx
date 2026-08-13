@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useSocket } from './SocketContext';
 import { messageService } from '../services/messageService';
 import { useAuth } from './AuthContext';
@@ -11,17 +11,33 @@ export const MessageProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
-  const [unreadCounts, setUnreadCounts] = useState({});
   const [typingUsers, setTypingUsers] = useState({});
   const [socketConnected, setSocketConnected] = useState(false);
+  const [sendMessageError, setSendMessageError] = useState(null);
   const { socket } = useSocket();
   const { user } = useAuth();
+  const pendingMessagesRef = useRef(new Map());
+
+  const computeUnreadCounts = useCallback((convs, msgs = []) => {
+    const counts = {};
+    convs.forEach((conv) => {
+      const count = msgs.filter(
+        (m) => m.conversation?.toString() === conv._id?.toString() &&
+        !m.isMine &&
+        (m.status === 'sent' || m.status === 'delivered')
+      ).length;
+      counts[conv._id] = count;
+    });
+    return counts;
+  }, []);
 
   const fetchConversations = useCallback(async (filter = 'all', search = '') => {
     try {
       setLoading(true);
       const data = await messageService.getConversations(filter, search);
       setConversations(data);
+      const counts = {};
+      data.forEach((conv) => { counts[conv._id] = conv.unreadCount || 0; });
       return data;
     } catch (error) {
       console.error('Failed to load conversations:', error);
@@ -31,10 +47,11 @@ export const MessageProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchMessages = useCallback(async (conversationId) => {
+  const fetchMessages = useCallback(async (conversationId, limit = 50, before = null) => {
     try {
       setMessagesLoading(true);
-      const data = await messageService.getMessages(conversationId);
+      const response = await messageService.getMessages(conversationId, limit, before);
+      const data = response.messages || response;
       setMessages(data);
       return data;
     } catch (error) {
@@ -46,30 +63,78 @@ export const MessageProvider = ({ children }) => {
   }, []);
 
   const sendMessage = useCallback(async (conversationId, text, attachment = null, replyTo = null) => {
-    try {
-      const data = await messageService.sendMessage(conversationId, text, attachment, replyTo);
-      setMessages((prev) => [...prev, data]);
-      setConversations((prev) => {
-        const updated = prev.map((c) =>
-          c._id === conversationId
-            ? {
-                ...c,
-                lastMessage: text || (data.messageType === 'image' ? '[Image]' : data.messageType === 'resume' ? '[Resume]' : '[Attachment]'),
-                lastMessageAt: data.createdAt
-              }
-            : c
-        );
-        return updated.sort((a, b) => {
-          if (a.isPinned !== b.isPinned) return b.isPinned - a.isPinned;
-          return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
-        });
+    const trimmedText = text?.trim();
+    if (!trimmedText && !attachment) {
+      throw new Error('Message cannot be empty');
+    }
+
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const optimisticMessage = {
+      _id: tempId,
+      conversation: conversationId,
+      sender: user._id,
+      message: trimmedText,
+      messageType: attachment ? 'image' : 'text',
+      attachments: attachment ? [{ url: URL.createObjectURL(attachment), type: attachment.type, name: attachment.name, size: attachment.size }] : [],
+      replyTo,
+      reactions: [],
+      status: 'sending',
+      edited: false,
+      deleted: false,
+      deletedFor: [],
+      isMine: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    pendingMessagesRef.current.set(tempId, optimisticMessage);
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setConversations((prev) => {
+      const updated = prev.map((c) =>
+        c._id === conversationId
+          ? {
+              ...c,
+              lastMessage: trimmedText || '[Attachment]',
+              lastMessageAt: new Date().toISOString()
+            }
+          : c
+      );
+      return updated.sort((a, b) => {
+        if (a.isPinned !== b.isPinned) return b.isPinned - a.isPinned;
+        return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
       });
+    });
+
+    try {
+      const data = await messageService.sendMessage(conversationId, trimmedText, attachment, replyTo);
+
+      setMessages((prev) =>
+        prev.map((msg) => (msg._id === tempId ? data : msg))
+      );
+
+      pendingMessagesRef.current.delete(tempId);
+      setSendMessageError(null);
       return data;
     } catch (error) {
-      console.error('Failed to send message:', error);
+      setSendMessageError(error.response?.data?.message || 'Message could not be sent. Please try again.');
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === tempId
+            ? { ...msg, status: 'failed', _id: tempId, error: true }
+            : msg
+        )
+      );
+
+      setTimeout(() => {
+        setMessages((prev) => prev.filter((msg) => msg._id !== tempId));
+        pendingMessagesRef.current.delete(tempId);
+      }, 5000);
+
       throw error;
     }
-  }, []);
+  }, [user]);
 
   const markAsRead = useCallback(async (conversationId, messageIds) => {
     try {
@@ -79,7 +144,6 @@ export const MessageProvider = ({ children }) => {
           messageIds.includes(msg._id) ? { ...msg, status: 'read' } : msg
         )
       );
-      setUnreadCounts((prev) => ({ ...prev, [conversationId]: 0 }));
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }
@@ -103,7 +167,11 @@ export const MessageProvider = ({ children }) => {
       await messageService.deleteMessage(messageId, deleteForEveryone);
       setMessages((prev) =>
         prev.map((msg) =>
-          msg._id === messageId ? { ...msg, deleted: true, deletedFor: [...msg.deletedFor, user._id] } : msg
+          msg._id === messageId
+            ? deleteForEveryone
+              ? { ...msg, deleted: true, message: 'This message was deleted', attachments: [] }
+              : { ...msg, deletedFor: [...msg.deletedFor, user._id] }
+            : msg
         )
       );
     } catch (error) {
@@ -142,7 +210,9 @@ export const MessageProvider = ({ children }) => {
     try {
       const data = await messageService.pinConversation(conversationId);
       setConversations((prev) => {
-        const updated = prev.map((c) => (c._id === conversationId ? { ...c, isPinned: data.isPinned } : c));
+        const updated = prev.map((c) =>
+          c._id === conversationId ? { ...c, isPinned: data.isPinned } : c
+        );
         return updated.sort((a, b) => {
           if (a.isPinned !== b.isPinned) return b.isPinned - a.isPinned;
           return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
@@ -159,7 +229,11 @@ export const MessageProvider = ({ children }) => {
     try {
       const data = await messageService.muteConversation(conversationId, duration);
       setConversations((prev) =>
-        prev.map((c) => (c._id === conversationId ? { ...c, isMuted: data.isMuted, mutedUntil: data.mutedUntil } : c))
+        prev.map((c) =>
+          c._id === conversationId
+            ? { ...c, isMuted: data.isMuted, mutedUntil: data.mutedUntil }
+            : c
+        )
       );
       return data;
     } catch (error) {
@@ -182,15 +256,29 @@ export const MessageProvider = ({ children }) => {
     }
   }, [activeConversation]);
 
+  const unreadCounts = useCallback((conversationId) => {
+    const conv = conversations.find((c) => c._id === conversationId);
+    if (conv?.unreadCount !== undefined) return conv.unreadCount;
+    return messages.filter(
+      (m) =>
+        m.conversation?.toString() === conversationId?.toString() &&
+        !m.isMine &&
+        (m.status === 'sent' || m.status === 'delivered')
+    ).length;
+  }, [conversations, messages]);
+
   const incrementUnread = useCallback((conversationId) => {
-    setUnreadCounts((prev) => ({
-      ...prev,
-      [conversationId]: (prev[conversationId] || 0) + 1
-    }));
+    setConversations((prev) =>
+      prev.map((c) =>
+        c._id === conversationId ? { ...c, unreadCount: (c.unreadCount || 0) + 1 } : c
+      )
+    );
   }, []);
 
   const clearUnread = useCallback((conversationId) => {
-    setUnreadCounts((prev) => ({ ...prev, [conversationId]: 0 }));
+    setConversations((prev) =>
+      prev.map((c) => (c._id === conversationId ? { ...c, unreadCount: 0 } : c))
+    );
   }, []);
 
   useEffect(() => {
@@ -205,20 +293,31 @@ export const MessageProvider = ({ children }) => {
         }
         return prev;
       });
+
       setConversations((prev) => {
         const existing = prev.find((c) => c._id === conversationId);
         if (existing) {
           return prev.map((c) =>
             c._id === conversationId
-              ? { ...c, lastMessage: message.message || '[Attachment]', lastMessageAt: message.createdAt }
+              ? {
+                  ...c,
+                  lastMessage: message.message || '[Attachment]',
+                  lastMessageAt: message.createdAt,
+                  unreadCount: activeConversation?._id === conversationId
+                    ? c.unreadCount
+                    : (c.unreadCount || 0) + 1
+                }
               : c
-          );
+          ).sort((a, b) => {
+            if (a.isPinned !== b.isPinned) return b.isPinned - a.isPinned;
+            return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
+          });
         }
         return prev;
       });
 
       if (activeConversation && conversationId === activeConversation._id) {
-        setUnreadCounts((prev) => ({ ...prev, [conversationId]: 0 }));
+        clearUnread(conversationId);
       } else {
         incrementUnread(conversationId);
       }
@@ -241,7 +340,9 @@ export const MessageProvider = ({ children }) => {
     const handleSeen = ({ conversationId }) => {
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.conversation?.toString() === conversationId?.toString() && msg.status !== 'read' ? { ...msg, status: 'read' } : msg
+          msg.conversation?.toString() === conversationId?.toString() && msg.status !== 'read'
+            ? { ...msg, status: 'read' }
+            : msg
         )
       );
     };
@@ -267,7 +368,9 @@ export const MessageProvider = ({ children }) => {
     const handleConversationUpdate = ({ conversationId, lastMessage, lastMessageAt }) => {
       setConversations((prev) =>
         prev.map((c) =>
-          c._id === conversationId ? { ...c, lastMessage, lastMessageAt } : c
+          c._id === conversationId
+            ? { ...c, lastMessage, lastMessageAt }
+            : c
         )
       );
     };
@@ -281,6 +384,12 @@ export const MessageProvider = ({ children }) => {
     socket.on('message:delete', handleDelete);
     socket.on('conversation:update', handleConversationUpdate);
 
+    const handleDisconnect = () => {
+      setSocketConnected(false);
+    };
+
+    socket.on('disconnect', handleDisconnect);
+
     return () => {
       socket.off('message:new', handleNewMessage);
       socket.off('message:typing', handleTyping);
@@ -290,19 +399,22 @@ export const MessageProvider = ({ children }) => {
       socket.off('message:edit', handleEdit);
       socket.off('message:delete', handleDelete);
       socket.off('conversation:update', handleConversationUpdate);
+      socket.off('disconnect', handleDisconnect);
     };
-  }, [socket, user, activeConversation, incrementUnread]);
+  }, [socket, user, activeConversation, incrementUnread, clearUnread]);
 
   const value = {
     conversations,
     activeConversation,
     setActiveConversation,
     messages,
+    setMessages,
     loading,
     messagesLoading,
-    unreadCounts,
     typingUsers,
     socketConnected,
+    sendMessageError,
+    unreadCounts,
     fetchConversations,
     fetchMessages,
     sendMessage,
@@ -315,8 +427,7 @@ export const MessageProvider = ({ children }) => {
     muteConversation,
     deleteConversation,
     incrementUnread,
-    clearUnread,
-    setMessages
+    clearUnread
   };
 
   return (

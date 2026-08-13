@@ -55,9 +55,9 @@ export const validatePasswordReset = [
 
 export const validatePost = [
   body('content')
+    .optional({ values: 'undefined' })
     .trim()
-    .isLength({ max: 5000 }).withMessage('Post content cannot exceed 5000 characters')
-    .optional(),
+    .isLength({ max: 5000 }).withMessage('Post content cannot exceed 5000 characters'),
   validateRequest
 ];
 
@@ -89,8 +89,8 @@ export const validateJob = [
   validateRequest
 ];
 
-export const validateObjectId = [
-  param('id')
+export const validateObjectId = (paramName = 'id') => [
+  param(paramName)
     .isMongoId().withMessage('Invalid ID format'),
   validateRequest
 ];

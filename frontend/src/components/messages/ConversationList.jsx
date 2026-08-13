@@ -1,29 +1,48 @@
-import React, { useState } from 'react';
-import { Search, Filter, X } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, X, Edit3 } from 'lucide-react';
 import ConversationCard from './ConversationCard';
 import styles from './ConversationList.module.css';
+
+const FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'unread', label: 'Unread' },
+  { id: 'pinned', label: 'Pinned' },
+  { id: 'archived', label: 'Archived' },
+];
 
 const ConversationList = ({
   conversations,
   activeConversation,
   unreadCounts,
   onSelectConversation,
-  loading
+  onFilterChange,
+  onSearch,
+   onNewConversation,
+   loading,
+   activeFilter = 'all'
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [localSearch, setLocalSearch] = useState('');
 
-  const filteredConversations = conversations.filter((conv) => {
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return conv.otherUser?.name?.toLowerCase().includes(q) ||
-        conv.otherUser?.email?.toLowerCase().includes(q);
-    }
-    if (filter === 'unread') return unreadCounts[conv._id] > 0;
-    if (filter === 'archived') return conv.isArchived;
-    if (filter === 'pinned') return conv.isPinned;
-    return !conv.isArchived;
-  });
+  const handleSearchChange = (e) => {
+    setLocalSearch(e.target.value);
+  };
+
+  const filteredConversations = useMemo(() => {
+    return conversations.filter((conv) => {
+      const q = localSearch.toLowerCase();
+      if (q) {
+        if (!conv.otherUser?.name?.toLowerCase().includes(q) &&
+            !conv.otherUser?.email?.toLowerCase().includes(q) &&
+            !conv.lastMessage?.toLowerCase().includes(q)) {
+          return false;
+        }
+      }
+      if (activeFilter === 'unread') return (unreadCounts[conv._id] || 0) > 0;
+      if (activeFilter === 'archived') return conv.isArchived;
+      if (activeFilter === 'pinned') return conv.isPinned;
+      return !conv.isArchived;
+    });
+  }, [conversations, localSearch, activeFilter, unreadCounts]);
 
   const pinnedConversations = filteredConversations.filter((c) => c.isPinned);
   const recentConversations = filteredConversations.filter((c) => !c.isPinned);
@@ -32,52 +51,68 @@ const ConversationList = ({
     <div className={styles.conversationListContainer}>
       <div className={styles.header}>
         <h2 className={styles.headerTitle}>Messages</h2>
-        <span className={styles.headerSubtitle}>
-          {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
-        </span>
+        <button
+          className={styles.newMessageBtn}
+          onClick={onNewConversation}
+          aria-label="Start new conversation"
+          title="Start new conversation"
+        >
+          <Edit3 size={16} />
+        </button>
       </div>
 
       <div className={styles.searchContainer}>
-        <Search size={16} className={styles.searchIcon} />
+        <Search size={16} className={styles.searchIcon} aria-hidden="true" />
         <input
           type="text"
-          placeholder="Search conversations..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search messages..."
+          value={localSearch}
+          onChange={handleSearchChange}
           className={styles.searchInput}
+          aria-label="Search messages"
         />
-        {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className={styles.searchClear}>
+        {localSearch && (
+          <button
+            onClick={() => handleSearchChange({ target: { value: '' } })}
+            className={styles.searchClear}
+            aria-label="Clear search"
+          >
             <X size={14} />
           </button>
         )}
       </div>
 
-      <div className={styles.filters}>
-        {['all', 'unread', 'archived', 'pinned'].map((f) => (
+      <div className={styles.filters} role="group" aria-label="Conversation filters">
+        {FILTERS.map((f) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`${styles.filterButton} ${filter === f ? styles.filterButtonActive : ''}`}
+            key={f.id}
+            onClick={() => onFilterChange?.(f.id)}
+            className={`${styles.filterButton} ${activeFilter === f.id ? styles.filterButtonActive : ''}`}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {f.label}
           </button>
         ))}
       </div>
 
       <div className={styles.conversationsScroll}>
         {loading ? (
-          <div className={styles.loadingState}>
-            <div className={styles.loadingDot} />
-            <div className={styles.loadingDot} />
-            <div className={styles.loadingDot} />
-          </div>
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className={styles.skeletonCard}>
+              <div className={styles.skeletonAvatar} />
+              <div className={styles.skeletonContent}>
+                <div className={styles.skeletonLine} style={{ width: '60%' }} />
+                <div className={styles.skeletonLine} style={{ width: '90%', marginTop: '6px' }} />
+              </div>
+            </div>
+          ))
         ) : filteredConversations.length === 0 ? (
           <div className={styles.emptyState}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, marginBottom: '8px' }}>
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-            </svg>
-            <p>No conversations found</p>
+            <span className={styles.emptyIcon}>💬</span>
+            <p className={styles.emptyText}>
+              {localSearch || activeFilter !== 'all'
+                ? 'No conversations found'
+                : 'No messages yet'}
+            </p>
           </div>
         ) : (
           <>

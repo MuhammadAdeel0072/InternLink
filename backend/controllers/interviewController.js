@@ -4,7 +4,7 @@ import Job from '../models/Job.js';
 import Profile from '../models/Profile.js';
 import User from '../models/User.js';
 import Company from '../models/Company.js';
-import Notification from '../models/Notification.js';
+import { createNotification } from '../services/notificationService.js';
 import { sendInterviewScheduledEmail, sendInterviewCancelledEmail, sendInterviewRescheduledEmail } from '../utils/sendEmail.js';
 import { escapeRegExp } from '../utils/regex.js';
 
@@ -19,35 +19,6 @@ const addTimelineEntry = async (interviewId, action, performedBy, note = '') => 
       }
     }
   });
-};
-
-const createNotification = async (req, recipientId, senderId, type, content, link = '') => {
-  try {
-    const notification = await Notification.create({
-      recipient: recipientId,
-      sender: senderId,
-      type,
-      content,
-      link
-    });
-
-    if (req.io) {
-      const recipientSocketId = req.userSocketMap.get(recipientId.toString());
-      if (recipientSocketId) {
-        req.io.to(recipientSocketId).emit('receive_notification', {
-          _id: notification._id,
-          type,
-          content,
-          link,
-          isRead: false,
-          createdAt: notification.createdAt,
-          sender: { _id: senderId, name: req.user?.name || '' }
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Notification creation error:', error);
-  }
 };
 
 // @desc    Get all interviews for recruiter/student with search, filters, sorting
@@ -351,14 +322,18 @@ export const createInterview = async (req, res) => {
 
     await application.save();
 
-    await createNotification(
-      req,
-      application.student._id,
-      req.user._id,
-      'interview-scheduled',
-      `An interview has been scheduled for your application to ${application.job.title}`,
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: application.student._id,
+      senderId: req.user._id,
+      title: 'Interview Scheduled',
+      message: `An interview has been scheduled for your application to ${application.job.title}`,
+      type: 'interview-scheduled',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     await sendInterviewScheduledEmail(
       application.student.email,
@@ -466,14 +441,18 @@ export const rescheduleInterview = async (req, res) => {
     const recipientId = isRecruiter ? interview.candidateId : interview.recruiterId;
     const senderName = isRecruiter ? (await User.findById(req.user._id))?.name : 'Candidate';
 
-    await createNotification(
-      req,
-      recipientId,
-      req.user._id,
-      isRecruiter ? 'interview-rescheduled' : 'interview-reschedule-requested',
-      `Interview has been rescheduled by ${senderName}`,
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: recipientId,
+      senderId: req.user._id,
+      title: 'Interview Rescheduled',
+      message: `Interview has been rescheduled by ${senderName}`,
+      type: 'interview-rescheduled',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     if (isRecruiter) {
       const job = await Job.findById(interview.jobId).select('title');
@@ -543,14 +522,18 @@ export const cancelInterview = async (req, res) => {
     const recipientId = isRecruiter ? interview.candidateId : interview.recruiterId;
     const senderName = isRecruiter ? (await User.findById(req.user._id))?.name : 'Candidate';
 
-    await createNotification(
-      req,
-      recipientId,
-      req.user._id,
-      isRecruiter ? 'interview-cancelled' : 'interview-cancelled',
-      `Interview has been cancelled by ${senderName}`,
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: recipientId,
+      senderId: req.user._id,
+      title: 'Interview Cancelled',
+      message: `Interview has been cancelled by ${senderName}`,
+      type: 'interview-cancelled',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     if (isRecruiter) {
       const recipientUser = await User.findById(recipientId);
@@ -603,14 +586,18 @@ export const confirmInterview = async (req, res) => {
 
     await interview.save();
 
-    await createNotification(
-      req,
-      interview.recruiterId,
-      req.user._id,
-      'interview-confirmed',
-      'Candidate has confirmed the interview',
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: interview.recruiterId,
+      senderId: req.user._id,
+      title: 'Interview Confirmed',
+      message: 'Candidate has confirmed the interview',
+      type: 'interview-confirmed',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,
@@ -654,14 +641,18 @@ export const requestReschedule = async (req, res) => {
 
     await interview.save();
 
-    await createNotification(
-      req,
-      interview.recruiterId,
-      req.user._id,
-      'interview-reschedule-requested',
-      'Candidate has requested to reschedule the interview',
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: interview.recruiterId,
+      senderId: req.user._id,
+      title: 'Interview Reschedule Requested',
+      message: 'Candidate has requested to reschedule the interview',
+      type: 'interview-rescheduled',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,
@@ -698,14 +689,18 @@ export const completeInterview = async (req, res) => {
 
     await interview.save();
 
-    await createNotification(
-      req,
-      interview.candidateId,
-      req.user._id,
-      'interview-completed',
-      'Your interview has been marked as completed',
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: interview.candidateId,
+      senderId: req.user._id,
+      title: 'Interview Completed',
+      message: 'Your interview has been marked as completed',
+      type: 'interview-completed',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,
@@ -1053,14 +1048,18 @@ export const sendInterviewReminders = async (req, res) => {
       const candidate = interview.candidateId;
       const jobTitle = interview.jobId?.title || 'an interview';
 
-      await createNotification(
-        req,
-        candidate._id,
-        req.user._id,
-        'interview-reminder',
-        `Reminder: Your interview for ${jobTitle} is scheduled on ${new Date(interview.date).toLocaleDateString()} at ${interview.time}`,
-        `/interviews/${interview._id}`
-      );
+      await createNotification({
+        recipientId: candidate._id,
+        senderId: req.user._id,
+        title: 'Interview Reminder',
+        message: `Reminder: Your interview for ${jobTitle} is scheduled on ${new Date(interview.date).toLocaleDateString()} at ${interview.time}`,
+        type: 'interview-reminder',
+        category: 'interview',
+        entityId: interview._id,
+        entityType: 'interview',
+        io: req.io,
+        userSocketMap: req.userSocketMap
+      });
 
       await sendInterviewScheduledEmail(
         candidate.email,
@@ -1112,14 +1111,18 @@ export const declineInterview = async (req, res) => {
 
     await interview.save();
 
-    await createNotification(
-      req,
-      interview.recruiterId,
-      req.user._id,
-      'interview-declined',
-      `Candidate has declined the interview`,
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: interview.recruiterId,
+      senderId: req.user._id,
+      title: 'Interview Declined',
+      message: `Candidate has declined the interview`,
+      type: 'interview-cancelled',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,
@@ -1160,14 +1163,18 @@ export const markNoShow = async (req, res) => {
 
     await interview.save();
 
-    await createNotification(
-      req,
-      interview.candidateId,
-      req.user._id,
-      'interview-no-show',
-      'You were marked as a no-show for your interview',
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: interview.candidateId,
+      senderId: req.user._id,
+      title: 'Interview No-Show',
+      message: 'You were marked as a no-show for your interview',
+      type: 'interview-no-show',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,
@@ -1210,16 +1217,23 @@ export const approveRescheduleRequest = async (req, res) => {
       note: 'Reschedule request approved by recruiter'
     });
 
+    // Return the interview to a scheduled state so it is actionable again
+    interview.status = 'scheduled';
+
     await interview.save();
 
-    await createNotification(
-      req,
-      interview.candidateId,
-      req.user._id,
-      'interview-reschedule-approved',
-      'Your reschedule request has been approved',
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: interview.candidateId,
+      senderId: req.user._id,
+      title: 'Reschedule Request Approved',
+      message: 'Your reschedule request has been approved',
+      type: 'interview-rescheduled',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,
@@ -1260,14 +1274,18 @@ export const rejectRescheduleRequest = async (req, res) => {
 
     await interview.save();
 
-    await createNotification(
-      req,
-      interview.candidateId,
-      req.user._id,
-      'interview-reschedule-rejected',
-      'Your reschedule request has been rejected',
-      `/interviews/${interview._id}`
-    );
+    await createNotification({
+      recipientId: interview.candidateId,
+      senderId: req.user._id,
+      title: 'Reschedule Request Rejected',
+      message: 'Your reschedule request has been rejected',
+      type: 'interview-rescheduled',
+      category: 'interview',
+      entityId: interview._id,
+      entityType: 'interview',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({
       success: true,

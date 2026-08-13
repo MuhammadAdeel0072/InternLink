@@ -1,7 +1,7 @@
 import Connection from '../models/Connection.js';
 import User from '../models/User.js';
 import Profile from '../models/Profile.js';
-import Notification from '../models/Notification.js';
+import { createNotification } from '../services/notificationService.js';
 import { escapeRegExp } from '../utils/regex.js';
 
 // @desc    Send a connection request
@@ -34,12 +34,17 @@ export const sendConnectionRequest = async (req, res) => {
     });
 
     // Create Notification
-    await Notification.create({
-      recipient: recipientId,
-      sender: requesterId,
+    await createNotification({
+      recipientId: recipientId,
+      senderId: requesterId,
+      title: 'New Connection Request',
+      message: `${req.user.name} sent you a connection request.`,
       type: 'connection-request',
-      content: `${req.user.name} sent you a connection request.`,
-      link: '/network'
+      category: 'network',
+      entityId: connection._id,
+      entityType: 'connection',
+      io: req.io,
+      userSocketMap: req.userSocketMap
     });
 
     res.status(201).json(connection);
@@ -67,12 +72,17 @@ export const acceptConnectionRequest = async (req, res) => {
     await connection.save();
 
     // Create Notification for the requester
-    await Notification.create({
-      recipient: connection.requester,
-      sender: req.user._id,
+    await createNotification({
+      recipientId: connection.requester,
+      senderId: req.user._id,
+      title: 'Connection Request Accepted',
+      message: `${req.user.name} accepted your connection request.`,
       type: 'connection-accept',
-      content: `${req.user.name} accepted your connection request.`,
-      link: `/profile/${req.user._id}`
+      category: 'network',
+      entityId: connection._id,
+      entityType: 'connection',
+      io: req.io,
+      userSocketMap: req.userSocketMap
     });
 
     res.status(200).json(connection);

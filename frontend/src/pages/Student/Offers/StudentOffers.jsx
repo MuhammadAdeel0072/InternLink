@@ -4,7 +4,6 @@ import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 import Modal from '../../../components/Modal/Modal';
 import StatusBadge from '../../../components/StatusBadge/StatusBadge';
-import PrimaryButton from '../../../components/primaryButton/primaryButton';
 import Toast from '../../../components/Toast/Toast';
 import styles from './StudentOffers.module.css';
 import {

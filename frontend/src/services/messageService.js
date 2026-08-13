@@ -1,23 +1,27 @@
 import api from './api';
 
 export const messageService = {
-  async getConversations(filter = 'all', search = '') {
-    const params = new URLSearchParams();
-    if (filter && filter !== 'all') params.set('filter', filter);
-    if (search) params.set('search', search);
-    const { data } = await api.get(`/messages/conversations?${params.toString()}`);
-    return data;
-  },
+   async getConversations(filter = 'all', search = '') {
+     const params = new URLSearchParams();
+     if (filter && filter !== 'all') params.set('filter', filter);
+     if (search) params.set('search', search);
+     const { data } = await api.get(`/messages/conversations?${params.toString()}`);
+     return data;
+   },
 
   async startConversation(recipientId) {
     const { data } = await api.post(`/messages/conversation/${recipientId}`);
     return data;
   },
 
-  async getMessages(conversationId) {
-    const { data } = await api.get(`/messages/${conversationId}`);
-    return data;
-  },
+   async getMessages(conversationId, limit = 50, before = null) {
+     const params = new URLSearchParams();
+     if (limit) params.set('limit', limit);
+     if (before) params.set('before', before);
+     const { data } = await api.get(`/messages/${conversationId}?${params.toString()}`);
+     if (data.messages) return data;
+     return { messages: data, hasMore: false, unreadCount: 0 };
+   },
 
   async sendMessage(conversationId, text, attachment = null, replyTo = null) {
     const formData = new FormData();

@@ -28,6 +28,6 @@ router.post('/jobs/:id/reopen', protect, recruiterOnly, reopenRecruiterJob);
 router.post('/jobs/:id/duplicate', protect, recruiterOnly, duplicateRecruiterJob);
 router.post('/jobs/:id/publish', protect, recruiterOnly, publishRecruiterJob);
 router.get('/jobs/:id/analytics', protect, recruiterOnly, getJobAnalytics);
-router.post('/jobs/:id/view', incrementJobViews);
+router.post('/jobs/:id/view', protect, incrementJobViews);
 
 export default router;

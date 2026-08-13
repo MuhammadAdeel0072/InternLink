@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { useSocket } from '../../../context/SocketContext';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
-import Loader, { CardSkeleton } from '../../../components/Loader/Loader';
-import styles from './Feed.module.css'; // Import CSS Module
+import { CardSkeleton } from '../../../components/Loader/Loader';
+import styles from './Feed.module.css';
 import {
   Image as ImageIcon,
   Send,
@@ -14,7 +14,10 @@ import {
   Palette,
   ChevronDown,
   ChevronUp,
-  CornerDownRight
+  CornerDownRight,
+  Edit3,
+  MoreHorizontal,
+  Check
 } from 'lucide-react';
 
 const BG_COLORS = [
@@ -36,7 +39,6 @@ const Feed = memo(() => {
   const [hasMore, setHasMore] = useState(true);
   const [skip, setSkip] = useState(0);
 
-  // Post creation
   const [newPostText, setNewPostText] = useState('');
   const [newPostImage, setNewPostImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -45,7 +47,6 @@ const Feed = memo(() => {
   const [posting, setPosting] = useState(false);
   const fileInputRef = useRef();
 
-  // Comments & Replies
   const [commentInputs, setCommentInputs] = useState({});
   const [replyInputs, setReplyInputs] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
@@ -54,24 +55,29 @@ const Feed = memo(() => {
   const [visibleCommentCount, setVisibleCommentCount] = useState({});
   const limit = 5;
 
-  const [nestedReplyInputs, setNestedReplyInputs] = useState({});
-  const [activeNestedReply, setActiveNestedReply] = useState({});
-  const [showAllNestedReplies, setShowAllNestedReplies] = useState({});
+  const [editingComment, setEditingComment] = useState({});
+  const [editingReply, setEditingReply] = useState({});
+  const [collapsedReplies, setCollapsedReplies] = useState({});
+  const [editCommentText, setEditCommentText] = useState({});
+  const [editReplyText, setEditReplyText] = useState({});
+  const [commentMenu, setCommentMenu] = useState({});
 
   const fetchPosts = async (reset = false) => {
     try {
       if (reset) {
         setLoading(true);
         const res = await api.get(`/posts?limit=${limit}&skip=0`);
-        setPosts(res.data);
+        const postsData = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+        setPosts(postsData);
         setSkip(limit);
-        setHasMore(res.data.length === limit);
+        setHasMore(postsData.length === limit);
       } else {
         setLoadingMore(true);
         const res = await api.get(`/posts?limit=${limit}&skip=${skip}`);
-        setPosts((prev) => [...prev, ...res.data]);
+        const postsData = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+        setPosts((prev) => [...prev, ...postsData]);
         setSkip((prev) => prev + limit);
-        setHasMore(res.data.length === limit);
+        setHasMore(postsData.length === limit);
       }
     } catch (err) {
       console.error('Failed to fetch posts:', err);
@@ -83,6 +89,7 @@ const Feed = memo(() => {
 
   useEffect(() => {
     fetchPosts(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleImageChange = (e) => {
@@ -113,11 +120,13 @@ const Feed = memo(() => {
       const res = await api.post('/posts', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setPosts((prev) => [res.data, ...prev]);
+      const createdPost = res.data.data || res.data;
+      setPosts((prev) => [createdPost, ...prev]);
       setNewPostText('');
       clearImageSelection();
       setSelectedBg('');
-    } catch (err) {
+    } catch (_err) {
+      console.error(_err);
       alert('Post creation failed.');
     } finally {
       setPosting(false);
@@ -129,18 +138,19 @@ const Feed = memo(() => {
       const postIndex = posts.findIndex((p) => p._id === postId);
       if (postIndex === -1) return;
       const targetPost = posts[postIndex];
-      const hasLiked = targetPost.likes.includes(user._id);
-      const updatedLikes = hasLiked
-        ? targetPost.likes.filter((id) => id !== user._id)
-        : [...targetPost.likes, user._id];
+      const hasLiked = targetPost.likes?.some(id => id?.toString() === user._id.toString());
+       const updatedLikes = hasLiked
+        ? targetPost.likes.filter((id) => id.toString() !== user._id.toString())
+        : [...(targetPost.likes || []), user._id];
       const updatedPostsList = [...posts];
       updatedPostsList[postIndex] = { ...targetPost, likes: updatedLikes };
       setPosts(updatedPostsList);
       const res = await api.put(`/posts/${postId}/like`);
-      updatedPostsList[postIndex] = res.data;
+      const updatedPost = res.data.data || res.data;
+      updatedPostsList[postIndex] = updatedPost;
       setPosts([...updatedPostsList]);
-      if (!hasLiked && res.data.author._id !== user._id) {
-        emitNotificationAlert(res.data.author._id, { type: 'like', content: `${user.name} liked your post.` });
+      if (!hasLiked && updatedPost.author?._id !== user._id) {
+        emitNotificationAlert(updatedPost.author._id, { type: 'like', content: `${user.name} liked your post.` });
       }
     } catch (err) {
       console.error(err);
@@ -152,9 +162,10 @@ const Feed = memo(() => {
     if (!text || !text.trim()) return;
     try {
       const res = await api.post(`/posts/${postId}/comment`, { text });
-      setPosts((prev) => prev.map((p) => (p._id === postId ? res.data : p)));
+      setPosts((prev) => prev.map((p) => (p._id === postId ? (res.data.data || res.data) : p)));
       setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
-    } catch (err) {
+    } catch (_err) {
+      console.error(_err);
       alert('Failed to add comment');
     }
   };
@@ -164,37 +175,72 @@ const Feed = memo(() => {
     if (!text || !text.trim()) return;
     try {
       const res = await api.post(`/posts/${postId}/comments/${commentId}/reply`, { text });
-      setPosts((prev) => prev.map((p) => (p._id === postId ? res.data : p)));
+      setPosts((prev) => prev.map((p) => (p._id === postId ? (res.data.data || res.data) : p)));
       setReplyInputs((prev) => ({ ...prev, [`${postId}-${commentId}`]: '' }));
       setActiveReply((prev) => ({ ...prev, [commentId]: false }));
-    } catch (err) {
+    } catch (_err) {
+      console.error(_err);
       alert('Failed to add reply');
     }
   };
 
-  const handleNestedReply = async (postId, commentId, parentReplyId) => {
-    const text = nestedReplyInputs[`${postId}-${commentId}-${parentReplyId}`];
+  const handleEditComment = async (postId, commentId) => {
+    const text = editCommentText[commentId];
     if (!text || !text.trim()) return;
     try {
-      const res = await api.post(`/posts/${postId}/comments/${commentId}/reply`, { 
-        text,
-        isNestedReply: true,
-        parentReplyId: parentReplyId 
-      });
-      setPosts((prev) => prev.map((p) => (p._id === postId ? res.data : p)));
-      setNestedReplyInputs((prev) => ({ ...prev, [`${postId}-${commentId}-${parentReplyId}`]: '' }));
-      setActiveNestedReply((prev) => ({ ...prev, [`${commentId}-${parentReplyId}`]: false }));
-    } catch (err) {
-      alert('Failed to add reply');
+      const res = await api.put(`/posts/${postId}/comments/${commentId}`, { text });
+      setPosts((prev) => prev.map((p) => (p._id === postId ? (res.data.data || res.data) : p)));
+      setEditingComment((prev) => ({ ...prev, [commentId]: false }));
+      setEditCommentText((prev) => ({ ...prev, [commentId]: '' }));
+    } catch (_err) {
+      console.error(_err);
+      alert('Failed to edit comment');
+    }
+  };
+
+  const handleDeleteComment = async (postId, commentId) => {
+    if (!window.confirm('Delete this comment?')) return;
+    try {
+      const res = await api.delete(`/posts/${postId}/comments/${commentId}`);
+      setPosts((prev) => prev.map((p) => (p._id === postId ? (res.data.data || res.data) : p)));
+    } catch (_err) {
+      console.error(_err);
+      alert('Failed to delete comment');
+    }
+  };
+
+  const handleEditReply = async (postId, commentId, replyId) => {
+    const text = editReplyText[`${commentId}-${replyId}`];
+    if (!text || !text.trim()) return;
+    try {
+      const res = await api.put(`/posts/${postId}/comments/${commentId}/replies/${replyId}`, { text });
+      setPosts((prev) => prev.map((p) => (p._id === postId ? (res.data.data || res.data) : p)));
+      setEditingReply((prev) => ({ ...prev, [`${commentId}-${replyId}`]: false }));
+      setEditReplyText((prev) => ({ ...prev, [`${commentId}-${replyId}`]: '' }));
+    } catch (_err) {
+      console.error(_err);
+      alert('Failed to edit reply');
+    }
+  };
+
+  const handleDeleteReply = async (postId, commentId, replyId) => {
+    if (!window.confirm('Delete this reply?')) return;
+    try {
+      const res = await api.delete(`/posts/${postId}/comments/${commentId}/replies/${replyId}`);
+      setPosts((prev) => prev.map((p) => (p._id === postId ? (res.data.data || res.data) : p)));
+    } catch (_err) {
+      console.error(_err);
+      alert('Failed to delete reply');
     }
   };
 
   const handleDeletePost = async (postId) => {
     if (!window.confirm('Delete this post?')) return;
     try {
-      setPosts((prev) => prev.filter((p) => p._id !== postId));
       await api.delete(`/posts/${postId}`);
-    } catch (err) {
+      setPosts((prev) => prev.filter((p) => p._id !== postId));
+    } catch (_err) {
+      console.error(_err);
       fetchPosts(true);
     }
   };
@@ -217,20 +263,23 @@ const Feed = memo(() => {
     setShowAllReplies((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
   };
 
-  const toggleShowNestedReplies = (replyId) => {
-    setShowAllNestedReplies((prev) => ({ ...prev, [replyId]: !prev[replyId] }));
+  const toggleCollapseReplies = (commentId) => {
+    setCollapsedReplies((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
+  };
+
+  const toggleCommentMenu = (commentId) => {
+    setCommentMenu((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
   };
 
   const getTotalCommentCount = (post) => {
     let count = post.comments?.length || 0;
     post.comments?.forEach(comment => {
       count += comment.replies?.length || 0;
-      comment.replies?.forEach(reply => {
-        count += reply.nestedReplies?.length || 0;
-      });
     });
     return count;
   };
+
+  const isOwner = (itemUserId) => itemUserId?.toString() === user?._id?.toString();
 
   return (
     <div className={styles.feedContainer}>
@@ -250,7 +299,6 @@ const Feed = memo(() => {
             />
           </div>
 
-          {/* Background color preview */}
           {selectedBg && !imagePreview && (
             <div className={styles.bgPreview} style={{ backgroundColor: selectedBg }}>
               <p className={styles.bgPreviewText}>{newPostText || 'Your post will appear here...'}</p>
@@ -388,7 +436,7 @@ const Feed = memo(() => {
               <div className={styles.actionButtons}>
                 <button 
                   onClick={() => handleLike(post._id)} 
-                  className={`${styles.likeBtn} ${post.likes?.includes(user._id) ? styles.liked : styles.unliked}`}
+                  className={`${styles.likeBtn} ${post.likes?.some(id => id?.toString() === user._id?.toString()) ? styles.liked : styles.unliked}`}
                 >
                   <ThumbsUp size={16} /> Like
                 </button>
@@ -403,7 +451,7 @@ const Feed = memo(() => {
               {/* Comments Section */}
               {expandedComments[post._id] && (
                 <div className={styles.commentsSection}>
-                  
+                   
                   {/* New Comment Input */}
                   <div className={styles.commentInputWrapper}>
                     <input 
@@ -432,12 +480,14 @@ const Feed = memo(() => {
                         const showAll = showAllReplies[comment._id];
                         const visibleReplies = showAll ? replies : replies.slice(0, 2);
                         const hasMoreReplies = replies.length > 2;
+                        const isCollapsed = collapsedReplies[comment._id];
+                        const isEditingComment = editingComment[comment._id];
+                        const commentMenuOpen = commentMenu[comment._id];
 
                         return (
                           <div key={comment._id} className={styles.commentItem}>
                             {/* Main Comment */}
                             <div className={styles.commentWrapper}>
-                              {/* Comment Avatar */}
                               <div className={styles.commentAvatar}>
                                 {comment.user?.avatar ? (
                                   <img src={comment.user.avatar} alt="" />
@@ -448,24 +498,61 @@ const Feed = memo(() => {
                                 )}
                               </div>
                               <div className={styles.commentBody}>
-                                <div className={styles.commentBubble}>
-                                  <h5 className={styles.commentUserName}>{comment.user?.name}</h5>
-                                  <p className={styles.commentText}>{comment.text}</p>
-                                </div>
-                                <div className={styles.commentActions}>
-                                  <button 
-                                    onClick={() => setActiveReply(prev => ({ ...prev, [comment._id]: !prev[comment._id] }))}
-                                    className={styles.replyBtn}
-                                  >
-                                    Reply {comment.replies?.length > 0 && `(${comment.replies.length})`}
-                                  </button>
-                                  <span className={styles.commentDate}>
-                                    {new Date(comment.createdAt).toLocaleDateString()}
-                                  </span>
-                                </div>
+                                {isEditingComment ? (
+                                  <div className={styles.editInputWrapper}>
+                                    <input 
+                                      type="text" 
+                                      value={editCommentText[comment._id] || ''}
+                                      onChange={(e) => setEditCommentText(prev => ({ ...prev, [comment._id]: e.target.value }))}
+                                      className={styles.editInput}
+                                      autoFocus
+                                    />
+                                    <div className={styles.editActions}>
+                                      <button onClick={() => handleEditComment(post._id, comment._id)} className={styles.editSaveBtn}><Check size={14} /></button>
+                                      <button onClick={() => setEditingComment(prev => ({ ...prev, [comment._id]: false }))} className={styles.editCancelBtn}><X size={14} /></button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className={styles.commentBubble}>
+                                      <h5 className={styles.commentUserName}>{comment.user?.name}</h5>
+                                      <p className={styles.commentText}>{comment.text}</p>
+                                    </div>
+                                    <div className={styles.commentActions}>
+                                      <button 
+                                        onClick={() => setActiveReply(prev => ({ ...prev, [comment._id]: !prev[comment._id] }))}
+                                        className={styles.replyBtn}
+                                      >
+                                        Reply {replies.length > 0 && `(${replies.length})`}
+                                      </button>
+                                      {replies.length > 0 && (
+                                        <button 
+                                          onClick={() => toggleCollapseReplies(comment._id)}
+                                          className={styles.collapseBtn}
+                                        >
+                                          {isCollapsed ? <><ChevronDown size={12} /> Show replies</> : <><ChevronUp size={12} /> Hide replies</>}
+                                        </button>
+                                      )}
+                                      <span className={styles.commentDate}>
+                                        {new Date(comment.createdAt).toLocaleDateString()}
+                                      </span>
+                                      {isOwner(comment.user?._id) && (
+                                        <div className={styles.commentMenuWrapper}>
+                                          <button onClick={() => toggleCommentMenu(comment._id)} className={styles.commentMenuBtn}><MoreHorizontal size={14} /></button>
+                                          {commentMenuOpen && (
+                                            <div className={styles.commentMenu}>
+                                              <button onClick={() => { setEditingComment(prev => ({ ...prev, [comment._id]: true })); setEditCommentText(prev => ({ ...prev, [comment._id]: comment.text })); setCommentMenu(prev => ({ ...prev, [comment._id]: false })); }} className={styles.commentMenuItem}><Edit3 size={14} /> Edit</button>
+                                              <button onClick={() => { handleDeleteComment(post._id, comment._id); setCommentMenu(prev => ({ ...prev, [comment._id]: false })); }} className={`${styles.commentMenuItem} ${styles.commentMenuDanger}`}><Trash2 size={14} /> Delete</button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </>
+                                )}
 
                                 {/* Reply Input for Comment */}
-                                {activeReply[comment._id] && (
+                                {activeReply[comment._id] && !isEditingComment && (
                                   <div className={styles.replyInputWrapper}>
                                     <input 
                                       type="text" 
@@ -484,136 +571,98 @@ const Feed = memo(() => {
                                   </div>
                                 )}
 
-                                {/* ===== REPLIES (Level 1) ===== */}
-                                {visibleReplies.map((reply) => {
-                                  const nestedReplies = reply.nestedReplies || [];
-                                  const showAllNested = showAllNestedReplies[reply._id];
-                                  const visibleNestedReplies = showAllNested ? nestedReplies : nestedReplies.slice(0, 2);
-                                  const hasMoreNested = nestedReplies.length > 2;
+                                {/* Replies */}
+                                {!isCollapsed && (
+                                  <>
+                                    {visibleReplies.map((reply) => {
+                                      const isEditingReply = editingReply[`${comment._id}-${reply._id}`];
+                                      const replyMenuOpen = commentMenu[`${comment._id}-${reply._id}`];
 
-                                  return (
-                                    <div key={reply._id} className={styles.replyContainer}>
-                                      {/* Reply Container */}
-                                      <div className={styles.replyWrapper}>
-                                        <CornerDownRight size={14} className={styles.replyIcon} />
-                                        
-                                        {/* Reply Content */}
-                                        <div className={styles.replyContent}>
-                                          <div className={styles.replyBubble}>
-                                            {/* Reply Avatar */}
-                                            <div className={styles.replyAvatar}>
-                                              {reply.user?.avatar ? (
-                                                <img src={reply.user.avatar} alt="" />
-                                              ) : (
-                                                <div className={styles.replyAvatarFallback}>
-                                                  {reply.user?.name?.charAt(0).toUpperCase() || '?'}
+                                      return (
+                                        <div key={reply._id} className={styles.replyContainer}>
+                                          <div className={styles.replyWrapper}>
+                                            <CornerDownRight size={14} className={styles.replyIcon} />
+                                            <div className={styles.replyContent}>
+                                              {isEditingReply ? (
+                                                <div className={styles.editInputWrapper}>
+                                                  <input 
+                                                    type="text" 
+                                                    value={editReplyText[`${comment._id}-${reply._id}`] || ''}
+                                                    onChange={(e) => setEditReplyText(prev => ({ ...prev, [`${comment._id}-${reply._id}`]: e.target.value }))}
+                                                    className={styles.editInput}
+                                                    autoFocus
+                                                  />
+                                                  <div className={styles.editActions}>
+                                                    <button onClick={() => handleEditReply(post._id, comment._id, reply._id)} className={styles.editSaveBtn}><Check size={14} /></button>
+                                                    <button onClick={() => setEditingReply(prev => ({ ...prev, [`${comment._id}-${reply._id}`]: false }))} className={styles.editCancelBtn}><X size={14} /></button>
+                                                  </div>
                                                 </div>
-                                              )}
-                                            </div>
-                                            <div className={styles.replyMeta}>
-                                              <div className={styles.replyUserInfo}>
-                                                <h5 className={styles.replyUserName}>{reply.user?.name}</h5>
-                                                <span className={styles.replyDate}>
-                                                  {new Date(reply.createdAt).toLocaleDateString()}
-                                                </span>
-                                              </div>
-                                              <p className={styles.replyText}>{reply.text}</p>
-                                            </div>
-                                          </div>
-
-                                          {/* Reply Actions */}
-                                          <div className={styles.replyActions}>
-                                            <button 
-                                              onClick={() => setActiveNestedReply(prev => ({ ...prev, [`${comment._id}-${reply._id}`]: !prev[`${comment._id}-${reply._id}`] }))}
-                                              className={styles.nestedReplyBtn}
-                                            >
-                                              Reply {nestedReplies.length > 0 && `(${nestedReplies.length})`}
-                                            </button>
-                                          </div>
-
-                                          {/* ===== NESTED REPLIES (Level 2) ===== */}
-                                          {visibleNestedReplies.map((nestedReply) => (
-                                            <div key={nestedReply._id} className={styles.nestedReplyContainer}>
-                                              <div className={styles.nestedReplyWrapper}>
-                                                <CornerDownRight size={12} className={styles.nestedReplyIcon} />
-                                                <div className={styles.nestedReplyBubble}>
-                                                  <div className={styles.nestedReplyInner}>
-                                                    {/* Nested Reply Avatar */}
-                                                    <div className={styles.nestedReplyAvatar}>
-                                                      {nestedReply.user?.avatar ? (
-                                                        <img src={nestedReply.user.avatar} alt="" />
+                                              ) : (
+                                                <>
+                                                  <div className={styles.replyBubble}>
+                                                    <div className={styles.replyAvatar}>
+                                                      {reply.user?.avatar ? (
+                                                        <img src={reply.user.avatar} alt="" />
                                                       ) : (
-                                                        <div className={styles.nestedReplyAvatarFallback}>
-                                                          {nestedReply.user?.name?.charAt(0).toUpperCase() || '?'}
+                                                        <div className={styles.replyAvatarFallback}>
+                                                          {reply.user?.name?.charAt(0).toUpperCase() || '?'}
                                                         </div>
                                                       )}
                                                     </div>
-                                                    <div className={styles.nestedReplyContent}>
-                                                      <div className={styles.nestedReplyMeta}>
-                                                        <h5 className={styles.nestedReplyUserName}>{nestedReply.user?.name}</h5>
-                                                        <span className={styles.nestedReplyDate}>
-                                                          {new Date(nestedReply.createdAt).toLocaleDateString()}
+                                                    <div className={styles.replyMeta}>
+                                                      <div className={styles.replyUserInfo}>
+                                                        <h5 className={styles.replyUserName}>{reply.user?.name}</h5>
+                                                        <span className={styles.replyDate}>
+                                                          {new Date(reply.createdAt).toLocaleDateString()}
                                                         </span>
                                                       </div>
-                                                      <p className={styles.nestedReplyText}>{nestedReply.text}</p>
+                                                      <p className={styles.replyText}>{reply.text}</p>
                                                     </div>
                                                   </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ))}
-
-                                          {/* See More Nested Replies */}
-                                          {hasMoreNested && (
-                                            <button 
-                                              onClick={() => toggleShowNestedReplies(reply._id)}
-                                              className={styles.nestedSeeMoreBtn}
-                                            >
-                                              {showAllNested ? (
-                                                <><ChevronUp size={12} /> Show less</>
-                                              ) : (
-                                                <><ChevronDown size={12} /> See {nestedReplies.length - 2} more replies</>
+                                                  <div className={styles.replyActions}>
+                                                    <button 
+                                                      onClick={() => setActiveReply(prev => ({ ...prev, [comment._id]: true }))}
+                                                      className={styles.replyBtn}
+                                                    >
+                                                      Reply
+                                                    </button>
+                                                    <span className={styles.commentDate}>
+                                                      {new Date(reply.createdAt).toLocaleDateString()}
+                                                    </span>
+                                                    {isOwner(reply.user?._id) && (
+                                                      <div className={styles.commentMenuWrapper}>
+                                                        <button onClick={() => toggleCommentMenu(`${comment._id}-${reply._id}`)} className={styles.commentMenuBtn}><MoreHorizontal size={14} /></button>
+                                                        {replyMenuOpen && (
+                                                          <div className={styles.commentMenu}>
+                                                            <button onClick={() => { setEditingReply(prev => ({ ...prev, [`${comment._id}-${reply._id}`]: true })); setEditReplyText(prev => ({ ...prev, [`${comment._id}-${reply._id}`]: reply.text })); setCommentMenu(prev => ({ ...prev, [`${comment._id}-${reply._id}`]: false })); }} className={styles.commentMenuItem}><Edit3 size={14} /> Edit</button>
+                                                            <button onClick={() => { handleDeleteReply(post._id, comment._id, reply._id); setCommentMenu(prev => ({ ...prev, [`${comment._id}-${reply._id}`]: false })); }} className={`${styles.commentMenuItem} ${styles.commentMenuDanger}`}><Trash2 size={14} /> Delete</button>
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </>
                                               )}
-                                            </button>
-                                          )}
-
-                                          {/* Nested Reply Input */}
-                                          {activeNestedReply[`${comment._id}-${reply._id}`] && (
-                                            <div className={styles.nestedReplyInputWrapper}>
-                                              <input 
-                                                type="text" 
-                                                placeholder="Write a reply..."
-                                                value={nestedReplyInputs[`${post._id}-${comment._id}-${reply._id}`] || ''}
-                                                onChange={(e) => setNestedReplyInputs(prev => ({ ...prev, [`${post._id}-${comment._id}-${reply._id}`]: e.target.value }))}
-                                                className={styles.nestedReplyInput}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') handleNestedReply(post._id, comment._id, reply._id); }} 
-                                              />
-                                              <button 
-                                                onClick={() => handleNestedReply(post._id, comment._id, reply._id)}
-                                                className={styles.sendNestedReplyBtn}
-                                              >
-                                                <Send size={12} />
-                                              </button>
                                             </div>
-                                          )}
+                                          </div>
                                         </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
+                                      );
+                                    })}
 
-                                {/* See More Replies for Comment */}
-                                {hasMoreReplies && (
-                                  <button 
-                                    onClick={() => toggleShowReplies(comment._id)}
-                                    className={styles.seeMoreBtn}
-                                  >
-                                    {showAll ? (
-                                      <><ChevronUp size={12} /> Show less</>
-                                    ) : (
-                                      <><ChevronDown size={12} /> See {replies.length - 2} more replies</>
+                                    {/* See More Replies for Comment */}
+                                    {hasMoreReplies && (
+                                      <button 
+                                        onClick={() => toggleShowReplies(comment._id)}
+                                        className={styles.seeMoreBtn}
+                                      >
+                                        {showAll ? (
+                                          <><ChevronUp size={12} /> Show less</>
+                                        ) : (
+                                          <><ChevronDown size={12} /> See {replies.length - 2} more replies</>
+                                        )}
+                                      </button>
                                     )}
-                                  </button>
+                                  </>
                                 )}
                               </div>
                             </div>

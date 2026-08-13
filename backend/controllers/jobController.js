@@ -1,6 +1,6 @@
 import Job from '../models/Job.js';
 import Application from '../models/Application.js';
-import Notification from '../models/Notification.js';
+import { createNotification } from '../services/notificationService.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { escapeRegExp } from '../utils/regex.js';
 import JobAlert from '../models/JobAlert.js';
@@ -123,12 +123,17 @@ export const applyForJob = async (req, res) => {
     });
 
     // Notify the Recruiter
-    await Notification.create({
-      recipient: job.recruiter,
-      sender: req.user._id,
-      type: 'job-application',
-      content: `${req.user.name} applied for your job posting: "${job.title}".`,
-      link: '/jobs'
+    await createNotification({
+      recipientId: job.recruiter,
+      senderId: req.user._id,
+      title: 'New Job Application',
+      message: `${req.user.name} applied for your job posting: "${job.title}".`,
+      type: 'application-submitted',
+      category: 'application',
+      entityId: application._id,
+      entityType: 'application',
+      io: req.io,
+      userSocketMap: req.userSocketMap
     });
 
     res.status(201).json({
@@ -268,12 +273,28 @@ export const updateApplicationStatus = async (req, res) => {
     app.status = status;
     await app.save();
     
-    await Notification.create({
-      recipient: app.student,
-      sender: req.user._id,
-      type: 'application-update',
-      content: `Your application status has been updated to: ${status}`,
-      link: '/jobs'
+    const statusTypeMap = {
+      'applied': { type: 'application-submitted', title: 'Application Status Updated' },
+      'under-review': { type: 'application-submitted', title: 'Application Status Updated' },
+      'shortlisted': { type: 'application-shortlisted', title: 'Application Shortlisted' },
+      'rejected': { type: 'application-rejected', title: 'Application Rejected' },
+      'accepted': { type: 'application-accepted', title: 'Application Accepted' },
+      'hired': { type: 'application-accepted', title: 'Application Accepted' },
+      'withdrawn': { type: 'application-withdrawn', title: 'Application Withdrawn' }
+    };
+    const statusNotif = statusTypeMap[status] || { type: 'application-submitted', title: 'Application Status Updated' };
+
+    await createNotification({
+      recipientId: app.student,
+      senderId: req.user._id,
+      title: statusNotif.title,
+      message: `Your application status has been updated to: ${status}`,
+      type: statusNotif.type,
+      category: 'application',
+      entityId: app._id,
+      entityType: 'application',
+      io: req.io,
+      userSocketMap: req.userSocketMap
     });
     
     res.status(200).json(app);

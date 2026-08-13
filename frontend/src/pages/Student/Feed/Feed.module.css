@@ -632,6 +632,147 @@
   color: var(--text-muted);
 }
 
+.collapseBtn {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.collapseBtn:hover {
+  color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.commentMenuWrapper {
+  position: relative;
+}
+
+.commentMenuBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.commentMenuBtn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.commentMenu {
+  position: absolute;
+  right: 0;
+  top: 24px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  min-width: 140px;
+  padding: 4px;
+}
+
+.commentMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s;
+}
+
+.commentMenuItem:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.commentMenuDanger {
+  color: var(--danger);
+}
+
+.commentMenuDanger:hover {
+  background-color: var(--danger-light);
+}
+
+.editInputWrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.editInput {
+  flex: 1;
+  padding: 8px 14px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.editInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.editActions {
+  display: flex;
+  gap: 4px;
+}
+
+.editSaveBtn,
+.editCancelBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.editSaveBtn {
+  background-color: var(--success);
+  color: white;
+}
+
+.editCancelBtn {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.editSaveBtn:hover {
+  background-color: #16a34a;
+}
+
+.editCancelBtn:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
 /* Reply Input */
 .replyInputWrapper {
   display: flex;
@@ -799,96 +940,6 @@
   background-color: var(--primary-light);
 }
 
-/* Nested Replies */
-.nestedReplyContainer {
-  margin-top: 12px;
-  margin-left: 16px;
-}
-
-.nestedReplyWrapper {
-  display: flex;
-  gap: 10px;
-}
-
-.nestedReplyIcon {
-  color: var(--text-muted);
-  margin-top: 10px;
-  flex-shrink: 0;
-}
-
-.nestedReplyBubble {
-  flex: 1;
-  background-color: var(--bg-tertiary);
-  padding: 12px 16px;
-  border-radius: 16px;
-  min-width: 0;
-  border-top-left-radius: 4px;
-}
-
-.nestedReplyInner {
-  display: flex;
-  gap: 12px;
-}
-
-.nestedReplyAvatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-  overflow: hidden;
-  flex-shrink: 0;
-  margin-top: 2px;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
-}
-
-.nestedReplyAvatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.nestedReplyAvatarFallback {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-size: 0.65rem;
-  font-weight: 600;
-}
-
-.nestedReplyContent {
-  flex: 1;
-  min-width: 0;
-}
-
-.nestedReplyMeta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.nestedReplyUserName {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.nestedReplyDate {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-}
-
-.nestedReplyText {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  margin-top: 4px;
-  word-break: break-word;
-  line-height: 1.6;
-}
-
 /* See More Buttons */
 .seeMoreBtn {
   font-size: 0.8rem;
@@ -1006,59 +1057,6 @@
   font-weight: 600;
   margin-top: 20px;
   transition: all 0.2s ease;
-}
-
-/* Nested Reply Input */
-.nestedReplyInputWrapper {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
-  margin-left: 20px;
-}
-
-.nestedReplyInput {
-  flex: 1;
-  padding: 10px 18px;
-  background-color: var(--bg-tertiary);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  font-family: inherit;
-  min-width: 0;
-  transition: border-color 0.2s;
-}
-
-.nestedReplyInput:focus {
-  border-color: var(--primary);
-  outline: none;
-  box-shadow: 0 0 0 3px var(--primary-light);
-}
-
-.nestedReplyInput::placeholder {
-  color: var(--text-muted);
-}
-
-.sendNestedReplyBtn {
-  padding: 10px;
-  border-radius: 50%;
-  background-color: var(--primary);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.sendNestedReplyBtn:hover {
-  background-color: var(--primary-hover);
-  transform: scale(1.05);
 }
 
 /* ============================================ */
@@ -1250,39 +1248,13 @@
     height: 28px;
   }
 
-  .replyText {
+   .replyText {
     font-size: 0.85rem;
-  }
-
-  .nestedReplyContainer {
-    margin-left: 12px;
-  }
-
-  .nestedReplyBubble {
-    padding: 10px 14px;
-  }
-
-  .nestedReplyAvatar {
-    width: 24px;
-    height: 24px;
-  }
-
-  .nestedReplyText {
-    font-size: 0.8rem;
-  }
-
-  .seeMoreBtn {
-    margin-left: 24px;
-    font-size: 0.75rem;
   }
 
   .nestedSeeMoreBtn {
     margin-left: 20px;
     font-size: 0.7rem;
-  }
-
-  .nestedReplyInputWrapper {
-    margin-left: 16px;
   }
 
   .colorPickerDropdown {

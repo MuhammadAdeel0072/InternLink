@@ -5,7 +5,7 @@ import Job from '../models/Job.js';
 import Profile from '../models/Profile.js';
 import User from '../models/User.js';
 import Company from '../models/Company.js';
-import Notification from '../models/Notification.js';
+import { createNotification } from '../services/notificationService.js';
 import {
   sendOfferSentEmail,
   sendOfferAcceptedEmail,
@@ -45,35 +45,6 @@ const addHistoryEntry = async (offerId, version, changes, updatedBy) => {
 const generateOfferNumber = async () => {
   const count = await Offer.countDocuments();
   return `OFF-${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
-};
-
-const createNotification = async (req, recipientId, senderId, type, content, link = '') => {
-  try {
-    const notification = await Notification.create({
-      recipient: recipientId,
-      sender: senderId,
-      type,
-      content,
-      link
-    });
-
-    if (req.io) {
-      const recipientSocketId = req.userSocketMap.get(recipientId.toString());
-      if (recipientSocketId) {
-        req.io.to(recipientSocketId).emit('receive_notification', {
-          _id: notification._id,
-          type,
-          content,
-          link,
-          isRead: false,
-          createdAt: notification.createdAt,
-          sender: { _id: senderId, name: req.user?.name || '' }
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Notification creation error:', error);
-  }
 };
 
 const computeCompensation = (salary, compensation) => {
@@ -479,14 +450,18 @@ export const sendOffer = async (req, res) => {
       await sendOfferSentEmail(candidate.email, candidate.name, populated);
     }
 
-    await createNotification(
-      req,
-      offer.candidateId,
-      req.user._id,
-      'offer-sent',
-      `You have received a new offer for ${offer.jobId?.title || 'a position'}`,
-      `/student/offers`
-    );
+    await createNotification({
+      recipientId: offer.candidateId,
+      senderId: req.user._id,
+      title: 'New Offer Received',
+      message: `You have received a new offer for ${offer.jobId?.title || 'a position'}`,
+      type: 'offer-sent',
+      category: 'offer',
+      entityId: offer._id,
+      entityType: 'offer',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     const finalOffer = await Offer.findById(offer._id)
       .populate('applicationId')
@@ -571,14 +546,18 @@ export const acceptOffer = async (req, res) => {
       }
     });
 
-    await createNotification(
-      req,
-      offer.recruiterId,
-      req.user._id,
-      'offer-accepted',
-      `${req.user.name} has accepted the offer for ${offer.jobId?.title || 'the position'}`,
-      `/recruiter/offers`
-    );
+    await createNotification({
+      recipientId: offer.recruiterId,
+      senderId: req.user._id,
+      title: 'Offer Accepted',
+      message: `${req.user.name} has accepted the offer for ${offer.jobId?.title || 'the position'}`,
+      type: 'offer-accepted',
+      category: 'offer',
+      entityId: offer._id,
+      entityType: 'offer',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     const recruiter = await User.findById(offer.recruiterId);
     if (recruiter && recruiter.email) {
@@ -628,14 +607,18 @@ export const rejectOffer = async (req, res) => {
 
     await addTimelineEntry(offer._id, 'Offer Rejected', req.user._id, reason || 'Candidate rejected the offer');
 
-    await createNotification(
-      req,
-      offer.recruiterId,
-      req.user._id,
-      'offer-rejected',
-      `${req.user.name} has rejected the offer for ${offer.jobId?.title || 'the position'}`,
-      `/recruiter/offers`
-    );
+    await createNotification({
+      recipientId: offer.recruiterId,
+      senderId: req.user._id,
+      title: 'Offer Rejected',
+      message: `${req.user.name} has rejected the offer for ${offer.jobId?.title || 'the position'}`,
+      type: 'offer-rejected',
+      category: 'offer',
+      entityId: offer._id,
+      entityType: 'offer',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     const recruiter = await User.findById(offer.recruiterId);
     if (recruiter && recruiter.email) {
@@ -690,14 +673,18 @@ export const negotiateOffer = async (req, res) => {
 
     await addTimelineEntry(offer._id, 'Negotiation Requested', req.user._id, 'Candidate requested negotiation');
 
-    await createNotification(
-      req,
-      offer.recruiterId,
-      req.user._id,
-      'offer-negotiation',
-      `${req.user.name} has requested negotiation for the offer for ${offer.jobId?.title || 'the position'}`,
-      `/recruiter/offers`
-    );
+    await createNotification({
+      recipientId: offer.recruiterId,
+      senderId: req.user._id,
+      title: 'Offer Negotiation Requested',
+      message: `${req.user.name} has requested negotiation for the offer for ${offer.jobId?.title || 'the position'}`,
+      type: 'offer-negotiation',
+      category: 'offer',
+      entityId: offer._id,
+      entityType: 'offer',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     const recruiter = await User.findById(offer.recruiterId);
     if (recruiter && recruiter.email) {
@@ -750,14 +737,18 @@ export const withdrawOffer = async (req, res) => {
 
     await addTimelineEntry(offer._id, 'Offer Withdrawn', req.user._id, reason || 'Offer withdrawn by recruiter');
 
-    await createNotification(
-      req,
-      offer.candidateId,
-      req.user._id,
-      'offer-withdrawn',
-      `Your offer for ${offer.jobId?.title || 'the position'} has been withdrawn`,
-      `/student/offers`
-    );
+    await createNotification({
+      recipientId: offer.candidateId,
+      senderId: req.user._id,
+      title: 'Offer Withdrawn',
+      message: `Your offer for ${offer.jobId?.title || 'the position'} has been withdrawn`,
+      type: 'offer-withdrawn',
+      category: 'offer',
+      entityId: offer._id,
+      entityType: 'offer',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     const candidate = await User.findById(offer.candidateId);
     if (candidate && candidate.email) {
@@ -1086,14 +1077,18 @@ export const sendOfferReminder = async (req, res) => {
 
     await addTimelineEntry(offer._id, 'Reminder Sent', req.user._id, 'Reminder sent to candidate');
 
-    await createNotification(
-      req,
-      offer.candidateId,
-      req.user._id,
-      'offer-reminder',
-      `Reminder: Your offer for ${offer.jobId?.title || 'the position'} is pending response`,
-      `/student/offers`
-    );
+    await createNotification({
+      recipientId: offer.candidateId,
+      senderId: req.user._id,
+      title: 'Offer Reminder',
+      message: `Reminder: Your offer for ${offer.jobId?.title || 'the position'} is pending response`,
+      type: 'offer-updated',
+      category: 'offer',
+      entityId: offer._id,
+      entityType: 'offer',
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(200).json({ success: true, message: 'Reminder sent successfully' });
   } catch (error) {

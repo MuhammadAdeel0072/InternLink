@@ -6,28 +6,26 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   border: 1px solid transparent;
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-secondary);
   transition: all 0.15s ease;
   position: relative;
   min-height: 68px;
+  outline: none;
 }
 
 .conversationCard:hover {
   border-color: var(--border-hover);
-  background-color: var(--bg-secondary);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--bg-tertiary);
 }
 
 .conversationCardActive {
   border: 1px solid var(--primary);
   background-color: var(--primary-light);
-  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .conversationCardActive:hover {
   background-color: var(--primary-light);
-  transform: none;
+  border-color: var(--primary);
 }
 
 .avatarWrapper {
@@ -35,7 +33,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-tertiary);
   overflow: hidden;
   flex-shrink: 0;
   border: 2px solid var(--border-color);
@@ -75,8 +73,18 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: #22c55e;
-  border: 2px solid var(--bg-tertiary);
+  border: 2px solid var(--bg-secondary);
+  transition: border-color 0.2s;
+}
+
+.onlineIndicator.online {
+  background-color: var(--success);
+  box-shadow: 0 0 0 2px var(--bg-tertiary);
+}
+
+.onlineIndicator.offline {
+  background-color: var(--text-muted);
+  box-shadow: 0 0 0 2px var(--bg-tertiary);
 }
 
 .conversationCardActive .onlineIndicator {

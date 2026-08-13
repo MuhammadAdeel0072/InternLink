@@ -17,7 +17,8 @@ import {
   disconnectProvider,
   forgotPassword,
   validateResetToken,
-  resetPassword
+  resetPassword,
+  checkUsername
 } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import { passwordResetLimiter, loginLimiter } from '../middlewares/rateLimiter.js';
@@ -94,6 +95,7 @@ router.put('/change-password', protect, changePassword);
 router.put('/preferences', protect, updatePreferences);
 router.put('/disconnect-provider', protect, disconnectProvider);
 router.get('/sessions', protect, getSessions);
+router.get('/check-username', protect, checkUsername);
 router.post('/logout', protect, logout);
 router.post('/logout-all', protect, logoutAllDevices);
 router.delete('/account', protect, deleteAccount);
