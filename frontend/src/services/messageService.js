@@ -25,7 +25,12 @@ export const messageService = {
 
   async sendMessage(conversationId, text, attachment = null, replyTo = null) {
     const formData = new FormData();
-    formData.append('text', text);
+    // Only append text when it's a non-empty string.
+    // If we blindly append null/undefined, FormData serializes it as the string "null"
+    // which bypasses the backend's empty-message validation.
+    if (text && typeof text === 'string' && text.trim().length > 0) {
+      formData.append('text', text.trim());
+    }
     if (attachment) formData.append('attachment', attachment);
     if (replyTo) formData.append('replyTo', JSON.stringify(replyTo));
 
@@ -34,6 +39,7 @@ export const messageService = {
     });
     return data;
   },
+
 
   async markAsRead(conversationId, messageIds) {
     const { data } = await api.put(`/messages/${conversationId}/read`, { messageIds });

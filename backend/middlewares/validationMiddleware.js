@@ -55,7 +55,7 @@ export const validatePasswordReset = [
 
 export const validatePost = [
   body('content')
-    .optional({ values: 'undefined' })
+    .optional({ nullable: true, checkFalsy: true })
     .trim()
     .isLength({ max: 5000 }).withMessage('Post content cannot exceed 5000 characters'),
   validateRequest

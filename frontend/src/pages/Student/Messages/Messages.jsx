@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMessages } from '../../../context/MessageContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ConversationList from '../../../components/messages/ConversationList';
 import ChatWindow from '../../../components/messages/ChatWindow';
 import EmptyChat from '../../../components/messages/EmptyChat';
@@ -22,6 +22,7 @@ const Messages = () => {
     sendMessageError
   } = useMessages();
   const navigate = useNavigate();
+  const { conversationId } = useParams();
 
   const [filter, setFilter] = useState('all');
   const [showInfo, setShowInfo] = useState(false);
@@ -29,6 +30,15 @@ const Messages = () => {
   useEffect(() => {
     fetchConversations(filter);
   }, [filter, fetchConversations]);
+
+  useEffect(() => {
+    if (conversationId && !activeConversation) {
+      const found = conversations.find((c) => c._id === conversationId);
+      if (found) {
+        setActiveConversation(found);
+      }
+    }
+  }, [conversationId, conversations, activeConversation, setActiveConversation]);
 
   useEffect(() => {
     if (activeConversation) {

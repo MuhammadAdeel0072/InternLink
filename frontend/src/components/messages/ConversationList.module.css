@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 20px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .headerTitle {
@@ -65,8 +65,8 @@
   width: 100%;
   padding: 10px 36px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
   font-size: 0.85rem;
   outline: none;
@@ -75,8 +75,8 @@
 
 .searchInput:focus {
   border-color: var(--primary);
-  background-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  background-color: var(--bg-tertiary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .searchInput::placeholder {
@@ -122,7 +122,7 @@
   padding: 7px 16px;
   border-radius: 20px;
   border: none;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-tertiary);
   color: var(--text-secondary);
   font-size: 0.82rem;
   font-weight: 500;
@@ -133,7 +133,7 @@
 }
 
 .filterButton:hover {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
 }
 

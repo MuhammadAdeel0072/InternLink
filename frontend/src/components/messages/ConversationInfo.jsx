@@ -35,7 +35,7 @@ const ConversationInfo = ({ conversation, onAction, onClose }) => {
   };
 
   return (
-    <div className={styles.infoPanel} role=" complementary" aria-label="Conversation info">
+      <div className={styles.infoPanel} role="complementary" aria-label="Conversation info">
       <div className={styles.infoPanelHeader}>
         <h3 className={styles.infoPanelTitle}>Conversation Info</h3>
         {onClose && (

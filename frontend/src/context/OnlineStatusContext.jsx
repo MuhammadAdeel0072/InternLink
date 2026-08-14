@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useSocket } from './SocketContext';
-import { useAuth } from './AuthContext';
 
 const OnlineStatusContext = createContext();
 
 export const OnlineStatusProvider = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  // NOTE: socket registration ('register' event) is handled exclusively by SocketContext.
+  // OnlineStatusContext only listens for presence updates.
   const { socket, socketConnected } = useSocket() || {};
-  const { user } = useAuth();
 
   useEffect(() => {
     if (!socket) {
@@ -15,38 +15,36 @@ export const OnlineStatusProvider = ({ children }) => {
       return;
     }
 
-    const handleConnect = () => {
-      if (user?._id) {
-        socket.emit('register', user._id);
+    const handleOnlineList = ({ onlineUserIds }) => {
+      if (Array.isArray(onlineUserIds)) {
+        setOnlineUsers(new Set(onlineUserIds.map((id) => id?.toString())));
       }
     };
 
     const handleUserOnline = ({ userId }) => {
-      setOnlineUsers((prev) => new Set([...prev, userId]));
+      if (!userId) return;
+      setOnlineUsers((prev) => new Set([...prev, userId.toString()]));
     };
 
     const handleUserOffline = ({ userId }) => {
+      if (!userId) return;
       setOnlineUsers((prev) => {
         const updated = new Set(prev);
-        updated.delete(userId);
+        updated.delete(userId.toString());
         return updated;
       });
     };
 
-    socket.on('connect', handleConnect);
+    socket.on('users:online_list', handleOnlineList);
     socket.on('user:online', handleUserOnline);
     socket.on('user:offline', handleUserOffline);
 
-    if (socket.connected) {
-      handleConnect();
-    }
-
     return () => {
-      socket.off('connect', handleConnect);
+      socket.off('users:online_list', handleOnlineList);
       socket.off('user:online', handleUserOnline);
       socket.off('user:offline', handleUserOffline);
     };
-  }, [socket, user]);
+  }, [socket]);
 
   const isOnline = useCallback((userId) => {
     return onlineUsers.has(userId?.toString());

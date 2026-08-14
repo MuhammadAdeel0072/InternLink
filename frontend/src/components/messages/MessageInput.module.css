@@ -2,9 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background-color: var(--bg-secondary);
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
   border-radius: 0;
   flex-shrink: 0;
 }
@@ -12,15 +12,21 @@
 .replyPreview {
   display: flex;
   gap: 0;
-  background-color: rgba(124, 58, 237, 0.12);
+  background-color: var(--bg-secondary);
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(124, 58, 237, 0.25);
+  border: 1px solid var(--border-color);
+  opacity: 0.9;
+  transition: all 0.2s ease;
+}
+
+.replyPreview:hover {
+  opacity: 1;
 }
 
 .replyPreviewBar {
   width: 4px;
-  background-color: var(--primary, #7c3aed);
+  background: linear-gradient(135deg, var(--primary, #6366f1) 0%, #4f46e5 100%);
   flex-shrink: 0;
 }
 
@@ -38,12 +44,14 @@
 }
 
 .replyLabel {
-  font-size: 0.78rem;
-  color: var(--primary, #7c3aed);
-  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--primary);
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .replyCancel {
@@ -56,17 +64,17 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
 .replyCancel:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
 }
 
 .replyText {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -77,10 +85,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  padding: 10px 14px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
 }
 
 .attachmentPreviewContent {
@@ -92,29 +100,37 @@
 }
 
 .attachmentThumb {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   object-fit: cover;
   border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .attachmentIcon {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(124, 58, 237, 0.2);
-  border-radius: 6px;
-  color: var(--primary, #7c3aed);
+  background: linear-gradient(135deg, var(--primary-light) 0%, rgba(99, 102, 241, 0.1) 100%);
+  border-radius: 8px;
+  flex-shrink: 0;
+  color: var(--primary);
 }
 
 .attachmentName {
   font-size: 0.82rem;
+  font-weight: 500;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.attachmentSize {
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 .attachmentRemove {
@@ -127,12 +143,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .attachmentRemove:hover {
   color: var(--danger);
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
 .inputForm {
@@ -146,21 +163,21 @@
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
 .attachmentBtn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: var(--border-hover);
 }
 
 .hiddenFileInput {
@@ -172,18 +189,18 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 24px;
   padding: 0 14px;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   min-height: 44px;
 }
 
 .inputBox:focus-within {
-  border-color: var(--primary, #7c3aed);
-  background-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  border-color: var(--primary);
+  background-color: var(--bg-tertiary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .textInput {
@@ -223,37 +240,40 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  width: 32px;
+  height: 32px;
 }
 
-.emojiBtn:hover {
-  color: var(--text-primary);
+.emojiBtn:hover,
+.emojiBtnActive {
+  color: var(--primary);
 }
 
 .emojiBtnActive {
-  color: var(--primary, #7c3aed);
+  background-color: var(--primary-light);
 }
 
 .sendButton {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background-color: var(--primary, #7c3aed);
+  background: linear-gradient(135deg, var(--primary, #6366f1) 0%, #4f46e5 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
 }
 
 .sendButton:hover:not(:disabled) {
-  background-color: var(--primary-hover, #6d28d9);
-  transform: scale(1.04);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.5);
+  background: linear-gradient(135deg, var(--primary-hover, #4f46e5) 0%, #4338ca 100%);
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
 }
 
 .sendButtonDisabled,
@@ -266,7 +286,8 @@
 
 @media (max-width: 768px) {
   .inputContainer {
-    padding: 8px 12px;
+    padding: 10px 12px 14px;
+    gap: 6px;
   }
 
   .attachmentBtn {

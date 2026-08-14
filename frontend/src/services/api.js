@@ -14,8 +14,9 @@ const api = axios.create({
     'Content-Type': 'application/json'
   },
   withCredentials: true,
-  // Timeout prevents requests from hanging indefinitely
-  timeout: 15000, // 15 seconds
+  // Timeout — must be longer than the backend's per-request timeout (30s)
+  // so we don't reject a request that the server is still processing.
+  timeout: 30000, // 30 seconds
 });
 
 api.interceptors.request.use(
@@ -32,25 +33,28 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    if (status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       if (!window.location.pathname.includes('/login') && 
           !window.location.pathname.includes('/register')) {
         window.location.href = '/login';
       }
-    } else if (error.response?.status === 403) {
+    } else if (status === 403) {
       if (import.meta.env.DEV) {
-        console.error('Forbidden:', error.response.data);
+        console.error('Forbidden:', error.response?.data);
       }
-    } else if (error.response?.status >= 500) {
+    } else if (status && status >= 500) {
       if (import.meta.env.DEV) {
-        console.error('Server error:', error.response.data);
+        console.error('Server error:', error.response?.data);
       }
     } else if (!error.response) {
       if (import.meta.env.DEV) {
         console.error('Network error - no response received:', error.message);
       }
+      // On network errors (server down), do NOT force a redirect to /login.
+      // The user may have a valid cached session. Let the calling code handle it.
     }
     return Promise.reject(error);
   }

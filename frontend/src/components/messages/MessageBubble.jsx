@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Reply, Smile, Edit3, Trash2, MoreVertical,
-  CheckCheck, Check, Clock, Download, Copy
+  Smile, Edit3, Trash2,
+  CheckCheck, Check, Clock, Download, Copy, AlertCircle, CornerDownLeft
 } from 'lucide-react';
 import { formatMessageTime } from '../../utils/formatters';
 import styles from './MessageBubble.module.css';
 
-const REACTION_EMOJIS = ['👍', '❤️', '🎉', '😂', '😮', '😢', '👏', '🔥'];
+const REACTION_EMOJIS = ['👍', '❤️', '😂', '🎉', '😮', '😢', '👏', '🔥'];
 
 const MessageBubble = ({
   message,
@@ -27,27 +27,65 @@ const MessageBubble = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(message.message || '');
   const menuRef = useRef(null);
+  const reactionRefs = useRef({});
 
+  // Close actions menu and reaction picker on outside click / Escape
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowMenu(false);
       }
+      if (showReactions && reactionRefs.current.picker && !reactionRefs.current.picker.contains(e.target)) {
+        setShowReactions(false);
+      }
     };
-    if (showMenu) {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setShowMenu(false);
+        setShowReactions(false);
+      }
+    };
+    if (showMenu || showReactions) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMenu]);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showMenu, showReactions]);
+
+  // Group reactions by emoji and include whether the current user reacted
+  const groupedReactions = (() => {
+    if (!message.reactions?.length) return [];
+    const map = new Map();
+    const myId = currentUserId?.toString();
+    message.reactions.forEach((r) => {
+      const key = r.emoji;
+      const userId = r.userId?.toString?.() || r.userId?.toString?.();
+      if (!map.has(key)) {
+        map.set(key, { emoji: key, count: 0, users: [] });
+      }
+      const entry = map.get(key);
+      entry.count += 1;
+      if (userId && myId && userId === myId) {
+        entry.users.push('me');
+      } else {
+        entry.users.push(userId);
+      }
+    });
+    return Array.from(map.values());
+  })();
 
   const getStatusIcon = () => {
     if (!isMine) return null;
     const status = message.status || 'sent';
-    if (status === 'sent') return <Check size={14} className={styles.statusSent} />;
-    if (status === 'delivered') return <CheckCheck size={14} className={styles.statusDelivered} />;
-    if (status === 'read') return <CheckCheck size={14} className={styles.statusRead} />;
-    if (status === 'sending') return <Clock size={14} className={styles.statusDefault} />;
-    return <Clock size={14} className={styles.statusDefault} />;
+    if (status === 'sent') return <Clock size={14} className={styles.statusIcon} />;
+    if (status === 'delivered') return <Check size={14} className={styles.statusIcon} />;
+    if (status === 'read') return <CheckCheck size={14} className={styles.statusIcon} />;
+    if (status === 'sending') return <Clock size={14} className={`${styles.statusIcon} ${styles.statusSending}`} />;
+    if (status === 'failed') return <AlertCircle size={14} className={`${styles.statusIcon} ${styles.statusFailed}`} />;
+    return <Clock size={14} className={styles.statusIcon} />;
   };
 
   const handleReact = (emoji) => {
@@ -79,9 +117,10 @@ const MessageBubble = ({
     }
   };
 
-  const handleDelete = async () => {
-    await onDelete(message._id, false);
-    setShowMenu(false);
+  const handleCopy = () => {
+    if (message.message) {
+      navigator.clipboard.writeText(message.message);
+    }
   };
 
   const handleDeleteForEveryone = async () => {
@@ -91,14 +130,21 @@ const MessageBubble = ({
     }
   };
 
-  const handleCopy = () => {
-    if (message.message) {
-      navigator.clipboard.writeText(message.message);
+  // Build a tooltip title showing who reacted
+  const getReactionTitle = (group) => {
+    const meIdx = group.users.indexOf('me');
+    const others = group.users.filter((u) => u !== 'me');
+    let text = '';
+    if (meIdx !== -1) text += 'You';
+    if (others.length > 0) {
+      text += (text ? ', ' : '') + (others.length === 1 ? '1 other' : `${others.length} others`);
     }
+    if (!text) text = `${group.count} reaction${group.count > 1 ? 's' : ''}`;
+    return text;
   };
 
   const isDeleted = message.deleted;
-  const isDeletedForMe = message.deletedFor?.includes(currentUserId);
+  const isDeletedForMe = message.deletedFor?.some((id) => id?.toString() === currentUserId?.toString());
   const bubbleClass = isMine ? styles.messageBubbleMine : styles.messageBubbleOther;
   const wrapperClass = isMine ? styles.messageWrapperMine : styles.messageWrapperOther;
 
@@ -117,8 +163,6 @@ const MessageBubble = ({
       </div>
     );
   }
-
-  const userReaction = message.reactions?.find((r) => r.userId === currentUserId);
 
   return (
     <div
@@ -140,13 +184,17 @@ const MessageBubble = ({
         aria-label={`Message from ${message.sender?.name || 'Unknown'}. Double-click to reply.`}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
+            const tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'a' || tag === 'button' || tag === 'input' || tag === 'textarea' || tag === 'img') {
+              return;
+            }
             e.preventDefault();
             onReply(message);
           }
         }}
       >
         {message.replyTo && (
-          <div 
+          <div
             className={styles.replyContainer}
             onClick={() => onScrollToMessage?.(message.replyTo.messageId)}
             role="button"
@@ -218,7 +266,7 @@ const MessageBubble = ({
                     className={styles.documentLink}
                   >
                     <div className={styles.documentIcon}>
-                      <Download size={18} />
+                      <Download size={20} />
                     </div>
                     <div className={styles.documentInfo}>
                       <span className={styles.documentName}>{attachment.name}</span>
@@ -230,111 +278,119 @@ const MessageBubble = ({
                 )}
               </div>
             ))}
+
+            {/* Reactions Display */}
+            {groupedReactions.length > 0 && (
+              <div className={styles.reactionsDisplay}>
+                {groupedReactions.map((group, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`${styles.reactionBadge} ${group.users.includes('me') ? styles.myReaction : ''}`}
+                    onClick={() => onReact(message._id, group.emoji)}
+                    title={getReactionTitle(group)}
+                    aria-label={`${group.emoji}, ${getReactionTitle(group)}`}
+                  >
+                    <span className={styles.reactionEmoji}>{group.emoji}</span>
+                    <span className={styles.reactionCount}>{group.count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className={styles.messageFooter}>
+              <span
+                className={styles.messageTime}
+                aria-label={`Sent at ${formatMessageTime(message.createdAt)}`}
+              >
+                {formatMessageTime(message.createdAt)}
+                {message.edited && <span className={styles.editedBadge}> (edited)</span>}
+              </span>
+              {getStatusIcon()}
+            </div>
           </>
         )}
 
-        <div className={styles.messageFooter}>
-          <span
-            className={styles.messageTime}
-            aria-label={`Sent at ${formatMessageTime(message.createdAt)}`}
+        {showActions && !isEditing && (
+          <div
+            className={`${styles.actionsContainer} ${showMenu ? styles.actionsVisible : ''}`}
+            ref={menuRef}
           >
-            {formatMessageTime(message.createdAt)}
-            {message.edited && <span className={styles.editedBadge}> (edited)</span>}
-          </span>
-          {getStatusIcon()}
-        </div>
-      </div>
-
-      {message.reactions?.length > 0 && !showActions && (
-        <div className={styles.reactionsDisplay}>
-          {message.reactions.map((reaction, idx) => (
-            <span key={idx} className={styles.reactionBadge}>
-              {reaction.emoji}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {showActions && !isEditing && (
-        <div
-          className={`${styles.actionsContainer} ${showMenu ? styles.actionsVisible : ''}`}
-          ref={menuRef}
-        >
-          {shouldShowMenu && (
-            <>
-              <button
-                onClick={() => onReply(message)}
-                className={styles.actionButton}
-                title="Reply"
-                aria-label="Reply"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="12" y2="9" />
-                  <polyline points="22 2 15 22 12 12 2 15 22 2" />
-                </svg>
-              </button>
-              <div className={styles.reactionWrapper}>
+            {shouldShowMenu && (
+              <>
                 <button
-                  onClick={() => setShowReactions(!showReactions)}
+                  onClick={() => onReply(message)}
                   className={styles.actionButton}
-                  title="React"
-                  aria-label="React"
+                  title="Reply"
+                  aria-label="Reply"
                 >
-                  <Smile size={14} />
+                  <CornerDownLeft size={16} />
                 </button>
-                {showReactions && (
-                  <div className={styles.reactionPicker}>
-                    {REACTION_EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        onClick={() => handleReact(emoji)}
-                        className={styles.reactionOption}
-                        aria-label={`React with ${emoji}`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={handleCopy}
-                className={styles.actionButton}
-                title="Copy"
-                aria-label="Copy message"
-              >
-                <Copy size={14} />
-              </button>
-              {isMine && (
-                <>
+                <div className={styles.reactionWrapper}>
                   <button
-                    onClick={handleEdit}
+                    type="button"
+                    onClick={() => setShowReactions(!showReactions)}
                     className={styles.actionButton}
-                    title="Edit"
-                    aria-label="Edit message"
+                    title="React"
+                    aria-label="React"
+                    aria-expanded={showReactions}
                   >
-                    <Edit3 size={14} />
+                    <Smile size={14} />
                   </button>
-                  <button
-                    onClick={handleDeleteForEveryone}
-                    className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                    title="Delete for everyone"
-                    aria-label="Delete for everyone"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {userReaction && !showActions && (
-        <div className={styles.myReaction}>
-          {userReaction.emoji}
-        </div>
-      )}
+                  {showReactions && (
+                    <div
+                      className={styles.reactionPicker}
+                      ref={(el) => {
+                        if (el) reactionRefs.current.picker = el;
+                      }}
+                    >
+                      {REACTION_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          onClick={() => handleReact(emoji)}
+                          className={styles.reactionOption}
+                          type="button"
+                          aria-label={`React with ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={handleCopy}
+                  className={styles.actionButton}
+                  title="Copy"
+                  aria-label="Copy message"
+                >
+                  <Copy size={14} />
+                </button>
+                {isMine && (
+                  <>
+                    <button
+                      onClick={handleEdit}
+                      className={styles.actionButton}
+                      title="Edit"
+                      aria-label="Edit message"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                    <button
+                      onClick={handleDeleteForEveryone}
+                      className={`${styles.actionButton} ${styles.actionButtonDanger}`}
+                      title="Delete for everyone"
+                      aria-label="Delete for everyone"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

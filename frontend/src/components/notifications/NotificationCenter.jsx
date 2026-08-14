@@ -54,19 +54,33 @@ const NotificationCenter = ({ onClose }) => {
   };
 
   const handleBulkMarkRead = async () => {
-    await markBulkAsRead(selectedIds);
-    setSelectedIds([]);
-    setShowBulkActions(false);
+    try {
+      await markBulkAsRead(selectedIds);
+    } catch (err) {
+      console.error('Failed to bulk mark as read:', err);
+    } finally {
+      setSelectedIds([]);
+      setShowBulkActions(false);
+    }
   };
 
   const handleBulkDelete = async () => {
-    await bulkDeleteNotifications(selectedIds);
-    setSelectedIds([]);
-    setShowBulkActions(false);
+    try {
+      await bulkDeleteNotifications(selectedIds);
+    } catch (err) {
+      console.error('Failed to bulk delete notifications:', err);
+    } finally {
+      setSelectedIds([]);
+      setShowBulkActions(false);
+    }
   };
 
   const handleDeleteRead = async () => {
-    await deleteReadNotifications();
+    try {
+      await deleteReadNotifications();
+    } catch (err) {
+      console.error('Failed to delete read notifications:', err);
+    }
   };
 
   const filteredNotifications = React.useMemo(() => {

@@ -13,6 +13,8 @@ const groupMessagesByDate = (messages) => {
 
   messages.forEach((msg) => {
     const msgDate = new Date(msg.createdAt);
+    // Guard against invalid/missing createdAt to prevent crashes
+    if (isNaN(msgDate.getTime())) return;
     const dateKey = msgDate.toDateString();
 
     if (currentGroup.date !== dateKey) {
@@ -34,13 +36,17 @@ const groupMessagesByDate = (messages) => {
 
 const shouldShowAvatar = (msg, allMessages, index) => {
   if (msg.isMine) return false;
-  if (index > 0 && allMessages[index - 1]?.isMine === false) {
-    const prev = allMessages[index - 1];
-    const prevTime = new Date(prev.createdAt).getTime();
-    const currTime = new Date(msg.createdAt).getTime();
-    return currTime - prevTime > DATE_SEPARATOR_THRESHOLD * 60 * 1000;
-  }
-  return true;
+  if (index === 0) return true;
+  const prev = allMessages[index - 1];
+  if (prev?.isMine) return true;
+  const prevSenderId = prev?.sender?._id?.toString() || prev?.sender?.toString();
+  const currSenderId = msg?.sender?._id?.toString() || msg?.sender?.toString();
+  if (prevSenderId && currSenderId && prevSenderId !== currSenderId) return true;
+  const prevTime = new Date(prev?.createdAt).getTime();
+  const currTime = new Date(msg?.createdAt).getTime();
+  // Guard against invalid dates to avoid NaN comparisons
+  if (isNaN(prevTime) || isNaN(currTime)) return true;
+  return currTime - prevTime > DATE_SEPARATOR_THRESHOLD * 60 * 1000;
 };
 
 const MessageList = ({
@@ -90,7 +96,12 @@ const MessageList = ({
   }, [handleScroll]);
 
   useEffect(() => {
-    if (messages.length && messages.length > prevMessageCountRef.current) {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const isNearBottom = distanceFromBottom < 150;
+
+    if (messages.length && messages.length > prevMessageCountRef.current && isNearBottom) {
       scrollToBottom();
     }
     prevMessageCountRef.current = messages.length;
@@ -123,9 +134,10 @@ const MessageList = ({
           </div>
 
           {group.messages.map((msg, idx) => {
-            const isConsecutive = idx > 0 &&
-              group.messages[idx - 1]?.sender?.toString() === msg.sender?.toString() &&
-              msg.isMine === group.messages[idx - 1]?.isMine;
+            const prev = idx > 0 ? group.messages[idx - 1] : null;
+            const isConsecutive = prev &&
+              (prev.sender?._id?.toString() || prev.sender?.toString()) === (msg.sender?._id?.toString() || msg.sender?.toString()) &&
+              msg.isMine === prev.isMine;
             const showAvatar = shouldShowAvatar(msg, group.messages, idx);
             const isHighlighted = highlightedMessageId === msg._id;
 

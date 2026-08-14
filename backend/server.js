@@ -73,15 +73,18 @@ const io = new Server(server, {
   }
 });
 
-// Map to track active user socket connections
+// Map to track active user socket connections: userId → socketId
 const userSocketMap = new Map();
+// Reverse map: socketId → userId (for server-side authentication of socket events)
+const socketUserMap = new Map();
 
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
   socket.on('register', (userId) => {
     if (userId) {
-      userSocketMap.set(userId, socket.id);
+      userSocketMap.set(userId.toString(), socket.id);
+      socketUserMap.set(socket.id, userId.toString());
       console.log(`Registered user ${userId} to socket ${socket.id}`);
       socket.broadcast.emit('user:online', { userId });
       // Emit online user IDs to the newly registered socket
@@ -149,8 +152,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('message:seen', async ({ conversationId, userId, messageIds }) => {
+  socket.on('message:seen', async ({ conversationId, messageIds }) => {
     try {
+      // Derive userId from the server-side reverse map — never trust client-supplied userId
+      const userId = socketUserMap.get(socket.id);
+      if (!userId) return;
+
       const updateQuery = {
         conversation: conversationId,
         sender: { $ne: userId },
@@ -249,7 +256,7 @@ io.on('connection', (socket) => {
         msg.attachments = [];
         await msg.save();
       } else {
-        if (!msg.deletedFor.includes(userId)) {
+        if (!msg.deletedFor.some((d) => d.toString() === userId.toString())) {
           msg.deletedFor.push(userId);
           await msg.save();
         }
@@ -291,14 +298,14 @@ io.on('connection', (socket) => {
     }
   });
 
-   socket.on('disconnect', () => {
-    for (const [userId, socketId] of userSocketMap.entries()) {
-      if (socketId === socket.id) {
-        userSocketMap.delete(userId);
-        console.log(`Unregistered user ${userId}`);
-        socket.broadcast.emit('user:offline', { userId });
-        break;
-      }
+  socket.on('disconnect', () => {
+    // Use the reverse map for O(1) lookup instead of iterating
+    const userId = socketUserMap.get(socket.id);
+    if (userId) {
+      userSocketMap.delete(userId);
+      socketUserMap.delete(socket.id);
+      console.log(`Unregistered user ${userId}`);
+      socket.broadcast.emit('user:offline', { userId });
     }
     console.log(`Socket disconnected: ${socket.id}`);
   });

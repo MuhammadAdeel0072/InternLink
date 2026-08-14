@@ -1,5 +1,11 @@
+const isValidDate = (date) => {
+  if (!date) return false;
+  const d = new Date(date);
+  return !isNaN(d.getTime());
+};
+
 export const formatTimeAgo = (date) => {
-  if (!date) return '';
+  if (!isValidDate(date)) return '';
   const now = new Date();
   const target = new Date(date);
   const diffMs = now - target;
@@ -19,19 +25,19 @@ export const formatTimeAgo = (date) => {
   }
 
   if (target.getFullYear() === now.getFullYear()) {
-    return target.toLocaleDateString([], { month: 'short', day: 'd' });
+    return target.toLocaleDateString([], { month: 'short', day: 'numeric' });
   }
 
-  return target.toLocaleDateString([], { month: 'short', day: 'd', year: 'numeric' });
+  return target.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 export const formatMessageTime = (date) => {
-  if (!date) return '';
+  if (!isValidDate(date)) return '';
   return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
 export const formatDateSeparator = (date) => {
-  if (!date) return '';
+  if (!isValidDate(date)) return '';
   const now = new Date();
   const target = new Date(date);
 
@@ -43,12 +49,12 @@ export const formatDateSeparator = (date) => {
 
   const diffDays = Math.floor((now - target) / (24 * 60 * 60 * 1000));
   if (diffDays < 7) {
-    return target.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'd' });
+    return target.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
   if (target.getFullYear() === now.getFullYear()) {
-    return target.toLocaleDateString([], { month: 'long', day: 'd' });
+    return target.toLocaleDateString([], { month: 'long', day: 'numeric' });
   }
 
-  return target.toLocaleDateString([], { month: 'long', day: 'd', year: 'numeric' });
+  return target.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
 };

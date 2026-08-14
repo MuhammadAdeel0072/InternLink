@@ -34,7 +34,9 @@ const MessageInput = ({
     if (onTyping) {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       onTyping();
-      typingTimerRef.current = setTimeout(() => {}, 2000);
+      typingTimerRef.current = setTimeout(() => {
+        // typing stopped
+      }, 2000);
     }
   };
 

@@ -22,10 +22,26 @@
 .skeletonBubble {
   width: 140px;
   height: 44px;
-  border-radius: 20px;
+  border-radius: 18px;
   background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+.skeletonRowOther .skeletonBubble {
+  border-bottom-left-radius: 4px;
+}
+
+.skeletonRowMine .skeletonBubble {
+  border-bottom-right-radius: 4px;
+}
+
+.skeletonRow:nth-child(odd) .skeletonBubble {
+  width: 120px;
+}
+
+.skeletonRow:nth-child(even) .skeletonBubble {
+  width: 160px;
 }
 
 @keyframes shimmer {

@@ -19,6 +19,8 @@ export const MessageProvider = ({ children }) => {
   const pendingMessagesRef = useRef(new Map());
 
   const [hasMore, setHasMore] = useState(false);
+  const activeConversationRef = useRef(activeConversation);
+  activeConversationRef.current = activeConversation;
 
   const computeUnreadCounts = useCallback((convs, msgs = []) => {
     const counts = {};
@@ -50,6 +52,11 @@ export const MessageProvider = ({ children }) => {
   const fetchMessages = useCallback(async (conversationId, limit = 50, before = null) => {
     try {
       setMessagesLoading(true);
+      // Clear messages immediately when loading a new conversation (not pagination)
+      // to prevent stale messages from a previous conversation flashing on screen.
+      if (!before) {
+        setMessages([]);
+      }
       const response = await messageService.getMessages(conversationId, limit, before);
       const fetched = response.messages || (Array.isArray(response) ? response : []);
       setHasMore(Boolean(response.hasMore));
@@ -86,7 +93,12 @@ export const MessageProvider = ({ children }) => {
       message: trimmedText || '',
       messageType: attachment ? (attachment.type.startsWith('image/') ? 'image' : 'document') : 'text',
       attachments: attachment ? [{ url: URL.createObjectURL(attachment), type: attachment.type, name: attachment.name, size: attachment.size }] : [],
-      replyTo,
+      replyTo: replyTo ? {
+        messageId: replyTo._id || replyTo.messageId,
+        text: replyTo.message || replyTo.text || '',
+        senderName: replyTo.sender?.name || replyTo.senderName || 'Unknown',
+        senderId: replyTo.sender?._id || replyTo.senderId
+      } : null,
       reactions: [],
       status: 'sending',
       edited: false,
@@ -293,55 +305,84 @@ export const MessageProvider = ({ children }) => {
 
     setSocketConnected(true);
 
-    const handleNewMessage = ({ conversationId, message }) => {
+    const handleNewMessage = ({ conversationId, message, senderId: payloadSenderId }) => {
+      const currentActive = activeConversationRef.current;
+      const senderId = payloadSenderId || message.sender?._id || message.sender;
+      const isFromOther = senderId && user?._id && senderId.toString() !== user._id.toString();
+
       setMessages((prev) => {
-        if (activeConversation && conversationId === activeConversation._id) {
+        if (currentActive && conversationId === currentActive._id) {
           const exists = prev.some((m) => m._id === message._id);
           if (exists) return prev.map((m) => (m._id === message._id ? message : m));
+
+          // Check if there is an optimistic temp message matching this text/sender
+          // to avoid showing the message twice (optimistic + server-confirmed)
+          const tempIndex = prev.findIndex(
+            (m) => typeof m._id === 'string' && m._id.startsWith('temp_') && m.message === message.message
+          );
+          if (tempIndex !== -1) {
+            const updated = [...prev];
+            updated[tempIndex] = message;
+            return updated;
+          }
+
           return [...prev, message];
         }
         return prev;
       });
 
+      // NOTE: Do NOT emit message:delivered from the client.
+      // The backend sendMessage controller handles delivered status when the
+      // recipient is online (checks userSocketMap) — this is the authoritative source.
+      // A client-side emit here would create a race condition and is a security risk.
+
       setConversations((prev) => {
         const existing = prev.find((c) => c._id === conversationId);
         if (existing) {
-          return prev.map((c) =>
-            c._id === conversationId
-              ? {
-                  ...c,
-                  lastMessage: message.message || '[Attachment]',
-                  lastMessageAt: message.createdAt || new Date().toISOString(),
-                  unreadCount: activeConversation?._id === conversationId
-                    ? c.unreadCount
-                    : (c.unreadCount || 0) + 1
-                }
-              : c
-          ).sort((a, b) => {
-            if (a.isPinned !== b.isPinned) return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
-            return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
-          });
+          return prev
+            .map((c) =>
+              c._id === conversationId
+                ? {
+                    ...c,
+                    lastMessage: message.message || '[Attachment]',
+                    lastMessageAt: message.createdAt || new Date().toISOString(),
+                    unreadCount: currentActive?._id === conversationId
+                      ? 0
+                      : isFromOther
+                      ? (c.unreadCount || 0) + 1
+                      : c.unreadCount || 0
+                  }
+                : c
+            )
+            .sort((a, b) => {
+              if (a.isPinned !== b.isPinned) return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
+              return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
+            });
         } else {
           fetchConversations();
           return prev;
         }
       });
 
-      if (activeConversation && conversationId === activeConversation._id) {
+      if (currentActive && conversationId === currentActive._id) {
         clearUnread(conversationId);
-        const senderId = message.sender?._id || message.sender;
-        if (senderId && senderId.toString() !== user._id.toString()) {
-          markAsRead(conversationId, [message._id]);
-        }
-      } else {
+      } else if (isFromOther) {
         incrementUnread(conversationId);
       }
     };
 
-    const handleDelivered = ({ conversationId, messageId }) => {
+    const handleDelivered = ({ conversationId, messageId, messageIds }) => {
+      const ids = new Set();
+      if (messageIds && Array.isArray(messageIds)) {
+        messageIds.forEach((id) => ids.add(id));
+      } else if (messageId) {
+        ids.add(messageId);
+      }
+
       setMessages((prev) =>
         prev.map((msg) => {
-          if (msg._id === messageId || (msg.conversation === conversationId && msg.status === 'sent')) {
+          if (ids.size > 0 && !ids.has(msg._id)) return msg;
+          if (msg.conversation?.toString() === conversationId?.toString()) {
             if (msg.status !== 'read') {
               return { ...msg, status: 'delivered' };
             }
@@ -354,7 +395,8 @@ export const MessageProvider = ({ children }) => {
     const handleSeen = ({ conversationId, messageIds }) => {
       setMessages((prev) =>
         prev.map((msg) => {
-          const isTarget = (!messageIds || messageIds.length === 0 || messageIds.includes(msg._id)) &&
+          const isTarget =
+            (!messageIds || messageIds.length === 0 || messageIds.includes(msg._id)) &&
             msg.conversation?.toString() === conversationId?.toString();
           if (isTarget) {
             return { ...msg, status: 'read' };
@@ -362,6 +404,10 @@ export const MessageProvider = ({ children }) => {
           return msg;
         })
       );
+
+      if (conversationId) {
+        clearUnread(conversationId);
+      }
     };
 
     const handleTyping = ({ conversationId, userId }) => {
@@ -398,11 +444,16 @@ export const MessageProvider = ({ children }) => {
 
     const handleConversationUpdate = ({ conversationId, lastMessage, lastMessageAt }) => {
       setConversations((prev) =>
-        prev.map((c) =>
-          c._id === conversationId
-            ? { ...c, lastMessage, lastMessageAt }
-            : c
-        )
+        prev
+          .map((c) =>
+            c._id === conversationId
+              ? { ...c, lastMessage, lastMessageAt }
+              : c
+          )
+          .sort((a, b) => {
+            if (a.isPinned !== b.isPinned) return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
+            return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
+          })
       );
     };
 
@@ -434,7 +485,7 @@ export const MessageProvider = ({ children }) => {
       socket.off('conversation:update', handleConversationUpdate);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [socket, user, activeConversation, incrementUnread, clearUnread, fetchConversations, markAsRead]);
+  }, [socket, user, incrementUnread, clearUnread, fetchConversations]);
 
   const value = {
     conversations,

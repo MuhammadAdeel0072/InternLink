@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Notification from '../models/Notification.js';
 import Profile from '../models/Profile.js';
 import {
@@ -90,7 +91,7 @@ export const getNotifications = async (req, res) => {
         updatedAt: notif.updatedAt,
         sender: {
           _id: senderIdStr || null,
-          name: notif.sender?.name || 'User',
+          name: notif.sender?.name || '',
           email: notif.sender?.email || '',
           avatar: senderProfile?.avatar || ''
         }
@@ -162,7 +163,7 @@ export const getUnreadNotifications = async (req, res) => {
         createdAt: notif.createdAt,
         sender: {
           _id: senderIdStr || null,
-          name: notif.sender?.name || 'User',
+          name: notif.sender?.name || '',
           email: notif.sender?.email || '',
           avatar: senderProfile?.avatar || ''
         }
@@ -180,7 +181,14 @@ export const getUnreadNotifications = async (req, res) => {
 // @access  Private
 export const getNotificationById = async (req, res) => {
   try {
-    const notification = await Notification.findById(req.params.id)
+    const { id } = req.params;
+
+    // Validate ObjectId to avoid CastError 500s on non-ObjectId strings
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: 'Invalid notification ID' });
+    }
+
+    const notification = await Notification.findById(id)
       .populate('sender', 'name email')
       .lean();
 
@@ -212,7 +220,7 @@ export const getNotificationById = async (req, res) => {
       updatedAt: notification.updatedAt,
       sender: {
         _id: senderId?.toString() || null,
-        name: notification.sender?.name || 'User',
+        name: notification.sender?.name || '',
         email: notification.sender?.email || '',
         avatar: senderProfile?.avatar || ''
       }
@@ -227,7 +235,14 @@ export const getNotificationById = async (req, res) => {
 // @access  Private
 export const markAsRead = async (req, res) => {
   try {
-    const notification = await Notification.findById(req.params.id);
+    const { id } = req.params;
+
+    // Validate ObjectId to avoid CastError 500s on non-ObjectId strings
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: 'Invalid notification ID' });
+    }
+
+    const notification = await Notification.findById(id);
     if (!notification) {
       return res.status(404).json({ message: 'Notification not found' });
     }
@@ -275,7 +290,14 @@ export const markAllAsRead = async (req, res) => {
 // @access  Private
 export const deleteNotification = async (req, res) => {
   try {
-    const notification = await Notification.findById(req.params.id);
+    const { id } = req.params;
+
+    // Validate ObjectId to avoid CastError 500s on non-ObjectId strings
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: 'Invalid notification ID' });
+    }
+
+    const notification = await Notification.findById(id);
     if (!notification) {
       return res.status(404).json({ message: 'Notification not found' });
     }

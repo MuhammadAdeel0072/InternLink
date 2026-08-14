@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { notificationService } from '../services/notificationService';
 import { useSocket } from './SocketContext';
 
@@ -66,6 +66,12 @@ export const NotificationProvider = ({ children }) => {
   const [state, dispatch] = useReducer(notificationReducer, initialState);
   const { socket, emitNotificationAlert } = useSocket();
 
+  // Ref to always have the latest notifications without re-creating callbacks.
+  // This avoids stale-closure issues where `state.notifications` was captured
+  // at callback creation time and never updated.
+  const notificationsRef = useRef([]);
+  notificationsRef.current = state.notifications;
+
   const fetchNotifications = useCallback(async (options = {}) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
@@ -129,7 +135,7 @@ export const NotificationProvider = ({ children }) => {
       await notificationService.markAllAsRead();
       dispatch({
         type: 'SET_NOTIFICATIONS',
-        payload: state.notifications.map(n => ({ ...n, isRead: true }))
+        payload: notificationsRef.current.map(n => ({ ...n, isRead: true }))
       });
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -137,14 +143,14 @@ export const NotificationProvider = ({ children }) => {
     } finally {
       dispatch({ type: 'SET_REFRESHING', payload: false });
     }
-  }, [state.notifications]);
+  }, []);
 
   const markBulkAsRead = useCallback(async (ids) => {
     try {
       await notificationService.markBulkAsRead(ids);
       dispatch({
         type: 'SET_NOTIFICATIONS',
-        payload: state.notifications.map(n =>
+        payload: notificationsRef.current.map(n =>
           ids.includes(n._id) ? { ...n, isRead: true } : n
         )
       });
@@ -152,7 +158,7 @@ export const NotificationProvider = ({ children }) => {
       console.error('Failed to bulk mark as read:', error);
       throw error;
     }
-  }, [state.notifications]);
+  }, []);
 
   const deleteNotification = useCallback(async (id) => {
     try {
@@ -170,7 +176,7 @@ export const NotificationProvider = ({ children }) => {
       await notificationService.deleteReadNotifications();
       dispatch({
         type: 'SET_NOTIFICATIONS',
-        payload: state.notifications.filter(n => !n.isRead)
+        payload: notificationsRef.current.filter(n => !n.isRead)
       });
     } catch (error) {
       console.error('Failed to delete read notifications:', error);
@@ -178,20 +184,20 @@ export const NotificationProvider = ({ children }) => {
     } finally {
       dispatch({ type: 'SET_REFRESHING', payload: false });
     }
-  }, [state.notifications]);
+  }, []);
 
   const bulkDeleteNotifications = useCallback(async (ids) => {
     try {
       await notificationService.bulkDeleteNotifications(ids);
       dispatch({
         type: 'SET_NOTIFICATIONS',
-        payload: state.notifications.filter(n => !ids.includes(n._id))
+        payload: notificationsRef.current.filter(n => !ids.includes(n._id))
       });
     } catch (error) {
       console.error('Failed to bulk delete notifications:', error);
       throw error;
     }
-  }, [state.notifications]);
+  }, []);
 
   const updatePreferences = useCallback(async (preferences) => {
     try {

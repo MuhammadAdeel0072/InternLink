@@ -22,12 +22,12 @@ export const getOrCreateConversation = async (userId, recipientId) => {
   }
 
   const blockedUsers = currentUser.preferences?.privacy?.blockedUsers || [];
-  if (blockedUsers.includes(recipientId)) {
+  if (blockedUsers.some((id) => id.toString() === recipientId.toString())) {
     throw new Error('You have blocked this user');
   }
 
   const recipientBlocked = recipient.preferences?.privacy?.blockedUsers || [];
-  if (recipientBlocked.includes(userId)) {
+  if (recipientBlocked.some((id) => id.toString() === userId.toString())) {
     throw new Error('You cannot message this user');
   }
 

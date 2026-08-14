@@ -29,9 +29,11 @@ router.put('/preferences', protect, updatePreferences);
 router.put('/read-all', protect, markAllAsRead);
 router.put('/read-bulk', protect, markBulkAsRead);
 router.put('/:id/read', protect, markAsRead);
-router.delete('/:id', protect, deleteNotification);
 router.delete('/read', protect, deleteReadNotifications);
 router.delete('/bulk', protect, bulkDeleteNotifications);
+// /:id MUST come AFTER all static keyword routes ('read', 'bulk') to avoid
+// Express matching '/read' or '/bulk' as an ObjectId param.
+router.delete('/:id', protect, deleteNotification);
 router.get('/:id', protect, getNotificationById);
 
 export default router;

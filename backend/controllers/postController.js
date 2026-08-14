@@ -82,23 +82,29 @@ const formatPost = (post, userMap, profileMap) => {
   const authorIdStr = authorId ? authorId.toString() : null;
 
   // Author enrichment
-  const authorUser = post.author && typeof post.author === 'object' ? post.author : userMap.get(authorIdStr);
+  const authorUser = post.author && typeof post.author === 'object' && post.author.name
+    ? post.author
+    : userMap.get(authorIdStr);
   const authorProfile = profileMap.get(authorIdStr);
-  const authorName = authorUser?.name || 'User';
+  const authorName = authorUser?.name || '';
   const authorEmail = authorUser?.email || '';
 
   // Comments enrichment
   const commentsWithProfiles = (post.comments || []).map((comment) => {
     const commentUserId = comment.user?._id || comment.user;
     const commentUserIdStr = commentUserId ? commentUserId.toString() : null;
-    const commentUser = comment.user && typeof comment.user === 'object' ? comment.user : userMap.get(commentUserIdStr);
+    const commentUser = comment.user && typeof comment.user === 'object' && comment.user.name
+      ? comment.user
+      : userMap.get(commentUserIdStr);
     const commentProfile = profileMap.get(commentUserIdStr);
 
     // Replies enrichment
     const repliesWithProfiles = (comment.replies || []).map((reply) => {
       const replyUserId = reply.user?._id || reply.user;
       const replyUserIdStr = replyUserId ? replyUserId.toString() : null;
-      const replyUser = reply.user && typeof reply.user === 'object' ? reply.user : userMap.get(replyUserIdStr);
+      const replyUser = reply.user && typeof reply.user === 'object' && reply.user.name
+        ? reply.user
+        : userMap.get(replyUserIdStr);
       const replyProfile = profileMap.get(replyUserIdStr);
 
       return {
@@ -107,7 +113,7 @@ const formatPost = (post, userMap, profileMap) => {
         createdAt: reply.createdAt,
         user: {
           _id: replyUserId || null,
-          name: replyUser?.name || 'User',
+          name: replyUser?.name || '',
           avatar: replyProfile?.avatar || ''
         }
       };
@@ -120,7 +126,7 @@ const formatPost = (post, userMap, profileMap) => {
       replies: repliesWithProfiles,
       user: {
         _id: commentUserId || null,
-        name: commentUser?.name || 'User',
+        name: commentUser?.name || '',
         avatar: commentProfile?.avatar || ''
       }
     };

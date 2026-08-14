@@ -3,18 +3,25 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-primary);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
 }
 
 .sendMessageError {
-  padding: 8px 20px;
-  background-color: var(--danger-light);
+  padding: 10px 20px;
+  background-color: rgba(239, 68, 68, 0.1);
   color: var(--danger);
   font-size: 0.85rem;
-  border-top: 1px solid var(--danger-light);
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
   text-align: center;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .chatWindow.showInfo {
@@ -26,9 +33,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(8px);
 }
 
 .headerLeft {
@@ -44,16 +55,16 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: none;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
 .backButton:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
 }
 
@@ -65,12 +76,12 @@
   min-width: 0;
   cursor: pointer;
   border-radius: 8px;
-  padding: 2px 4px;
+  padding: 4px 8px;
   transition: background-color 0.15s ease;
 }
 
 .headerUserInfo:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-tertiary);
 }
 
 .headerAvatar {
@@ -80,14 +91,14 @@
   border-radius: 50%;
   overflow: visible;
   flex-shrink: 0;
-  background-color: var(--bg-tertiary);
-  border: none;
-  transition: all 0.2s;
+  border: 2px solid var(--bg-tertiary);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
 }
 
 .headerAvatarOnline {
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  border-color: var(--bg-primary);
 }
 
 .headerAvatar img {
@@ -119,15 +130,16 @@
   border-radius: 50%;
   border: 2px solid var(--bg-secondary, #0f172a);
   box-sizing: border-box;
+  transition: all 0.2s;
 }
 
 .statusOnline {
   background-color: #22c55e;
+  box-shadow: 0 0 0 2px var(--bg-secondary, #0f172a);
 }
 
 .statusOffline {
   background-color: #64748b;
-  display: none;
 }
 
 .headerDetails {
@@ -152,12 +164,21 @@
   color: var(--text-muted);
   margin: 1px 0 0;
   font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.headerStatus.typing {
+  color: var(--primary);
+  font-weight: 500;
 }
 
 .headerRight {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .headerBtn {
@@ -170,25 +191,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   width: 34px;
   height: 34px;
 }
 
 .headerBtn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-tertiary);
   color: var(--text-primary);
 }
 
 .headerBtnActive {
-  background-color: rgba(139, 92, 246, 0.15);
+  background-color: rgba(99, 102, 241, 0.15);
   color: var(--primary);
   border: none;
 }
 
 .searchBox {
   position: relative;
-  padding: 12px 20px;
+  padding: 12px 20px 12px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   flex-shrink: 0;
@@ -197,22 +218,45 @@
 .searchInput {
   width: 100%;
   padding: 8px 36px 8px 12px;
-  border-radius: var(--radius-full);
+  border-radius: 24px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
   font-size: 0.85rem;
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .searchInput:focus {
   border-color: var(--primary);
+  background-color: var(--bg-tertiary);
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .searchInput::placeholder {
   color: var(--text-muted);
+}
+
+.searchClearBtn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.searchClearBtn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
 }
 
 @media (max-width: 768px) {

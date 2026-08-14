@@ -80,7 +80,11 @@ const Feed = memo(() => {
         setHasMore(postsData.length === limit);
       }
     } catch (err) {
-      console.error('Failed to fetch posts:', err);
+      console.error('Failed to fetch posts:', err.message || err);
+      // Only show user-facing alert on initial load, not on pagination
+      if (reset && posts.length === 0) {
+        // Non-blocking error — the UI handles empty state gracefully
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);

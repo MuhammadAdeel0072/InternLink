@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import ConversationInfo from './ConversationInfo';
-import { Phone, Video, MoreVertical, Search, ArrowLeft } from 'lucide-react';
+import { Phone, Video, MoreVertical, Search, ArrowLeft, X } from 'lucide-react';
 import styles from './ChatWindow.module.css';
 
 const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
@@ -42,9 +42,19 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
   }, []);
 
   useEffect(() => {
+    setReplyingTo(null);
+  }, [conversation?._id]);
+
+  // Mark unread incoming messages as read whenever the active conversation
+  // contains messages the current user has not yet read. This fires once per
+  // conversation load AND for every new message that arrives while the
+  // conversation is open, so senders receive read receipts for all messages.
+  // The backend call is idempotent (already-read messages are no-ops) and only
+  // runs when there is at least one unread incoming message, so it does not
+  // "hammer" the API or mark the user's own messages as read.
+  useEffect(() => {
     if (!conversation || !messages.length) return;
 
-    const otherUserId = conversation.otherUser?._id;
     const unreadMessageIds = messages
       .filter((msg) => {
         const senderId = msg.sender?._id?.toString() || msg.sender?.toString();
@@ -56,6 +66,7 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
       markAsRead(conversation._id, unreadMessageIds);
     }
   }, [conversation, messages, user, markAsRead]);
+
 
   const emitTyping = useCallback(() => {
     if (!socket || !conversation || !user) return;
@@ -85,7 +96,12 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
   };
 
   const handleReply = (msg) => {
-    setReplyingTo(msg);
+    setReplyingTo({
+      _id: msg._id,
+      message: msg.message || msg.text || '',
+      sender: msg.sender,
+      text: msg.message || msg.text || ''
+    });
   };
 
   const handleConversationAction = async (actionType, conversationId) => {
@@ -164,9 +180,9 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
             </div>
             <div className={styles.headerDetails}>
               <h3 className={styles.headerName}>{conversation.otherUser.name}</h3>
-              <p className={styles.headerStatus}>
-                {isTyping ? 'typing...' : (online ? 'Online' : (conversation.otherUser.currentStatus || conversation.otherUser.role))}
-              </p>
+        <p className={`${styles.headerStatus} ${isTyping ? styles.typing : ''}`}>
+          {isTyping ? 'typing...' : (online ? 'Online' : (conversation.otherUser.currentStatus || conversation.otherUser.role))}
+        </p>
             </div>
           </div>
         </div>
@@ -197,8 +213,30 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
         </div>
       </div>
 
+      {showSearch && (
+        <div className={styles.searchBox}>
+          <input
+            type="text"
+            placeholder="Search messages in this conversation..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+            autoFocus
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className={styles.searchClearBtn}
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
       <MessageList
-        messages={messages}
+        messages={searchQuery ? messages.filter((m) => m.message?.toLowerCase().includes(searchQuery.toLowerCase())) : messages}
         loading={messagesLoading}
         currentUserId={user._id}
         typingUsers={typingUsers}
