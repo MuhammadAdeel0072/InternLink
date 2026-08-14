@@ -5,6 +5,7 @@ import StatusBadge from '../../../components/StatusBadge/StatusBadge';
 import CalendarView from '../../../components/CalendarView/CalendarView';
 import PrimaryButton from '../../../components/primaryButton/primaryButton';
 import Toast from '../../../components/Toast/Toast';
+import styles from './StudentInterviews.module.css';
 import {
   Search,
   Filter,
@@ -325,10 +326,10 @@ const StudentInterviews = () => {
 
     if (interviews.length === 0) {
       return (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-          <Calendar size={48} style={{ color: 'var(--text-muted)', marginBottom: '16px' }} />
-          <h3 style={{ margin: '0 0 8px', color: 'var(--text-primary)' }}>No interviews found</h3>
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Try adjusting your filters or request a new interview.</p>
+        <div className={styles.emptyState}>
+          <Calendar size={48} className={styles.emptyStateIcon} />
+          <h3>No interviews found</h3>
+          <p>Try adjusting your filters or request a new interview.</p>
         </div>
       );
     }
