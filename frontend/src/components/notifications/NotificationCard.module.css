@@ -88,14 +88,14 @@
 }
 
 .title {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.4;
 }
 
 .message {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   line-height: 1.4;
   display: -webkit-box;
@@ -105,7 +105,7 @@
 }
 
 .priorityBadge {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: var(--radius-full);
@@ -122,7 +122,7 @@
 }
 
 .time {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
 }
 
@@ -130,7 +130,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--primary);
   text-decoration: none;
   font-weight: 500;
@@ -223,11 +223,11 @@
   }
 
   .title {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .message {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .deleteBtn {

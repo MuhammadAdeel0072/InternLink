@@ -38,7 +38,7 @@
 /* ============================================ */
 .errorText {
   color: var(--danger);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   margin-top: 4px;
   display: block;
 }
@@ -54,7 +54,7 @@
   }
 
   .errorText {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
 
   .selectInput {
@@ -67,6 +67,24 @@
 @media (max-width: 480px) {
   .textareaInput {
     min-height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .errorText {
+    font-size: 0.7rem;
+  }
+
+  .selectInput {
+    padding-right: 28px;
+    background-position: right 8px center;
+    font-size: 0.9rem;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 360px) {
+  .textareaInput {
+    min-height: 36px;
     font-size: 0.85rem;
   }
 
@@ -75,25 +93,7 @@
   }
 
   .selectInput {
-    padding-right: 28px;
-    background-position: right 8px center;
     font-size: 0.85rem;
-  }
-}
-
-/* Very Small Mobile */
-@media (max-width: 360px) {
-  .textareaInput {
-    min-height: 36px;
-    font-size: 0.8rem;
-  }
-
-  .errorText {
-    font-size: 0.6rem;
-  }
-
-  .selectInput {
-    font-size: 0.8rem;
     padding-right: 24px;
   }
 }

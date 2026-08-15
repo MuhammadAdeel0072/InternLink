@@ -28,7 +28,7 @@
   line-height: 1.6;
   color: var(--text-secondary);
   white-space: pre-wrap;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 /* ============================================ */
@@ -54,7 +54,7 @@
   font-weight: 600;
   cursor: pointer;
   padding: 8px 0 0 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   transition: all 0.2s ease;
 }
 
@@ -76,12 +76,12 @@
 /* Tablet */
 @media (max-width: 768px) {
   .collapsibleText {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     line-height: 1.5;
   }
 
   .collapsibleToggle {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     padding: 6px 0 0 0;
   }
 
@@ -93,12 +93,12 @@
 /* Mobile */
 @media (max-width: 480px) {
   .collapsibleText {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     line-height: 1.5;
   }
 
   .collapsibleToggle {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     padding: 4px 0 0 0;
   }
 
@@ -110,12 +110,12 @@
 /* Very Small Mobile */
 @media (max-width: 360px) {
   .collapsibleText {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     line-height: 1.4;
   }
 
   .collapsibleToggle {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     padding: 4px 0 0 0;
   }
 

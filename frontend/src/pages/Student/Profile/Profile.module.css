@@ -475,7 +475,7 @@
 }
 
 .languageProficiency {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: var(--radius-full);
   background-color: var(--primary-light);
@@ -557,7 +557,7 @@
 }
 
 .experienceBadge {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   padding: 1px 6px;
   margin-left: 8px;
 }
@@ -1129,7 +1129,7 @@
   }
 
   .coverBtn {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     padding: 4px 10px;
   }
 
@@ -1240,7 +1240,7 @@
   }
 
   .skillStars {
-    font-size: 0.6rem;
+    font-size: 0.7rem;
   }
 
   .experienceItem,
@@ -1312,7 +1312,7 @@
   }
 
   .certificationId {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
   }
 
   .editBtn,
@@ -1415,7 +1415,7 @@
   .messageBtn,
   .connectedBtn,
   .pendingBtn {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     padding: 4px 8px;
   }
 
@@ -1432,7 +1432,7 @@
   }
 
   .skillTag {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     padding: 4px 8px;
   }
 

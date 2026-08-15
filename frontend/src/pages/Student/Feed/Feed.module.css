@@ -158,7 +158,7 @@
   align-items: center;
   gap: 8px;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -331,7 +331,7 @@
 }
 
 .postMeta {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -401,7 +401,7 @@
   display: flex;
   justify-content: space-between;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 12px;
@@ -428,7 +428,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -457,7 +457,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   background: none;
   border: none;
@@ -495,7 +495,7 @@
   border-radius: var(--radius-full);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-family: inherit;
   min-width: 0;
   transition: border-color 0.2s;
@@ -589,14 +589,14 @@
 }
 
 .commentUserName {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .commentText {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 1rem;
   margin-top: 4px;
   word-break: break-word;
   line-height: 1.6;
@@ -611,7 +611,7 @@
 }
 
 .replyBtn {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   font-weight: 600;
   background: none;
@@ -628,12 +628,12 @@
 }
 
 .commentDate {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
 }
 
 .collapseBtn {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   font-weight: 600;
   background: none;
@@ -898,19 +898,19 @@
 }
 
 .replyUserName {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .replyDate {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
 .replyText {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   margin-top: 4px;
   word-break: break-word;
   line-height: 1.6;
@@ -924,7 +924,7 @@
 }
 
 .nestedReplyBtn {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   font-weight: 600;
   background: none;
@@ -942,7 +942,7 @@
 
 /* See More Buttons */
 .seeMoreBtn {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--primary);
   margin-left: 36px;
   margin-top: 8px;
@@ -963,7 +963,7 @@
 }
 
 .nestedSeeMoreBtn {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--primary);
   margin-left: 28px;
   margin-top: 8px;
@@ -993,7 +993,7 @@
 .commentsSeeMoreBtn {
   color: var(--primary);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -1013,7 +1013,7 @@
 .commentsSeeLessBtn {
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -1033,7 +1033,7 @@
 /* No Comments */
 .noComments {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   text-align: center;
   padding: 18px;
 }
@@ -1181,7 +1181,7 @@
 
   .likeBtn,
   .commentActionBtn {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     padding: 10px 14px;
     min-height: 40px;
   }
@@ -1228,7 +1228,7 @@
   }
 
   .commentText {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
 
   .replyInputWrapper {
@@ -1249,12 +1249,12 @@
   }
 
    .replyText {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .nestedSeeMoreBtn {
     margin-left: 20px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
 
   .colorPickerDropdown {
@@ -1287,7 +1287,7 @@
   }
 
   .actionBtn {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     padding: 6px 10px;
   }
 
@@ -1297,7 +1297,7 @@
 
   .likeBtn,
   .commentActionBtn {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     padding: 8px 12px;
   }
 

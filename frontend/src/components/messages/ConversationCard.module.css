@@ -114,14 +114,14 @@
 }
 
 .conversationTime {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   flex-shrink: 0;
   font-weight: 400;
 }
 
 .conversationPreview {
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 400;
   color: var(--text-muted);
   overflow: hidden;
@@ -141,7 +141,7 @@
   color: #ffffff;
   border-radius: 9999px;
   padding: 2px 7px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   min-width: 20px;
   text-align: center;
@@ -150,7 +150,7 @@
 }
 
 .pinnedBadge {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--primary);
   background-color: var(--primary-light);
   padding: 2px 8px;
@@ -163,7 +163,7 @@
 }
 
 .mutedBadge {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   background-color: var(--bg-secondary);
   padding: 2px 8px;
@@ -189,6 +189,6 @@
   }
 
   .conversationPreview {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
 }

@@ -43,7 +43,7 @@
   }
 
   .authDividerText {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     letter-spacing: 0.4px;
   }
 }
@@ -56,7 +56,7 @@
   }
 
   .authDividerText {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     letter-spacing: 0.3px;
   }
 }
@@ -69,7 +69,7 @@
   }
 
   .authDividerText {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     letter-spacing: 0.2px;
   }
 }

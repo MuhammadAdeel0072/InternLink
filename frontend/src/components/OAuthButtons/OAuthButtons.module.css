@@ -71,7 +71,7 @@
 
   .oauthButton {
     height: 44px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     gap: 10px;
   }
 
@@ -95,7 +95,7 @@
 
   .oauthButton {
     height: 40px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     gap: 8px;
     border-radius: 6px;
   }
@@ -120,7 +120,7 @@
 
   .oauthButton {
     height: 36px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     gap: 6px;
     border-radius: 6px;
   }
