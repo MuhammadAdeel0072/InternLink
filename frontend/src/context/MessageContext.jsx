@@ -17,6 +17,7 @@ export const MessageProvider = ({ children }) => {
   const { socket } = useSocket();
   const { user } = useAuth();
   const pendingMessagesRef = useRef(new Map());
+  const messageRequestRef = useRef(0);
 
   const [hasMore, setHasMore] = useState(false);
   const activeConversationRef = useRef(activeConversation);
@@ -50,6 +51,7 @@ export const MessageProvider = ({ children }) => {
   }, []);
 
   const fetchMessages = useCallback(async (conversationId, limit = 50, before = null) => {
+    const requestId = ++messageRequestRef.current;
     try {
       setMessagesLoading(true);
       // Clear messages immediately when loading a new conversation (not pagination)
@@ -59,6 +61,9 @@ export const MessageProvider = ({ children }) => {
       }
       const response = await messageService.getMessages(conversationId, limit, before);
       const fetched = response.messages || (Array.isArray(response) ? response : []);
+      // A slow response for a conversation that is no longer active must not
+      // replace the newly selected thread.
+      if (requestId !== messageRequestRef.current) return [];
       setHasMore(Boolean(response.hasMore));
 
       if (before) {
@@ -86,8 +91,10 @@ export const MessageProvider = ({ children }) => {
     }
 
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const clientMessageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 14)}`;
     const optimisticMessage = {
       _id: tempId,
+      clientMessageId,
       conversation: conversationId,
       sender: user._id,
       message: trimmedText || '',
@@ -109,7 +116,7 @@ export const MessageProvider = ({ children }) => {
       updatedAt: new Date().toISOString()
     };
 
-    pendingMessagesRef.current.set(tempId, optimisticMessage);
+    pendingMessagesRef.current.set(tempId, { ...optimisticMessage, _attachment: attachment });
 
     setMessages((prev) => [...prev, optimisticMessage]);
     setConversations((prev) => {
@@ -129,7 +136,13 @@ export const MessageProvider = ({ children }) => {
     });
 
     try {
-      const data = await messageService.sendMessage(conversationId, trimmedText, attachment, replyTo);
+      const data = await messageService.sendMessage(
+        conversationId,
+        trimmedText,
+        attachment,
+        replyTo,
+        clientMessageId
+      );
 
       setMessages((prev) =>
         prev.map((msg) => (msg._id === tempId ? data : msg))
@@ -140,6 +153,8 @@ export const MessageProvider = ({ children }) => {
       return data;
     } catch (error) {
       setSendMessageError(error.response?.data?.message || 'Message could not be sent. Please try again.');
+      const pending = pendingMessagesRef.current.get(tempId);
+      if (pending) pending.status = 'failed';
 
       setMessages((prev) =>
         prev.map((msg) =>
@@ -153,20 +168,56 @@ export const MessageProvider = ({ children }) => {
     }
   }, [user]);
 
+  const retryMessage = useCallback(async (tempId) => {
+    const pending = pendingMessagesRef.current.get(tempId);
+    if (!pending || pending.status !== 'failed') return;
+
+    setMessages((prev) => prev.map((message) => (
+      message._id === tempId ? { ...message, status: 'sending', error: false } : message
+    )));
+    pending.status = 'sending';
+
+    try {
+      const data = await messageService.sendMessage(
+        pending.conversation,
+        pending.message,
+        pending._attachment,
+        pending.replyTo,
+        pending.clientMessageId
+      );
+      setMessages((prev) => prev.map((message) => (message._id === tempId ? data : message)));
+      pendingMessagesRef.current.delete(tempId);
+      setSendMessageError(null);
+    } catch (error) {
+      pending.status = 'failed';
+      setMessages((prev) => prev.map((message) => (
+        message._id === tempId ? { ...message, status: 'failed', error: true } : message
+      )));
+      setSendMessageError(error.response?.data?.message || 'Message could not be sent. Please try again.');
+      throw error;
+    }
+  }, []);
+
+  const loadOlderMessages = useCallback(async () => {
+    const conversationId = activeConversationRef.current?._id;
+    const oldestMessage = messages[0];
+    if (!conversationId || !oldestMessage?.createdAt || !hasMore) return [];
+    return fetchMessages(conversationId, 50, oldestMessage.createdAt);
+  }, [messages, hasMore, fetchMessages]);
+
   const markAsRead = useCallback(async (conversationId, messageIds) => {
     try {
       await messageService.markAsRead(conversationId, messageIds);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          (!messageIds || messageIds.length === 0 || messageIds.includes(msg._id))
-            ? { ...msg, status: 'read' }
-            : msg
-        )
-      );
+      setMessages((prev) => prev.map((msg) => {
+        const senderId = msg.sender?._id?.toString() || msg.sender?.toString();
+        const isIncoming = senderId !== user?._id?.toString();
+        const isTarget = !messageIds || messageIds.length === 0 || messageIds.includes(msg._id);
+        return isIncoming && isTarget ? { ...msg, status: 'read' } : msg;
+      }));
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }
-  }, []);
+  }, [user]);
 
   const editMessage = useCallback(async (messageId, newMessage) => {
     try {
@@ -306,6 +357,7 @@ export const MessageProvider = ({ children }) => {
     setSocketConnected(true);
 
     const handleNewMessage = ({ conversationId, message, senderId: payloadSenderId }) => {
+      if (!conversationId || !message?._id) return;
       const currentActive = activeConversationRef.current;
       const senderId = payloadSenderId || message.sender?._id || message.sender;
       const isFromOther = senderId && user?._id && senderId.toString() !== user._id.toString();
@@ -330,6 +382,12 @@ export const MessageProvider = ({ children }) => {
         }
         return prev;
       });
+
+      if (isFromOther) {
+        // Receipt is deliberately separate from read: this only confirms that
+        // this authenticated client received the persisted socket payload.
+        socket.emit('message:received', { conversationId, messageId: message._id });
+      }
 
       // NOTE: Do NOT emit message:delivered from the client.
       // The backend sendMessage controller handles delivered status when the
@@ -366,8 +424,6 @@ export const MessageProvider = ({ children }) => {
 
       if (currentActive && conversationId === currentActive._id) {
         clearUnread(conversationId);
-      } else if (isFromOther) {
-        incrementUnread(conversationId);
       }
     };
 
@@ -395,9 +451,11 @@ export const MessageProvider = ({ children }) => {
     const handleSeen = ({ conversationId, messageIds }) => {
       setMessages((prev) =>
         prev.map((msg) => {
+          const senderId = msg.sender?._id?.toString() || msg.sender?.toString();
           const isTarget =
             (!messageIds || messageIds.length === 0 || messageIds.includes(msg._id)) &&
-            msg.conversation?.toString() === conversationId?.toString();
+            msg.conversation?.toString() === conversationId?.toString() &&
+            senderId === user?._id?.toString();
           if (isTarget) {
             return { ...msg, status: 'read' };
           }
@@ -405,9 +463,6 @@ export const MessageProvider = ({ children }) => {
         })
       );
 
-      if (conversationId) {
-        clearUnread(conversationId);
-      }
     };
 
     const handleTyping = ({ conversationId, userId }) => {
@@ -467,11 +522,19 @@ export const MessageProvider = ({ children }) => {
     socket.on('message:delete', handleDelete);
     socket.on('conversation:update', handleConversationUpdate);
 
+    const handleConnect = () => {
+      setSocketConnected(true);
+      fetchConversations();
+      const current = activeConversationRef.current;
+      if (current?._id) fetchMessages(current._id);
+    };
+
     const handleDisconnect = () => {
       setSocketConnected(false);
     };
 
     socket.on('disconnect', handleDisconnect);
+    socket.on('connect', handleConnect);
 
     return () => {
       socket.off('message:new', handleNewMessage);
@@ -484,8 +547,9 @@ export const MessageProvider = ({ children }) => {
       socket.off('message:delete', handleDelete);
       socket.off('conversation:update', handleConversationUpdate);
       socket.off('disconnect', handleDisconnect);
+      socket.off('connect', handleConnect);
     };
-  }, [socket, user, incrementUnread, clearUnread, fetchConversations]);
+  }, [socket, user, clearUnread, fetchConversations, fetchMessages]);
 
   const value = {
     conversations,
@@ -502,7 +566,9 @@ export const MessageProvider = ({ children }) => {
     unreadCounts,
     fetchConversations,
     fetchMessages,
+    loadOlderMessages,
     sendMessage,
+    retryMessage,
     markAsRead,
     editMessage,
     deleteMessage,

@@ -58,7 +58,10 @@ const MessageList = ({
   onReply,
   onReact,
   onEdit,
-  onDelete
+  onDelete,
+  onRetry,
+  hasMore = false,
+  onLoadOlder
 }) => {
   const containerRef = useRef(null);
   const bottomRef = useRef(null);
@@ -125,6 +128,15 @@ const MessageList = ({
 
   return (
     <div className={styles.messageList} ref={containerRef}>
+      {hasMore && (
+        <button
+          type="button"
+          className={styles.loadOlderButton}
+          onClick={onLoadOlder}
+        >
+          Load older messages
+        </button>
+      )}
       {groupedMessages.map((group, gIdx) => (
         <div key={gIdx}>
           <div className={styles.dateSeparator}>
@@ -154,6 +166,7 @@ const MessageList = ({
                   onReact={onReact}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onRetry={onRetry}
                   onScrollToMessage={scrollToMessage}
                   currentUserId={currentUserId}
                   showAvatar={showAvatar}

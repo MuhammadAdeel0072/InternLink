@@ -27,6 +27,7 @@ export const SocketProvider = ({ children }) => {
     }
 
     const newSocket = io(API_URL, {
+      auth: { token: localStorage.getItem('token') },
       withCredentials: true,
       transports: ['websocket', 'polling'],
       // Exponential backoff: start at 1s, max 30s, jitter to avoid thundering herd
@@ -39,7 +40,6 @@ export const SocketProvider = ({ children }) => {
 
     newSocket.on('connect', () => {
       setSocketConnected(true);
-      newSocket.emit('register', user._id);
     });
 
     newSocket.on('disconnect', (reason) => {

@@ -9,6 +9,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 import xss from 'xss-clean';
 import compression from 'compression';
 import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
@@ -18,6 +19,7 @@ import connectDB from './config/db.js';
 import './config/passport.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 import TokenBlacklist from './models/TokenBlacklist.js';
+import User from './models/User.js';
 import { authLimiter, generalLimiter, passwordResetLimiter } from './middlewares/rateLimiter.js';
 import {
   ALLOWED_ORIGINS,
@@ -77,21 +79,43 @@ const io = new Server(server, {
 const userSocketMap = new Map();
 // Reverse map: socketId → userId (for server-side authentication of socket events)
 const socketUserMap = new Map();
+const userSocketIds = new Map();
+const userRoom = (userId) => `user:${userId.toString()}`;
+
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error('Authentication required'));
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const [isBlacklisted, user] = await Promise.all([
+      TokenBlacklist.exists({ token }),
+      User.findById(decoded.id).select('_id isVerified')
+    ]);
+    if (isBlacklisted || !user?.isVerified) return next(new Error('Authentication failed'));
+
+    socket.data.userId = user._id.toString();
+    next();
+  } catch {
+    next(new Error('Authentication failed'));
+  }
+});
 
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  socket.on('register', (userId) => {
-    if (userId) {
-      userSocketMap.set(userId.toString(), socket.id);
-      socketUserMap.set(socket.id, userId.toString());
-      console.log(`Registered user ${userId} to socket ${socket.id}`);
-      socket.broadcast.emit('user:online', { userId });
-      // Emit online user IDs to the newly registered socket
-      const onlineUserIds = Array.from(userSocketMap.keys());
-      socket.emit('users:online_list', { onlineUserIds });
-    }
-  });
+  // The socket identity comes from the verified handshake token, never from
+  // the browser's register payload.
+  const userId = socket.data.userId;
+  const existingSockets = userSocketIds.get(userId) || new Set();
+  const wasOnline = existingSockets.size > 0;
+  existingSockets.add(socket.id);
+  userSocketIds.set(userId, existingSockets);
+  userSocketMap.set(userId, socket.id); // compatibility for non-message notifications
+  socketUserMap.set(socket.id, userId);
+  socket.join(userRoom(userId));
+  if (!wasOnline) socket.broadcast.emit('user:online', { userId });
+  socket.emit('users:online_list', { onlineUserIds: Array.from(userSocketIds.keys()) });
 
   socket.on('send_message_alert', ({ recipientId, message }) => {
     const recipientSocketId = userSocketMap.get(recipientId);
@@ -105,15 +129,26 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('message:delivered', async ({ conversationId, messageId, senderId }) => {
+  socket.on('message:received', async ({ conversationId, messageId }) => {
     try {
-      await Message.findByIdAndUpdate(messageId, { status: 'delivered', deliveredAt: new Date() });
-      const senderSocketId = userSocketMap.get(senderId);
-      if (senderSocketId) {
-        io.to(senderSocketId).emit('message:delivered', { conversationId, messageId, status: 'delivered' });
-      }
+      const message = await Message.findOne({
+        _id: messageId,
+        conversation: conversationId,
+        receiverId: socket.data.userId,
+        status: 'sent'
+      });
+      if (!message) return;
+
+      message.status = 'delivered';
+      message.deliveredAt = new Date();
+      await message.save();
+      io.to(userRoom(message.sender)).emit('message:delivered', {
+        conversationId,
+        messageId: message._id,
+        status: 'delivered'
+      });
     } catch (error) {
-      console.error('Error marking message delivered:', error);
+      console.error('Error confirming message delivery:', error);
     }
   });
 
@@ -138,25 +173,30 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('message:typing', ({ conversationId, userId, recipientId }) => {
-    const recipientSocketId = userSocketMap.get(recipientId);
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit('message:typing', { conversationId, userId });
-    }
+  socket.on('message:typing', async ({ conversationId }) => {
+    const authenticatedUserId = socket.data.userId;
+    const conversation = await Conversation.findById(conversationId).select('participants');
+    if (!conversation?.participants.some((participant) => participant.toString() === authenticatedUserId)) return;
+    const recipientId = conversation.participants.find((participant) => participant.toString() !== authenticatedUserId);
+    if (recipientId) io.to(userRoom(recipientId)).emit('message:typing', { conversationId, userId: authenticatedUserId });
   });
 
-  socket.on('message:stopTyping', ({ conversationId, userId, recipientId }) => {
-    const recipientSocketId = userSocketMap.get(recipientId);
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit('message:stopTyping', { conversationId, userId });
-    }
+  socket.on('message:stopTyping', async ({ conversationId }) => {
+    const authenticatedUserId = socket.data.userId;
+    const conversation = await Conversation.findById(conversationId).select('participants');
+    if (!conversation?.participants.some((participant) => participant.toString() === authenticatedUserId)) return;
+    const recipientId = conversation.participants.find((participant) => participant.toString() !== authenticatedUserId);
+    if (recipientId) io.to(userRoom(recipientId)).emit('message:stopTyping', { conversationId, userId: authenticatedUserId });
   });
 
   socket.on('message:seen', async ({ conversationId, messageIds }) => {
     try {
       // Derive userId from the server-side reverse map — never trust client-supplied userId
-      const userId = socketUserMap.get(socket.id);
+      const userId = socket.data.userId;
       if (!userId) return;
+
+      const conversation = await Conversation.findById(conversationId).select('participants');
+      if (!conversation?.participants.some((participant) => participant.toString() === userId)) return;
 
       const updateQuery = {
         conversation: conversationId,
@@ -172,14 +212,10 @@ io.on('connection', (socket) => {
         { status: 'read', readAt: new Date() }
       );
 
-      const conversation = await Conversation.findById(conversationId);
       if (conversation) {
         const senderId = conversation.participants.find((p) => p.toString() !== userId.toString());
         if (senderId) {
-          const senderSocketId = userSocketMap.get(senderId.toString());
-          if (senderSocketId) {
-            io.to(senderSocketId).emit('message:seen', { conversationId, messageIds: messageIds || [] });
-          }
+          io.to(userRoom(senderId)).emit('message:seen', { conversationId, messageIds: messageIds || [] });
         }
       }
     } catch (error) {
@@ -189,8 +225,11 @@ io.on('connection', (socket) => {
 
   socket.on('message:reaction', async ({ messageId, userId, emoji, recipientId }) => {
     try {
+      if (userId?.toString() !== socket.data.userId) return;
       const msg = await Message.findById(messageId);
       if (!msg) return;
+      const conversation = await Conversation.findById(msg.conversation).select('participants');
+      if (!conversation?.participants.some((participant) => participant.toString() === socket.data.userId)) return;
 
       const existingReaction = msg.reactions.find(
         (r) => r.userId.toString() === userId.toString() && r.emoji === emoji
@@ -223,8 +262,11 @@ io.on('connection', (socket) => {
 
   socket.on('message:edit', async ({ messageId, userId, newMessage, recipientId }) => {
     try {
+      if (userId?.toString() !== socket.data.userId) return;
       const msg = await Message.findById(messageId);
       if (!msg || msg.sender.toString() !== userId.toString()) return;
+      const conversation = await Conversation.findById(msg.conversation).select('participants');
+      if (!conversation?.participants.some((participant) => participant.toString() === socket.data.userId)) return;
 
       msg.message = newMessage;
       msg.edited = true;
@@ -247,8 +289,11 @@ io.on('connection', (socket) => {
 
   socket.on('message:delete', async ({ messageId, userId, recipientId, deleteForEveryone }) => {
     try {
+      if (userId?.toString() !== socket.data.userId) return;
       const msg = await Message.findById(messageId);
       if (!msg) return;
+      const conversation = await Conversation.findById(msg.conversation).select('participants');
+      if (!conversation?.participants.some((participant) => participant.toString() === socket.data.userId)) return;
 
       if (deleteForEveryone && msg.sender.toString() === userId.toString()) {
         msg.deleted = true;
@@ -276,8 +321,9 @@ io.on('connection', (socket) => {
 
   socket.on('conversation:update', async ({ conversationId, userId }) => {
     try {
+      if (userId?.toString() !== socket.data.userId) return;
       const conversation = await Conversation.findById(conversationId);
-      if (!conversation) return;
+      if (!conversation || !conversation.participants.some((participant) => participant.toString() === socket.data.userId)) return;
 
       const recipientId = conversation.participants.find(
         (p) => p.toString() !== userId.toString()
@@ -299,14 +345,17 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    // Use the reverse map for O(1) lookup instead of iterating
-    const userId = socketUserMap.get(socket.id);
-    if (userId) {
-      userSocketMap.delete(userId);
-      socketUserMap.delete(socket.id);
-      console.log(`Unregistered user ${userId}`);
-      socket.broadcast.emit('user:offline', { userId });
+    const disconnectedUserId = socket.data.userId;
+    const activeSockets = userSocketIds.get(disconnectedUserId);
+    activeSockets?.delete(socket.id);
+    if (activeSockets?.size) {
+      userSocketMap.set(disconnectedUserId, Array.from(activeSockets)[0]);
+    } else {
+      userSocketIds.delete(disconnectedUserId);
+      userSocketMap.delete(disconnectedUserId);
+      socket.broadcast.emit('user:offline', { userId: disconnectedUserId });
     }
+    socketUserMap.delete(socket.id);
     console.log(`Socket disconnected: ${socket.id}`);
   });
 });

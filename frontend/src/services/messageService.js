@@ -23,7 +23,7 @@ export const messageService = {
      return { messages: data, hasMore: false, unreadCount: 0 };
    },
 
-  async sendMessage(conversationId, text, attachment = null, replyTo = null) {
+  async sendMessage(conversationId, text, attachment = null, replyTo = null, clientMessageId = null) {
     const formData = new FormData();
     // Only append text when it's a non-empty string.
     // If we blindly append null/undefined, FormData serializes it as the string "null"
@@ -33,6 +33,7 @@ export const messageService = {
     }
     if (attachment) formData.append('attachment', attachment);
     if (replyTo) formData.append('replyTo', JSON.stringify(replyTo));
+    if (clientMessageId) formData.append('clientMessageId', clientMessageId);
 
     const { data } = await api.post(`/messages/${conversationId}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }

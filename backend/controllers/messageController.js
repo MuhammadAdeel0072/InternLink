@@ -1,7 +1,5 @@
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
-import Profile from '../models/Profile.js';
-import User from '../models/User.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import {
   getOrCreateConversation,
@@ -12,6 +10,21 @@ import {
   validateFileUpload,
   getFileType
 } from '../services/messageService.js';
+
+const MAX_MESSAGE_LENGTH = 5000;
+const userRoom = (userId) => `user:${userId.toString()}`;
+
+const emitToParticipant = (io, participantId, event, payload) => {
+  if (io && participantId) io.to(userRoom(participantId)).emit(event, payload);
+};
+
+const getConversationForParticipant = async (conversationId, userId) => {
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation || !conversation.participants.some((participant) => participant.toString() === userId.toString())) {
+    return null;
+  }
+  return conversation;
+};
 
 // @desc    Start or retrieve a conversation thread between two users
 // @route   POST /api/messages/conversation/:recipientId
@@ -39,27 +52,31 @@ export const getConversations = async (req, res) => {
     const userId = req.user._id;
     const { filter = 'all', search = '' } = req.query;
 
-    let query = { participants: userId };
+    let query = { participants: userId, deletedBy: { $ne: userId } };
 
     if (filter === 'unread') {
       query = {
         participants: userId,
+        deletedBy: { $ne: userId },
         archivedBy: { $ne: userId },
         isArchived: { $ne: true }
       };
     } else if (filter === 'archived') {
       query = {
         participants: userId,
+        deletedBy: { $ne: userId },
         $or: [{ archivedBy: userId }, { isArchived: true }]
       };
     } else if (filter === 'pinned') {
       query = {
         participants: userId,
+        deletedBy: { $ne: userId },
         $or: [{ pinnedBy: userId }, { isPinned: true }]
       };
     } else {
       query = {
         participants: userId,
+        deletedBy: { $ne: userId },
         archivedBy: { $ne: userId },
         isArchived: { $ne: true }
       };
@@ -141,46 +158,39 @@ export const getMessages = async (req, res) => {
     const paginatedMessages = hasMore ? rawMessages.slice(0, parsedLimit) : rawMessages;
     const chronologicalMessages = paginatedMessages.reverse();
 
+    // Loading a thread means the recipient's client has actually received the
+    // persisted messages. This is a delivery receipt, not a read receipt.
+    const deliveredMessages = await Message.find({
+      conversation: req.params.conversationId,
+      sender: { $ne: req.user._id },
+      status: 'sent'
+    }).select('_id');
+    const deliveredIds = deliveredMessages.map((message) => message._id);
+
+    if (deliveredIds.length > 0) {
+      await Message.updateMany(
+        { _id: { $in: deliveredIds } },
+        { status: 'delivered', deliveredAt: new Date() }
+      );
+      rawMessages.forEach((message) => {
+        if (deliveredIds.some((id) => id.equals(message._id))) message.status = 'delivered';
+      });
+    }
+
     const formatted = await Promise.all(
       chronologicalMessages.map((msg) => buildMessagePayload(msg, req.user._id))
     );
 
-    // Mark unread messages from others as delivered when conversation is opened
-    const deliveredResult = await Message.updateMany(
-      {
-        conversation: req.params.conversationId,
-        sender: { $ne: req.user._id },
-        status: 'sent'
-      },
-      {
-        status: 'delivered',
-        deliveredAt: new Date()
-      }
-    );
-
-    // Notify senders that their messages have been delivered
-    if (deliveredResult.modifiedCount > 0 && req.io && req.userSocketMap) {
+    if (deliveredIds.length > 0) {
       const senderId = conversation.participants.find(
         (p) => p.toString() !== req.user._id.toString()
       );
       if (senderId) {
-        const senderSocketId = req.userSocketMap.get(senderId.toString());
-        if (senderSocketId) {
-          const deliveredMessages = await Message.find({
-            conversation: req.params.conversationId,
-            sender: senderId,
-            status: 'delivered',
-            deliveredAt: { $gte: new Date(Date.now() - 10000) }
-          }).select('_id');
-          const deliveredIds = deliveredMessages.map((m) => m._id);
-          if (deliveredIds.length > 0) {
-            req.io.to(senderSocketId).emit('message:delivered', {
-              conversationId: req.params.conversationId,
-              messageIds: deliveredIds,
-              status: 'delivered'
-            });
-          }
-        }
+        emitToParticipant(req.io, senderId, 'message:delivered', {
+          conversationId: req.params.conversationId,
+          messageIds: deliveredIds,
+          status: 'delivered'
+        });
       }
     }
 
@@ -205,7 +215,7 @@ export const getMessages = async (req, res) => {
 // @access  Private
 export const sendMessage = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, clientMessageId } = req.body;
     const conversationId = req.params.conversationId;
     const userId = req.user._id;
 
@@ -227,8 +237,27 @@ export const sendMessage = async (req, res) => {
       (p) => p.toString() !== userId.toString()
     );
 
-    const recipientSocketId = req.userSocketMap ? req.userSocketMap.get(receiverId?.toString()) : null;
-    const isRecipientOnline = Boolean(recipientSocketId);
+    const normalizedClientMessageId = typeof clientMessageId === 'string'
+      ? clientMessageId.trim()
+      : '';
+    if (normalizedClientMessageId.length > 100) {
+      return res.status(400).json({ message: 'Invalid message identifier' });
+    }
+
+    // A timed-out request may already have committed. Return that persisted
+    // message instead of creating a duplicate on retry.
+    if (normalizedClientMessageId) {
+      const existing = await Message.findOne({
+        sender: userId,
+        clientMessageId: normalizedClientMessageId
+      }).populate('sender', 'name email');
+      if (existing) {
+        if (existing.conversation.toString() !== conversationId) {
+          return res.status(409).json({ message: 'Message identifier conflicts with another conversation' });
+        }
+        return res.status(200).json(await buildMessagePayload(existing, userId));
+      }
+    }
 
     let attachments = [];
     let messageType = 'text';
@@ -251,75 +280,83 @@ export const sendMessage = async (req, res) => {
     if (!trimmedText && attachments.length === 0) {
       return res.status(400).json({ message: 'Message text or attachment is required' });
     }
+    if (trimmedText.length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({ message: `Message cannot exceed ${MAX_MESSAGE_LENGTH} characters` });
+    }
 
     let replyTo = null;
     if (req.body.replyTo) {
+      let parsed;
       try {
-        const parsed = typeof req.body.replyTo === 'string' ? JSON.parse(req.body.replyTo) : req.body.replyTo;
-        if (parsed && (parsed._id || parsed.messageId)) {
-          const targetMsgId = parsed._id || parsed.messageId;
-          const origMsg = await Message.findById(targetMsgId).populate('sender', 'name');
-          if (origMsg) {
-            replyTo = {
-              messageId: origMsg._id,
-              text: origMsg.message || (origMsg.attachments?.length ? '[Attachment]' : ''),
-              senderName: origMsg.sender?.name || 'Unknown',
-              senderId: origMsg.sender?._id || origMsg.sender
-            };
-          }
-        }
-      } catch (e) {
-        replyTo = null;
+        parsed = typeof req.body.replyTo === 'string' ? JSON.parse(req.body.replyTo) : req.body.replyTo;
+      } catch {
+        return res.status(400).json({ message: 'Invalid reply reference' });
       }
+      const targetMsgId = parsed?._id || parsed?.messageId;
+      if (!targetMsgId) {
+        return res.status(400).json({ message: 'Invalid reply reference' });
+      }
+      const origMsg = await Message.findOne({ _id: targetMsgId, conversation: conversationId })
+        .populate('sender', 'name');
+      if (!origMsg) {
+        return res.status(400).json({ message: 'The message being replied to is unavailable' });
+      }
+      replyTo = {
+        messageId: origMsg._id,
+        text: origMsg.message || (origMsg.attachments?.length ? '[Attachment]' : ''),
+        senderName: origMsg.sender?.name || 'Unknown',
+        senderId: origMsg.sender?._id || origMsg.sender
+      };
     }
-
-    const initialStatus = isRecipientOnline ? 'delivered' : 'sent';
-    const deliveredAt = isRecipientOnline ? new Date() : undefined;
 
     const message = await Message.create({
       conversation: conversationId,
       sender: userId,
       receiverId,
+      clientMessageId: normalizedClientMessageId || undefined,
       message: trimmedText || '',
       messageType,
       attachments,
       replyTo,
-      status: initialStatus,
-      deliveredAt
+      status: 'sent'
     });
 
     conversation.lastMessage = trimmedText || (messageType === 'image' ? '[Image]' : messageType === 'resume' ? '[Resume]' : '[Attachment]');
     conversation.lastMessageAt = new Date();
+    // A new incoming message restores only the recipient's archived view.
+    conversation.archivedBy = (conversation.archivedBy || []).filter(
+      (participant) => participant.toString() !== receiverId.toString()
+    );
+    conversation.deletedBy = (conversation.deletedBy || []).filter(
+      (participant) => participant.toString() !== receiverId.toString()
+    );
     await conversation.save();
 
     const populatedMessage = await Message.findById(message._id).populate('sender', 'name email');
     const payload = await buildMessagePayload(populatedMessage, userId);
 
-    // Notify recipient and update conversation
-    if (req.io && recipientSocketId) {
-      const recipientPayload = await buildMessagePayload(populatedMessage, receiverId);
-      req.io.to(recipientSocketId).emit('message:new', {
-        conversationId,
-        message: recipientPayload,
-        senderId: userId
-      });
-      req.io.to(recipientSocketId).emit('conversation:update', {
-        conversationId,
-        lastMessage: conversation.lastMessage,
-        lastMessageAt: conversation.lastMessageAt
-      });
-    }
+    const recipientPayload = await buildMessagePayload(populatedMessage, receiverId);
+    emitToParticipant(req.io, receiverId, 'message:new', {
+      conversationId,
+      message: recipientPayload,
+      senderId: userId
+    });
+    emitToParticipant(req.io, receiverId, 'conversation:update', {
+      conversationId,
+      lastMessage: conversation.lastMessage,
+      lastMessageAt: conversation.lastMessageAt
+    });
 
-    if (isRecipientOnline) {
-      const senderSocketId = req.userSocketMap.get(userId.toString());
-      if (senderSocketId && req.io) {
-        req.io.to(senderSocketId).emit('message:delivered', {
-          conversationId,
-          messageId: message._id,
-          status: 'delivered'
-        });
-      }
-    }
+    // Persist a notification, but don't let notification failure roll back a
+    // message that has already been safely stored.
+    void sendMessageNotification({
+      senderId: userId,
+      recipientId: receiverId,
+      conversationId,
+      messagePreview: conversation.lastMessage,
+      io: req.io,
+      userSocketMap: req.userSocketMap
+    });
 
     res.status(201).json(payload);
   } catch (error) {
@@ -355,31 +392,31 @@ export const markMessagesAsRead = async (req, res) => {
       filterQuery._id = { $in: messageIds };
     }
 
-    const result = await Message.updateMany(
-      filterQuery,
-      {
-        status: 'read',
-        readAt: new Date()
-      }
-    );
+    const unreadMessages = await Message.find(filterQuery).select('_id');
+    const readMessageIds = unreadMessages.map((message) => message._id);
+
+    if (readMessageIds.length > 0) {
+      await Message.updateMany(
+        { _id: { $in: readMessageIds } },
+        { status: 'read', readAt: new Date() }
+      );
+    }
 
     const otherUser = conversation.participants.find(
       (p) => p.toString() !== userId.toString()
     );
 
-    if (otherUser && req.io && req.userSocketMap) {
-      const senderSocketId = req.userSocketMap.get(otherUser.toString());
-      if (senderSocketId) {
-        req.io.to(senderSocketId).emit('message:seen', {
-          conversationId,
-          messageIds: messageIds || []
-        });
-      }
+    if (otherUser && readMessageIds.length > 0) {
+      emitToParticipant(req.io, otherUser, 'message:seen', {
+        conversationId,
+        messageIds: readMessageIds
+      });
     }
 
     res.status(200).json({
       success: true,
-      updated: result.modifiedCount,
+      updated: readMessageIds.length,
+      messageIds: readMessageIds,
       message: 'Messages marked as read'
     });
   } catch (error) {
@@ -405,6 +442,10 @@ export const editMessage = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized to edit this message' });
     }
 
+    if (!await getConversationForParticipant(msg.conversation, userId)) {
+      return res.status(401).json({ message: 'Not authorized to edit this message' });
+    }
+
     if (msg.deleted) {
       return res.status(400).json({ message: 'Cannot edit deleted message' });
     }
@@ -414,13 +455,24 @@ export const editMessage = async (req, res) => {
       return res.status(400).json({ message: 'Message can only be edited within 15 minutes' });
     }
 
-    msg.message = newMessage;
+    const trimmedMessage = typeof newMessage === 'string' ? newMessage.trim() : '';
+    if (!trimmedMessage || trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({ message: 'Edited message must contain up to 5000 characters' });
+    }
+    msg.message = trimmedMessage;
     msg.edited = true;
     msg.editedAt = new Date();
     await msg.save();
 
     const populated = await Message.findById(msg._id).populate('sender', 'name email');
     const payload = await buildMessagePayload(populated, userId);
+
+    emitToParticipant(req.io, msg.receiverId, 'message:edit', {
+      messageId: msg._id,
+      message: msg.message,
+      edited: true,
+      editedAt: msg.editedAt
+    });
 
     res.status(200).json(payload);
   } catch (error) {
@@ -440,6 +492,10 @@ export const deleteMessage = async (req, res) => {
     const msg = await Message.findById(id);
     if (!msg) {
       return res.status(404).json({ message: 'Message not found' });
+    }
+
+    if (!await getConversationForParticipant(msg.conversation, userId)) {
+      return res.status(401).json({ message: 'Not authorized to delete this message' });
     }
 
     if (msg.sender.toString() !== userId.toString() && !deleteForEveryone) {
@@ -467,6 +523,15 @@ export const deleteMessage = async (req, res) => {
       }
     }
 
+    if (deleteForEveryone) {
+      emitToParticipant(req.io, msg.receiverId, 'message:delete', {
+        messageId: msg._id,
+        deleted: true,
+        message: msg.message,
+        attachments: []
+      });
+    }
+
     res.status(200).json({ success: true, message: 'Message deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -485,6 +550,14 @@ export const reactToMessage = async (req, res) => {
     const msg = await Message.findById(id);
     if (!msg) {
       return res.status(404).json({ message: 'Message not found' });
+    }
+
+    if (!await getConversationForParticipant(msg.conversation, userId)) {
+      return res.status(401).json({ message: 'Not authorized to react to this message' });
+    }
+
+    if (typeof emoji !== 'string' || emoji.length === 0 || emoji.length > 16) {
+      return res.status(400).json({ message: 'Invalid reaction' });
     }
 
     const existingReaction = msg.reactions.find(
@@ -506,6 +579,12 @@ export const reactToMessage = async (req, res) => {
     const populated = await Message.findById(msg._id).populate('sender', 'name email');
     const payload = await buildMessagePayload(populated, userId);
 
+    const recipientId = msg.sender.toString() === userId.toString() ? msg.receiverId : msg.sender;
+    emitToParticipant(req.io, recipientId, 'message:reaction', {
+      messageId: msg._id,
+      reactions: msg.reactions
+    });
+
     res.status(200).json(payload);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -526,11 +605,25 @@ export const replyToMessage = async (req, res) => {
       return res.status(404).json({ message: 'Original message not found' });
     }
 
+    const conversation = await getConversationForParticipant(originalMsg.conversation, userId);
+    if (!conversation) {
+      return res.status(401).json({ message: 'Not authorized to reply to this message' });
+    }
+
+    const trimmedReply = typeof replyText === 'string' ? replyText.trim() : '';
+    if (!trimmedReply || trimmedReply.length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({ message: 'Reply must contain up to 5000 characters' });
+    }
+
+    const receiverId = conversation.participants.find(
+      (participant) => participant.toString() !== userId.toString()
+    );
+
     const reply = await Message.create({
       conversation: originalMsg.conversation,
       sender: userId,
-      receiverId: originalMsg.sender._id,
-      message: replyText,
+      receiverId,
+      message: trimmedReply,
       messageType: 'text',
       replyTo: {
         messageId: originalMsg._id,
@@ -541,13 +634,19 @@ export const replyToMessage = async (req, res) => {
       status: 'sent'
     });
 
-    const conversation = await Conversation.findById(originalMsg.conversation);
-    conversation.lastMessage = replyText;
+    conversation.lastMessage = trimmedReply;
     conversation.lastMessageAt = new Date();
     await conversation.save();
 
     const populated = await Message.findById(reply._id).populate('sender', 'name email');
     const payload = await buildMessagePayload(populated, userId);
+
+    const recipientPayload = await buildMessagePayload(populated, receiverId);
+    emitToParticipant(req.io, receiverId, 'message:new', {
+      conversationId: conversation._id,
+      message: recipientPayload,
+      senderId: userId
+    });
 
     res.status(201).json(payload);
   } catch (error) {
@@ -762,7 +861,9 @@ export const deleteConversation = async (req, res) => {
       { $addToSet: { deletedFor: userId } }
     );
 
-    await Conversation.findByIdAndDelete(conversationId);
+    await Conversation.findByIdAndUpdate(conversationId, {
+      $addToSet: { deletedBy: userId }
+    });
 
     res.status(200).json({ success: true, message: 'Conversation deleted' });
   } catch (error) {

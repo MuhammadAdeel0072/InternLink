@@ -15,10 +15,8 @@ export const getOrCreateConversation = async (userId, recipientId) => {
   }
 
   const currentUser = await User.findById(userId);
-  if (!currentUser.preferences?.privacy?.allowMessages && currentUser.preferences?.privacy?.allowMessages !== undefined) {
-    if (!currentUser.preferences.privacy.allowMessages) {
-      throw new Error('This user has disabled direct messages');
-    }
+  if (recipient.preferences?.privacy?.allowMessages === false) {
+    throw new Error('This user has disabled direct messages');
   }
 
   const blockedUsers = currentUser.preferences?.privacy?.blockedUsers || [];
@@ -31,16 +29,38 @@ export const getOrCreateConversation = async (userId, recipientId) => {
     throw new Error('You cannot message this user');
   }
 
-  let conversation = await Conversation.findOne({
-    participants: { $all: [userId, recipientId], $size: 2 }
-  });
+  const participantKey = [userId.toString(), recipientId.toString()].sort().join(':');
+  let conversation = await Conversation.findOne({ participantKey });
+
+  // Older records do not have participantKey yet, so retain a safe fallback.
+  if (!conversation) {
+    conversation = await Conversation.findOne({
+      participants: { $all: [userId, recipientId], $size: 2 }
+    });
+    if (conversation && !conversation.participantKey) {
+      conversation.participantKey = participantKey;
+      await conversation.save();
+    }
+  }
 
   if (!conversation) {
-    conversation = await Conversation.create({
-      participants: [userId, recipientId],
-      lastMessage: 'Conversation started',
-      lastMessageAt: new Date()
-    });
+    try {
+      conversation = await Conversation.findOneAndUpdate(
+        { participantKey },
+        {
+          $setOnInsert: {
+            participantKey,
+            participants: [userId, recipientId],
+            lastMessage: 'Conversation started',
+            lastMessageAt: new Date()
+          }
+        },
+        { new: true, upsert: true }
+      );
+    } catch (error) {
+      if (error?.code !== 11000) throw error;
+      conversation = await Conversation.findOne({ participantKey });
+    }
   }
 
   return await conversation.populate('participants', 'name email role');
@@ -105,6 +125,7 @@ export const buildMessagePayload = async (message, currentUserId) => {
     conversation: message.conversation,
     sender: message.sender,
     receiverId: message.receiverId,
+    clientMessageId: message.clientMessageId,
     message: message.message,
     messageType: message.messageType,
     attachments: message.attachments,
@@ -144,17 +165,6 @@ export const sendMessageNotification = async ({
   };
 
   const notification = await createNotification(notificationPayload);
-
-  if (io && userSocketMap) {
-    const recipientSocketId = userSocketMap.get(recipientId?.toString());
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit('message:new', {
-        conversationId,
-        message: messagePreview,
-        senderId
-      });
-    }
-  }
 
   return notification;
 };

@@ -15,6 +15,7 @@ const MessageBubble = ({
   onReact,
   onEdit,
   onDelete,
+  onRetry,
   onScrollToMessage,
   currentUserId,
   showAvatar = true,
@@ -80,11 +81,23 @@ const MessageBubble = ({
   const getStatusIcon = () => {
     if (!isMine) return null;
     const status = message.status || 'sent';
-    if (status === 'sent') return <Clock size={14} className={styles.statusIcon} />;
-    if (status === 'delivered') return <Check size={14} className={styles.statusIcon} />;
-    if (status === 'read') return <CheckCheck size={14} className={styles.statusIcon} />;
+    if (status === 'sent') return <Check size={14} className={`${styles.statusIcon} ${styles.statusSent}`} />;
+    if (status === 'delivered') return <CheckCheck size={14} className={`${styles.statusIcon} ${styles.statusDelivered}`} />;
+    if (status === 'read') return <CheckCheck size={14} className={`${styles.statusIcon} ${styles.statusRead}`} />;
     if (status === 'sending') return <Clock size={14} className={`${styles.statusIcon} ${styles.statusSending}`} />;
-    if (status === 'failed') return <AlertCircle size={14} className={`${styles.statusIcon} ${styles.statusFailed}`} />;
+    if (status === 'failed') {
+      return (
+        <button
+          type="button"
+          className={`${styles.statusIcon} ${styles.statusFailed}`}
+          onClick={() => onRetry?.(message._id)}
+          title="Message failed. Retry"
+          aria-label="Message failed. Retry sending"
+        >
+          <AlertCircle size={14} />
+        </button>
+      );
+    }
     return <Clock size={14} className={styles.statusIcon} />;
   };
 

@@ -14,8 +14,11 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
   const {
     messages,
     messagesLoading,
+    hasMore,
+    loadOlderMessages,
     typingUsers,
     sendMessage,
+    retryMessage,
     markAsRead,
     editMessage,
     deleteMessage,
@@ -245,6 +248,9 @@ const ChatWindow = ({ conversation, onBack, showInfo, onToggleInfo }) => {
         onReact={reactToMessage}
         onEdit={editMessage}
         onDelete={deleteMessage}
+        onRetry={retryMessage}
+        hasMore={hasMore}
+        onLoadOlder={loadOlderMessages}
       />
 
       {showInfo && (
