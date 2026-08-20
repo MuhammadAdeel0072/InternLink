@@ -101,15 +101,13 @@ const Register = () => {
           text: result.message || 'Registration successful! Please check your email to verify your account.'
         });
 
-        setTimeout(() => {
-          if (verificationToken) {
-            navigate(`/verify-email?token=${verificationToken}&email=${encodeURIComponent(formData.email)}`);
-          } else {
-            navigate('/verify-email', { 
-              state: { email: formData.email } 
-            });
-          }
-        }, 1500);
+        if (verificationToken) {
+          navigate(`/verify-email?token=${verificationToken}&email=${encodeURIComponent(formData.email)}`);
+        } else {
+          navigate('/verify-email', { 
+            state: { email: formData.email } 
+          });
+        }
       } else {
         setStatusMessage({ type: 'error', text: result.message });
       }

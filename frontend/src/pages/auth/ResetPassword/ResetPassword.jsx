@@ -85,9 +85,7 @@ const ResetPassword = () => {
       const result = await resetPassword(token, password);
       if (result.success) {
         setSubmitted(true);
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        navigate('/login');
       } else {
         setErrorMsg(result.message);
       }

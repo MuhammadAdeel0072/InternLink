@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import api from "../../../services/api";
 import { useAuth } from "../../../context/AuthContext";
 import styles from "./OAuthCallback.module.css";
@@ -7,35 +7,50 @@ import styles from "./OAuthCallback.module.css";
 const OAuthCallback = () => {
   const { setUser } = useAuth();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const location = useLocation();
-  
+
   useEffect(() => {
     const completeLogin = async () => {
       const token = searchParams.get("token");
 
       if (!token) {
-        navigate("/login");
+        window.location.replace("/login");
         return;
       }
 
       try {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        localStorage.setItem("token", token);
+
         const res = await api.get("/auth/me");
 
-        const user = res.data.data || res.data;
+        const user = res.data?.data || res.data;
 
+        if (!user) {
+          throw new Error("No user data received");
+        }
+
+        localStorage.setItem("user", JSON.stringify(user));
         setUser(user);
 
-        const redirect = location.state?.from?.pathname || searchParams.get("redirect") || "/";
-        navigate(redirect, { replace: true });
+        const redirect =
+          location.state?.from?.pathname ||
+          searchParams.get("redirect") ||
+          (user.role === "recruiter" ? "/recruiter/dashboard" : "/");
+
+        window.location.replace(redirect);
       } catch (err) {
-        console.error(err);
-        navigate("/login");
+        console.error("OAuth callback error:", err);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.replace("/login");
       }
     };
 
     completeLogin();
-  }, [navigate, searchParams, setUser, location.state]);
+  }, [searchParams, setUser, location.state]);
 
   return (
     <div className={styles.callbackContainer}>

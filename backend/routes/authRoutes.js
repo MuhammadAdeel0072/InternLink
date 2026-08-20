@@ -65,9 +65,9 @@ router.get('/google', captureOAuthOrigin, startOAuth('google', {
   session: false,
 }));
 
-router.get('/google/callback', 
-  passport.authenticate('google', { 
-    failureRedirect: '/login?error=google_auth_failed',
+router.get('/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=google_auth_failed`,
     session: false,
   }),
   oAuthSuccess
@@ -81,7 +81,7 @@ router.get('/github', captureOAuthOrigin, startOAuth('github', {
 
 router.get('/github/callback',
   passport.authenticate('github', {
-    failureRedirect: '/login?error=github_auth_failed',
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=github_auth_failed`,
     session: false,
   }),
   oAuthSuccess

@@ -2,9 +2,9 @@ import User from '../models/User.js';
 import Profile from '../models/Profile.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/sendEmail.js';
 import { blacklistToken } from '../middlewares/tokenBlacklist.js';
 import { getOAuthOrigin, checkOriginSync } from '../config/cors.js';
+import { enqueueEmail } from '../utils/emailQueue.js';
 
 /**
  * Generate a JWT access token for a user
@@ -53,23 +53,14 @@ export const setRefreshTokenCookie = (res, refreshToken, days = 7) => {
  * @param {string} token - The plain token to hash
  * @returns {string} SHA-256 hex digest of the token
  */
-export const hashToken = (token) => {
-  return crypto.createHash('sha256').update(token).digest('hex');
-};
-
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res) => {
-  console.log('[registerUser] Register request received', {
-    body: { name: req.body.name, email: req.body.email, role: req.body.role, acceptedTerms: req.body.acceptedTerms },
-  });
   try {
-    console.log('[registerUser] Step 1: Start registration');
     const { name, email, password, role, acceptedTerms } = req.body;
 
     if (!name || !email || !password) {
-      console.log('[registerUser] Validation failed: missing fields');
       return res.status(400).json({ 
         success: false,
         message: 'All fields are required' 
@@ -77,7 +68,6 @@ export const registerUser = async (req, res) => {
     }
 
     if (acceptedTerms !== true) {
-      console.log('[registerUser] Validation failed: terms not accepted');
       return res.status(400).json({
         success: false,
         message: 'You must accept the Terms of Service and Privacy Policy'
@@ -86,32 +76,24 @@ export const registerUser = async (req, res) => {
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
-      console.log('[registerUser] Validation failed: password does not meet complexity requirements');
       return res.status(400).json({
         success: false,
         message: 'Password must be 8+ characters with uppercase, lowercase, number, and special character'
       });
     }
 
-    console.log('[registerUser] Step 2: Checking if user exists');
     const userExists = await User.findOne({ email });
     if (userExists) {
-      console.log('[registerUser] User already exists');
       return res.status(409).json({ 
         success: false,
         message: 'An account with this email already exists' 
       });
     }
 
-    console.log('[registerUser] Step 3: Creating verification token');
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    console.log('[registerUser] Verification token generated:', verificationToken);
-    const verificationTokenHash = hashToken(verificationToken);
-    console.log('[registerUser] Verification token hashed:', verificationTokenHash);
-    const verificationTokenExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
-    console.log('[registerUser] Verification token expires at:', new Date(verificationTokenExpire).toISOString());
+    const verificationTokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    const verificationTokenExpire = Date.now() + 30 * 60 * 1000;
 
-    console.log('[registerUser] Step 4: Creating user');
     const user = await User.create({
       name,
       email,
@@ -123,11 +105,7 @@ export const registerUser = async (req, res) => {
       hasAcceptedTerms: true,
       authProvider: 'local',
     });
-    console.log('[registerUser] User created:', user._id);
-    console.log('[registerUser] User verificationToken stored:', user.verificationToken);
-    console.log('[registerUser] User verificationTokenExpire stored:', user.verificationTokenExpire);
 
-    console.log('[registerUser] Step 5: Creating profile');
     await Profile.create({
       user: user._id,
       skills: [],
@@ -136,42 +114,11 @@ export const registerUser = async (req, res) => {
       projects: [],
       certifications: [],
     });
-    console.log('[registerUser] Profile created');
 
-    console.log('[registerUser] Step 6: Sending verification email');
-
-    // Log SMTP environment variables (mask the password)
-    console.log('[registerUser] SMTP env vars:', {
-      SMTP_HOST: process.env.SMTP_HOST,
-      SMTP_PORT: process.env.SMTP_PORT,
-      SMTP_SECURE: process.env.SMTP_SECURE,
-      SMTP_USER: process.env.SMTP_USER,
-      SMTP_FROM: process.env.SMTP_FROM,
-      SMTP_PASS: process.env.SMTP_PASS ? '***' + process.env.SMTP_PASS.slice(-4) : '<not set>',
-      FRONTEND_URL: process.env.FRONTEND_URL,
-      NODE_ENV: process.env.NODE_ENV,
+    enqueueEmail({ type: 'verification', email: user.email, token: verificationToken }).catch(() => {
+      // Email delivery is best-effort; do not fail registration because of it.
     });
 
-    try {
-      console.log('[registerUser] sendVerificationEmail() called with:', {
-        email: user.email,
-        token: verificationToken,
-      });
-      await sendVerificationEmail(user.email, verificationToken);
-      console.log('[registerUser] Verification email sent');
-    } catch (emailError) {
-      console.error('[registerUser] Verification email failed:', {
-        message: emailError.message,
-        code: emailError.code,
-        stack: emailError.stack,
-        command: emailError.command,
-        response: emailError.response,
-        responseCode: emailError.responseCode,
-      });
-    }
-
-    // Do not issue JWT for unverified users - they must verify email first
-    console.log('[registerUser] Step 7: Sending response');
     res.status(201).json({
       success: true,
       message: 'Registration successful! Please check your email to verify your account.',
@@ -185,17 +132,8 @@ export const registerUser = async (req, res) => {
         requiresVerification: true
       }
     });
-    console.log('[registerUser] Response sent');
   } catch (error) {
-    console.error('[registerUser] Registration error:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-    });
-    console.error('[registerUser] Controller catch block: error details:', error);
+    console.error('Registration error:', error);
     res.status(500).json({ 
       success: false,
       message: 'Server error during registration' 
@@ -207,56 +145,41 @@ export const registerUser = async (req, res) => {
 // @route   GET /api/auth/verify-email/:token
 // @access  Public
 export const verifyEmail = async (req, res) => {
-  console.log('[verifyEmail] Verify email request received, token:', req.params.token);
   try {
     const { token } = req.params;
 
     if (!token) {
-      console.log('[verifyEmail] Token is missing from request params');
       return res.status(400).json({
         success: false,
         message: 'Verification token is required'
       });
     }
 
-    console.log('[verifyEmail] Hashing token for lookup');
-    const tokenHash = hashToken(token);
-    console.log('[verifyEmail] Token hash:', tokenHash);
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
-    console.log('[verifyEmail] Searching for user with matching token');
     const user = await User.findOne({
       verificationToken: tokenHash,
       verificationTokenExpire: { $gt: Date.now() }
     });
 
     if (!user) {
-      console.log('[verifyEmail] No user found with this token (invalid or expired)');
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired verification token'
       });
     }
 
-    console.log('[verifyEmail] User found:', user._id, user.email);
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpire = undefined;
     await user.save();
-    console.log('[verifyEmail] User verified and token cleared');
 
     res.status(200).json({
       success: true,
       message: 'Email verified successfully! You can now log in.'
     });
   } catch (error) {
-    console.error('[verifyEmail] Error:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-    });
+    console.error('Verify email error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during email verification'
@@ -268,14 +191,11 @@ export const verifyEmail = async (req, res) => {
 // @route   POST /api/auth/resend-verification
 // @access  Public
 export const resendVerification = async (req, res) => {
-  console.log('[resendVerification] request received', { email: req.body.email });
   try {
     const { email } = req.body;
 
-    console.log('[resendVerification] Step 1: Finding user', { email });
     const user = await User.findOne({ email });
     if (!user) {
-      console.log('[resendVerification] User not found');
       return res.status(404).json({
         success: false,
         message: 'No account found with this email'
@@ -283,55 +203,28 @@ export const resendVerification = async (req, res) => {
     }
 
     if (user.isVerified) {
-      console.log('[resendVerification] User already verified');
       return res.status(400).json({
         success: false,
         message: 'Email is already verified'
       });
     }
 
-    console.log('[resendVerification] Step 2: Generating new verification token');
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    console.log('[resendVerification] New token generated:', verificationToken);
-    const verificationTokenHash = hashToken(verificationToken);
+    const verificationTokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
     user.verificationToken = verificationTokenHash;
-    user.verificationTokenExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
-    console.log('[resendVerification] Token expire:', new Date(user.verificationTokenExpire).toISOString());
+    user.verificationTokenExpire = Date.now() + 30 * 60 * 1000;
     await user.save();
-    console.log('[resendVerification] Token saved to database');
 
-    console.log('[resendVerification] Step 3: Calling sendVerificationEmail');
-    try {
-      await sendVerificationEmail(user.email, verificationToken);
-      console.log('[resendVerification] Verification email sent successfully');
-    } catch (emailError) {
-      console.error('[resendVerification] Verification email failed:', {
-        message: emailError.message,
-        code: emailError.code,
-        stack: emailError.stack,
-        command: emailError.command,
-        response: emailError.response,
-        responseCode: emailError.responseCode,
-      });
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send verification email. Please try again later.'
-      });
-    }
+    enqueueEmail({ type: 'verification', email: user.email, token: verificationToken }).catch(() => {
+      // Email delivery is best-effort; do not fail the request because of it.
+    });
 
     res.status(200).json({
       success: true,
       message: 'Verification email sent successfully'
     });
   } catch (error) {
-    console.error('[resendVerification] Error:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-    });
+    console.error('Resend verification error:', error);
     res.status(500).json({
       success: false,
       message: 'Error sending verification email'
@@ -371,26 +264,14 @@ export const forgotPassword = async (req, res) => {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenHash = hashToken(resetToken);
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
     user.resetPasswordToken = resetTokenHash;
     user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
-    try {
-      await sendPasswordResetEmail(user.email, resetToken);
-    } catch (emailError) {
-      console.error('Password reset email error:', {
-        message: emailError.message,
-        code: emailError.code,
-        command: emailError.command,
-        response: emailError.response,
-        responseCode: emailError.responseCode,
-      });
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send password reset email. Please try again later.'
-      });
-    }
+    enqueueEmail({ type: 'password-reset', email: user.email, token: resetToken }).catch(() => {
+      // Email delivery is best-effort; do not fail the request because of it.
+    });
 
     res.status(200).json({
       success: true,
@@ -419,7 +300,7 @@ export const validateResetToken = async (req, res) => {
       });
     }
 
-    const tokenHash = hashToken(token);
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
     const user = await User.findOne({
       resetPasswordToken: tokenHash,
       resetPasswordExpire: { $gt: Date.now() }
@@ -475,7 +356,7 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    const tokenHash = hashToken(token);
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
     const user = await User.findOne({
       resetPasswordToken: tokenHash,
       resetPasswordExpire: { $gt: Date.now() }
@@ -511,7 +392,6 @@ export const resetPassword = async (req, res) => {
 // @access  Public
 export const loginUser = async (req, res) => {
   try {
-    console.log('[loginUser] Step 1: Start login');
     const { email, password, rememberMe } = req.body;
 
     if (!email || !password) {
@@ -521,37 +401,30 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    console.log('[loginUser] Step 2: Finding user by email');
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      console.log('[loginUser] User not found');
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       });
     }
-    console.log('[loginUser] User found:', user._id);
 
     if (user.authProvider !== 'local') {
-      console.log('[loginUser] Auth provider mismatch:', user.authProvider);
       return res.status(400).json({
         success: false,
         message: `This account uses ${user.authProvider} authentication. Please sign in with ${user.authProvider}.`
       });
     }
 
-    console.log('[loginUser] Step 3: Comparing password');
-    if (!(await user.comparePassword(password))) {
-      console.log('[loginUser] Password mismatch');
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       });
     }
-    console.log('[loginUser] Password matched');
 
     if (!user.isVerified) {
-      console.log('[loginUser] User not verified');
       return res.status(403).json({
         success: false,
         message: 'Please verify your email first',
@@ -560,27 +433,25 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    console.log('[loginUser] Step 4: Generating tokens');
     const token = jwt.sign(
-      { id: user._id }, 
-      process.env.JWT_SECRET, 
+      { id: user._id },
+      process.env.JWT_SECRET,
       { expiresIn: rememberMe ? '30d' : '1d' }
     );
-    
+
     const refreshToken = jwt.sign(
-      { id: user._id }, 
-      process.env.JWT_REFRESH_SECRET, 
+      { id: user._id },
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: rememberMe ? '30d' : '7d' }
     );
-    
+
     setRefreshTokenCookie(res, refreshToken, rememberMe ? 30 : 7);
 
-    console.log('[loginUser] Step 5: Updating lastLogin');
     user.lastLogin = new Date();
-    await user.save({ validateBeforeSave: false });
-    console.log('[loginUser] lastLogin updated');
+    user.save({ validateBeforeSave: false }).catch(() => {
+      // Non-critical metadata update; do not block login response.
+    });
 
-    console.log('[loginUser] Step 6: Sending response');
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -597,9 +468,8 @@ export const loginUser = async (req, res) => {
       githubId: user.githubId,
       preferences: user.preferences
     });
-    console.log('[loginUser] Response sent');
   } catch (error) {
-    console.error('[loginUser] Login error:', error);
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during login'
