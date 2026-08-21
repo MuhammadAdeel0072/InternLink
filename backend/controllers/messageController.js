@@ -108,14 +108,20 @@ export const getConversations = async (req, res) => {
         const unreadCount = await Message.countDocuments({
           conversation: conv._id,
           sender: { $ne: userId },
-          status: { $in: ['sent', 'delivered'] }
+          status: { $in: ['sent', 'delivered'] },
+          deletedFor: { $ne: userId }
         });
         payload.unreadCount = unreadCount;
         return payload;
       })
     );
 
-    res.status(200).json(formatted.filter(Boolean));
+    const visibleConversations = formatted.filter(Boolean);
+    res.status(200).json(
+      filter === 'unread'
+        ? visibleConversations.filter((conversation) => conversation.unreadCount > 0)
+        : visibleConversations
+    );
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -197,7 +203,8 @@ export const getMessages = async (req, res) => {
     const unreadCount = await Message.countDocuments({
       conversation: req.params.conversationId,
       sender: { $ne: req.user._id },
-      status: { $in: ['sent', 'delivered'] }
+      status: { $in: ['sent', 'delivered'] },
+      deletedFor: { $ne: req.user._id }
     });
 
     res.status(200).json({
@@ -814,7 +821,15 @@ export const searchMessages = async (req, res) => {
 
     let conversationIds = [];
     if (conversationId) {
-      conversationIds = [conversationId];
+      const conversation = await Conversation.findOne({
+        _id: conversationId,
+        participants: userId,
+        deletedBy: { $ne: userId }
+      }).select('_id');
+      if (!conversation) {
+        return res.status(404).json({ message: 'Conversation not found' });
+      }
+      conversationIds = [conversation._id];
     } else {
       const userConversations = await Conversation.find({ participants: userId }).select('_id');
       conversationIds = userConversations.map((c) => c._id);

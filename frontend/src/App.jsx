@@ -417,6 +417,17 @@ function App() {
     </MessageProvider>
   </RecruiterProtectedRoute>
 } />
+             <Route path="/recruiter/messages/:conversationId" element={
+  <RecruiterProtectedRoute>
+    <MessageProvider>
+    <MainLayout>
+      <Suspense fallback={<PageLoader />}>
+        <RecruiterMessages />
+      </Suspense>
+    </MainLayout>
+    </MessageProvider>
+  </RecruiterProtectedRoute>
+} />
              <Route path="/recruiter/talent-pool" element={
    <RecruiterProtectedRoute>
      <MainLayout>

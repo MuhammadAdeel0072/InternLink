@@ -77,6 +77,10 @@ jobSchema.index({ location: 1, jobType: 1 });
 jobSchema.index({ company: 1, isActive: 1 });
 jobSchema.index({ savedBy: 1, isActive: 1, createdAt: -1 });
 jobSchema.index({ skills: 1, isActive: 1, createdAt: -1 });
+// Supports recruiter's job management queries filtering by active status and sorting by creation date
+jobSchema.index({ isActive: 1, status: 1, createdAt: -1 });
+// Supports text search on company name
+jobSchema.index({ company: 'text' });
 
 const Job = mongoose.model('Job', jobSchema);
 export default Job;

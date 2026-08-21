@@ -12,5 +12,10 @@ const jobAlertSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Supports fetching job alerts for a user sorted by creation date
+jobAlertSchema.index({ user: 1, createdAt: -1 });
+// Supports filtering active alerts for a user
+jobAlertSchema.index({ user: 1, isActive: 1 });
+
 const JobAlert = mongoose.model('JobAlert', jobAlertSchema);
 export default JobAlert;

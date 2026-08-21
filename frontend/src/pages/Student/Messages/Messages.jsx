@@ -32,7 +32,7 @@ const Messages = () => {
   }, [filter, fetchConversations]);
 
   useEffect(() => {
-    if (conversationId && !activeConversation) {
+    if (conversationId && activeConversation?._id !== conversationId) {
       const found = conversations.find((c) => c._id === conversationId);
       if (found) {
         setActiveConversation(found);
@@ -50,6 +50,7 @@ const Messages = () => {
   const handleSelectConversation = (conv) => {
     setActiveConversation(conv);
     setShowInfo(false);
+    navigate(`/messages/${conv._id}`);
   };
 
   const handleConversationAction = async (actionType, conversationId) => {
@@ -80,6 +81,7 @@ const Messages = () => {
   const handleBack = () => {
     setActiveConversation(null);
     setShowInfo(false);
+    navigate('/messages');
   };
 
   const handleFilterChange = (newFilter) => {

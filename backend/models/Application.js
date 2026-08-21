@@ -125,6 +125,8 @@ applicationSchema.index({ job: 1, status: 1 });
 applicationSchema.index({ recruiter: 1, status: 1 });
 applicationSchema.index({ student: 1, status: 1 });
 applicationSchema.index({ createdAt: -1 });
+// Supports fetching a student's applications sorted by creation date
+applicationSchema.index({ student: 1, createdAt: -1 });
 
 const Application = mongoose.model('Application', applicationSchema);
 export default Application;

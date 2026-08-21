@@ -80,7 +80,9 @@ export const MessageProvider = ({ children }) => {
       console.error('Failed to fetch messages:', error);
       return [];
     } finally {
-      setMessagesLoading(false);
+      if (requestId === messageRequestRef.current) {
+        setMessagesLoading(false);
+      }
     }
   }, []);
 
@@ -205,6 +207,12 @@ export const MessageProvider = ({ children }) => {
     return fetchMessages(conversationId, 50, oldestMessage.createdAt);
   }, [messages, hasMore, fetchMessages]);
 
+  const clearUnread = useCallback((conversationId) => {
+    setConversations((prev) =>
+      prev.map((c) => (c._id === conversationId ? { ...c, unreadCount: 0 } : c))
+    );
+  }, []);
+
   const markAsRead = useCallback(async (conversationId, messageIds) => {
     try {
       await messageService.markAsRead(conversationId, messageIds);
@@ -214,10 +222,11 @@ export const MessageProvider = ({ children }) => {
         const isTarget = !messageIds || messageIds.length === 0 || messageIds.includes(msg._id);
         return isIncoming && isTarget ? { ...msg, status: 'read' } : msg;
       }));
+      clearUnread(conversationId);
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }
-  }, [user]);
+  }, [user, clearUnread]);
 
   const editMessage = useCallback(async (messageId, newMessage) => {
     try {
@@ -345,12 +354,6 @@ export const MessageProvider = ({ children }) => {
     );
   }, []);
 
-  const clearUnread = useCallback((conversationId) => {
-    setConversations((prev) =>
-      prev.map((c) => (c._id === conversationId ? { ...c, unreadCount: 0 } : c))
-    );
-  }, []);
-
   useEffect(() => {
     if (!socket || !user) return;
 
@@ -367,10 +370,13 @@ export const MessageProvider = ({ children }) => {
           const exists = prev.some((m) => m._id === message._id);
           if (exists) return prev.map((m) => (m._id === message._id ? message : m));
 
-          // Check if there is an optimistic temp message matching this text/sender
-          // to avoid showing the message twice (optimistic + server-confirmed)
+          // Reconcile the server event with the exact optimistic send. Matching
+          // on message text alone can replace the wrong message when text repeats.
           const tempIndex = prev.findIndex(
-            (m) => typeof m._id === 'string' && m._id.startsWith('temp_') && m.message === message.message
+            (m) => typeof m._id === 'string' &&
+              m._id.startsWith('temp_') &&
+              m.clientMessageId &&
+              m.clientMessageId === message.clientMessageId
           );
           if (tempIndex !== -1) {
             const updated = [...prev];
